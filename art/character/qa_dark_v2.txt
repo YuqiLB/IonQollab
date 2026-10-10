@@ -1,0 +1,8 @@
+PASS: saved source is 128 x 192, indexed, one frame.
+PASS: nine visible, editable, nonempty pixel layers in the requested stacking order.
+PASS: palette = 24 opaque entries + fully transparent index 0.
+PASS: PNG uses 24 opaque colors; 9443 transparent pixels; binary alpha only.
+PASS: native PNG equals the reopened Aseprite rendering pixel-for-pixel.
+PASS: 512 x 768 preview is exact 4x nearest-neighbour replication.
+Visual review: native and 4x inspected for both v1 and v2 against the supplied reference.
+v2: shorter nose cluster on the projected centerline, subtler smirk, restrained top highlights.

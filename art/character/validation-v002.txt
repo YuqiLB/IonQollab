@@ -1,0 +1,9 @@
+Aseprite 1.3.18.6
+Canvas: 128 x 192
+Mode: indexed
+Layers: 6
+Frames: 1
+Palette: 24 opaque + transparent index 0
+Visible opaque colors: 24
+Preview: 512 x 768, exact 4x nearest neighbour
+Revision: -v002

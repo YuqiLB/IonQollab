@@ -1,0 +1,6 @@
+PASS: source reloaded; six named editable layers; one neutral frame; 128x192 indexed canvas.
+PASS: native PNG equals Aseprite rendering pixel-for-pixel.
+PASS: 24 opaque colors; alpha values only 0 and 255.
+PASS: preview is exact 4x pixel replication, 512x768.
+Visual inspection: native and 4x exports inspected for v001 and v002.
+Refinements: round frames, raised near brow, cheek shadow, hair tips, sleeve fold.

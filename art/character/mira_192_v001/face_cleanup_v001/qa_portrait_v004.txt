@@ -1,0 +1,27 @@
+Independent focused cleanup verification
+Aseprite 1.3.18.6
+
+PASS: actual original and final are 192 x 256 indexed, one frame, identical frame duration and identical palette (32 opaque colors plus transparent index 0).
+PASS: 01 Back hair; protected raster and metadata exact; 0 changed pixels.
+PASS: 02 Clothing - black knit; protected raster and metadata exact; 0 changed pixels.
+PASS: 03 Clothing - plum blazer; protected raster and metadata exact; 0 changed pixels.
+PASS: 04 Neck; 469 changed pixels; inclusive bounds (76,99)-(114,122).
+PASS: 05 Face and ear; 1173 changed pixels; inclusive bounds (73,63)-(140,122).
+PASS: 06 Eyes and brows; 18 changed pixels; inclusive bounds (116,80)-(133,86).
+PASS: 07 Nose and mouth; 41 changed pixels; inclusive bounds (99,101)-(117,107).
+PASS: 08 Glasses; 55 changed pixels; inclusive bounds (80,79)-(108,89).
+PASS: 09 Front hair; protected raster and metadata exact; 0 changed pixels.
+PASS: 10 Accessories; protected raster and metadata exact; 0 changed pixels.
+PASS: 11 Construction guides - hidden; 252 changed pixels; inclusive bounds (76,49)-(140,122).
+PASS: eleven editable nonempty pixel layers; ten visible; construction guides hidden. All cels and layers have opacity 255 and all indexed pixels have binary alpha.
+PASS: neck edits touch only preexisting skin indices 8-13 inside x76-116,y99-122; collar and neck silhouette remain unchanged.
+INFO: summed per-layer changes, including hidden guides: 2008.
+PASS: composite 1109 changed pixels; inclusive bounds (73,63)-(139,122); every pixel outside face ROI x73-143,y42-123 is unchanged.
+PASS: native equals saved rendering; 32 actual opaque colors; 33163 opaque and 15989 fully transparent pixels; binary alpha only.
+PASS: 768 x 1024 preview is exact 4x nearest-neighbour; light/dark composites are exact at every pixel.
+PASS: native face crop is rectangle (60,42,84,88); 672 x 704 export is exact 8x nearest-neighbour.
+PASS: 176 x 88 comparison contains actual original at x0 and final at x92, exactly composited on RGB(34,36,46) with an 8px gap; 1056 x 528 is exact 6x nearest-neighbour.
+PASS: guide overlay export exactly matches the saved guide cel made visible temporarily; final saved guides remain hidden.
+PASS: verifier left original and final .aseprite byte streams unchanged.
+Manual visual review: actual before/after 6x and final full 4x images opened and inspected. Lower-face taper is restrained; cheek notch and narrow bright nasal stripe are gone; chin stays softly rounded. No blocking visual issue. The native pixel scale still limits subtle expression detail.
+PASS: external PowerShell SHA256 before and after verification equals preserved original: EF20FC14242E69395F054D3CFA5C4073ABF6C75FA5B9F1A210F8042F83F2DCDF

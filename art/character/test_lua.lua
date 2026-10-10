@@ -1,0 +1,8 @@
+local s = Sprite(4, 4, ColorMode.RGB)
+s.cels[1].image:drawPixel(1, 1, app.pixelColor.rgba(60, 130, 210, 255))
+s:saveAs('art/character/lua-test.aseprite')
+s:saveCopyAs('art/character/lua-test.png')
+local f = assert(io.open('art/character/lua-test.txt', 'w'))
+f:write('Lua execution OK; Aseprite ', tostring(app.version), '; canvas ', s.width, 'x', s.height, '\n')
+f:close()
+s:close()

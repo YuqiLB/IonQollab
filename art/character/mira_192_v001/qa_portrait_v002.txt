@@ -1,0 +1,23 @@
+Independent final portrait verification
+Aseprite 1.3.18.6
+
+PASS: reopened .aseprite is 192 x 256, indexed, one frame, transparent index 0.
+PASS: palette has exactly 32 fully opaque entries plus fully transparent index 0.
+PASS: 01 Back hair; visible; editable; 31351 opaque pixels.
+PASS: 02 Clothing - black knit; visible; editable; 12265 opaque pixels.
+PASS: 03 Clothing - plum blazer; visible; editable; 11395 opaque pixels.
+PASS: 04 Neck; visible; editable; 1634 opaque pixels.
+PASS: 05 Face and ear; visible; editable; 4242 opaque pixels.
+PASS: 06 Eyes and brows; visible; editable; 347 opaque pixels.
+PASS: 07 Nose and mouth; visible; editable; 46 opaque pixels.
+PASS: 08 Glasses; visible; editable; 168 opaque pixels.
+PASS: 09 Front hair; visible; editable; 8230 opaque pixels.
+PASS: 10 Accessories; visible; editable; 534 opaque pixels.
+PASS: 11 Construction guides - hidden; hidden; editable; 180 opaque pixels.
+PASS: every cel uses only binary-alpha palette indices; every layer and cel has opacity 255. No semitransparency exists in visible content or hidden guides.
+PASS: native PNG uses 32 actual opaque colors, 33163 opaque pixels and 15989 transparent pixels; all alpha is 0 or 255.
+PASS: native PNG equals the reopened saved .aseprite rendering at every pixel.
+PASS: 768 x 1024 preview is exact 4x nearest-neighbour replication.
+PASS: light RGB(236,232,221) and dark RGB(20,23,33) exports exactly composite binary-alpha native pixels at 4x.
+PASS: 768 x 736 face export exactly reproduces native rectangle (56,38,96,92) at 8x nearest-neighbour.
+Manual visual review: final native, 4x and face images were actually opened and inspected by an independent review agent. Face angle, jaw/neck, glasses bridge and small nose read coherently. Remaining aesthetic limitation: the expression is gentler and the far iris proportion is larger than the approved reference; no blocking geometric defect observed.

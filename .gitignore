@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# React / JavaScript
+node_modules/
+dist/
+build/
+coverage/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Local files
+*.log
+.DS_Store
+Thumbs.db

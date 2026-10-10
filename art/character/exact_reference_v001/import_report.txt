@@ -1,0 +1,5 @@
+PASS: source and rendered result are exactly 683 x 891.
+PASS: all 608553 RGBA pixels match the source bitmap.
+PASS: no resampling, quantization, palette reduction, or redrawing.
+Two editable layers: original-pixel character and reference background.
+Background pixels isolated: 203071.

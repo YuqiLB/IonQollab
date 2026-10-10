@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#0c101d">
+  <meta name="description" content="A little chemistry. A little cryptography. A playable quantum love story.">
+  <title>Qrush — a quantum love story</title>
+  <link rel="icon" href="./assets/heart.svg" type="image/svg+xml">
+  <link rel="preload" href="./assets/fonts/PixelifySans.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./main.css">
+</head>
+<body>
+  <div class="app">
+    <main class="game" id="game">
+      <h1 class="sr-only">Qrush — a quantum love story</h1>
+
+      <svg class="observatory" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#19243c"/><stop offset="1" stop-color="#34425c"/></linearGradient></defs>
+        <path fill="url(#sky)" d="M0 0h1600v900H0z"/>
+        <g fill="#8298b4"><path d="M115 106h4v4h-4zM272 195h3v3h-3zM483 84h3v3h-3zM693 224h4v4h-4zM831 119h3v3h-3zM1059 183h4v4h-4zM1305 94h3v3h-3zM1461 266h4v4h-4zM953 337h3v3h-3zM159 373h4v4h-4zM563 328h3v3h-3zM1196 394h3v3h-3z"/><path d="M734 77h3v19h-3zM726 85h19v3h-19zM1402 321h3v15h-3zM1396 327h15v3h-15z"/></g>
+        <path d="M370 113h54v13h14v54h-14v14h-54v-14h-14v-54h14z" fill="#d0d8d6"/><path d="M397 113h27v13h14v54h-14v14h-20v-16h14v-46h-21z" fill="#96acc1"/>
+        <path fill="#111d30" d="M0 568h65v-80h80v37h61v-104h82v135h61v-59h69v-46h92v85h63v-112h70v72h79v-45h75v112h68v-87h83v35h73v-125h97v127h58v-62h81v31h72v-77h93v130h65v-89h71v98h63V900H0z"/>
+        <g fill="#617590" opacity=".62"><path d="M83 513h9v17h-9zM105 513h9v17h-9zM224 446h9v17h-9zM247 446h9v17h-9zM224 480h9v17h-9zM439 478h9v17h-9zM462 478h9v17h-9zM593 451h9v17h-9zM617 451h9v17h-9zM754 477h9v17h-9zM887 505h9v17h-9zM911 505h9v17h-9zM1048 417h9v17h-9zM1073 417h9v17h-9zM1048 452h9v17h-9zM1327 453h9v17h-9zM1351 453h9v17h-9zM1483 506h9v17h-9z"/></g>
+        <path stroke="#394961" stroke-width="9" d="M54 0v717M792 0v717M1546 0v717M0 350h1600M0 708h1600"/>
+        <path fill="#111b2c" d="M0 719h1600v181H0z"/><path fill="#293951" d="M0 719h1600v9H0z"/>
+      </svg>
+      <aside class="portrait-panel" aria-label="Mira, quantum researcher">
+        <div class="portrait-wrap"><img id="portrait" src="./assets/characters/mira-idle.png" alt="Mira, a blue-haired researcher wearing glasses and a plum jacket" width="1086" height="1448"><span class="romance-heart" aria-hidden="true">♥</span></div>
+      </aside>
+      <section class="conversation-panel" aria-label="Conversation and interactive mathematics">
+        <section id="chat-view" class="chat-view">
+          <div id="messages" class="messages" role="log" aria-label="Message history" aria-live="polite" tabindex="0"></div>
+          <button id="new-messages" class="new-messages" hidden>New messages ↓</button>
+          <div class="typing" id="typing" aria-live="polite"><span></span></div>
+          <div id="story-actions" class="story-actions"></div>
+          <form id="composer" class="composer" novalidate>
+            <label for="message" id="composer-label">YOUR TURN</label>
+            <div class="compose-box"><textarea id="message" rows="2" maxlength="280" placeholder="Say something. She’s still here." aria-describedby="composer-hint compose-error"></textarea><button class="send-button" id="send" type="submit" aria-label="Send message"><span aria-hidden="true">↗</span></button></div>
+            <div class="compose-meta"><span id="composer-hint">Enter to send · Shift + Enter for a new line</span><span id="char-count">0 / 280</span></div>
+            <p id="compose-error" class="field-error" role="alert"></p>
+            <div class="suggestions" id="suggestions" aria-label="Suggested replies"></div>
+          </form>
+        </section>
+        <section id="stage" class="stage" aria-labelledby="stage-title" hidden>
+          <div class="stage-top"><span id="stage-kicker" class="eyebrow">UNDER THE HOOD</span><button id="return-chat" class="quiet">← Conversation</button></div>
+          <h2 id="stage-title" tabindex="-1"></h2><p id="stage-subtitle" class="stage-subtitle"></p>
+          <div class="mode-control" id="execution-controls" hidden><label for="execution-mode">EXECUTION</label><select id="execution-mode"><option value="demo">Illustrative demo</option><option value="live">Live Qollab</option></select><span class="mode-indicator" id="mode-label">Illustrative demo—no quantum job executed.</span><button id="about-button" class="quiet">What actually ran?</button></div>
+          <div id="stage-body" class="stage-body"></div>
+          <p id="stage-caption" class="stage-caption" aria-live="polite"></p>
+          <div id="stage-nav" class="stage-nav"></div>
+          <div class="motion-controls"><button id="replay-animation" class="quiet">↺ Replay animation</button><button id="skip-animation" class="quiet">Skip animation</button><span id="step-count"></span></div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <dialog id="about-dialog"><div class="dialog-head"><span class="eyebrow">BEHIND THE SCENE</span><button id="close-about" class="icon-button" aria-label="Close explanation">×</button></div><h2>What actually ran?</h2><div id="run-report"></div><hr><p><strong>Real classical mathematics.</strong> Your text becomes UTF-8 bytes, each stored as three base-15 digits. Each digit is encrypted with tiny, unpadded textbook RSA. After a verified period yields factors, the recovered exponent decrypts the actual packet.</p><p><strong>Quantum execution.</strong> Illustrative mode uses labeled deterministic sample measurements. Live mode requires a Python connection and your Qollab-selected simulator. A failed live job never becomes sample success. The circuit drawing is an order-finding schematic, not a backend circuit trace.</p><p><strong>Post-quantum exchange.</strong> The ML-KEM, key derivation, and authenticated-encryption sequence is an illustration. No actual ML-KEM or authenticated encryption runs here. Both messages stay in this browser’s memory; there is no secure chat service.</p><p>The story assumes a future sufficiently powerful quantum machine. This does not demonstrate breaking AES, a production messaging service, or all end-to-end encryption. Tiny RSA is also trivial to break classically. Here e = d = 3, so even the public exponent decrypts; factoring is shown to teach the recovery chain. ML-KEM is designed to resist known quantum attacks; it is not a claim of invulnerability. Public keys must also be authenticated in a real protocol.</p><p>Homomorphic encryption means computation on encrypted data; it is a different concept from post-quantum cryptography.</p><p class="source-links">Read the science: <a href="https://quantum.cloud.ibm.com/docs/en/tutorials/shors-algorithm" target="_blank" rel="noreferrer">IBM: Shor’s algorithm ↗</a> · <a href="https://csrc.nist.gov/pubs/fips/203/final" target="_blank" rel="noreferrer">NIST: ML-KEM ↗</a></p></dialog>
+  <noscript>This game needs JavaScript. Enable it and reopen the page.</noscript>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

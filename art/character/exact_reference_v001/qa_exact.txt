@@ -1,0 +1,5 @@
+PASS: reopened source is 683 x 891 RGB, one frame, with two visible editable pixel layers.
+PASS: all 608553 RGBA pixels of the saved Aseprite render and final PNG exactly equal clipboard_reference.png.
+PASS: transparent PNG exactly equals the foreground cel; 405482 retained pixels are unchanged and 203071 removed pixels are exact background color.
+Manual review: source bitmap and final PNG were actually opened and visually compared; appearance matches. This is an exact bitmap import, not a redraw.
+PASS: source SHA256 unchanged before/after verification: 60CD642F108A0ACCC224D49E79397B07906F15F199252500886637B17B323ED5

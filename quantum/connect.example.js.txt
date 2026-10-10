@@ -1,0 +1,7 @@
+// QOLLAB ONLY — add these lines to the top of main.js AFTER the Python
+// team implements quantum/attack.py::run_attack(backend, shots).
+// The Qollab runtime supplies backend. Choose a simulator using Select QPU.
+// Do not add these lines to the standalone browser demo before connecting it.
+import * as quantum from 'quantum.attack';
+import { configureQollab } from './js/quantum-adapter.js';
+configureQollab({ runAttack: quantum.run_attack, backend });
