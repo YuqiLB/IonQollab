@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#171d35">
+  <meta name="description" content="A little chemistry. A little cryptography. A playable quantum love story.">
+  <title>Qrush — a quantum love story</title>
+  <link rel="icon" href="./assets/heart.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./main.css">
+  <link rel="stylesheet" href="./styles/pixel-ui.css">
+  <link rel="stylesheet" href="./styles/story-scenes.css">
+  <link rel="stylesheet" href="./styles/puzzle-window.css">
+  <link rel="stylesheet" href="./styles/desktop-motion.css">
+  <link rel="stylesheet" href="./styles/message-windows.css">
+  <link rel="stylesheet" href="./styles/puzzle-fit.css">
+  <link rel="stylesheet" href="./styles/story-motion.css">
+  <link rel="stylesheet" href="./styles/story-pacing.css">
+</head>
+<body data-phase="MENU">
+  <div class="app">
+    <main class="game" id="game" data-view="menu" data-scene="balcony">
+      <h1 class="sr-only">Qrush — a quantum love story</h1>
+      <img class="scene-art balcony-art" src="./assets/scenes/balcony.svg" alt="" aria-hidden="true">
+      <img class="scene-art desk-art" src="./assets/scenes/desk.svg" alt="" aria-hidden="true">
+      <img id="date-art" class="scene-art" alt="" aria-hidden="true" hidden>
+
+      <section id="start-screen" class="start-screen" aria-labelledby="intro-title">
+        <div class="intro-content">
+          <p class="intro-kicker">2042 · QUANTUM LABORATORY</p>
+          <div class="intro-logo" aria-hidden="true">Qrush<span><img class="game-heart" src="./assets/heart.svg" alt=""></span></div>
+          <h2 id="intro-title">The lab can wait.</h2>
+          <div id="intro-story" class="intro-story">
+            <p>Alice is on the balcony. Your coworker. Your crush.</p>
+            <p>You’ve found a reason to stay a little longer.</p>
+            <p>And Zeno? He has a quantum computer—and terrible timing.</p>
+          </div>
+          <p class="start-prompt" aria-hidden="true"><span id="start-prompt-copy">Click anywhere to start</span> <span>↗</span></p>
+        </div>
+        <button id="start-game" class="start-hitarea" type="button" aria-label="Start Qrush" aria-describedby="intro-title intro-story"></button>
+      </section>
+      <aside class="portrait-panel" aria-label="Alice, quantum researcher">
+        <div class="portrait-wrap"><img id="portrait" src="./assets/characters/mira-idle-68x89.png" alt="Alice, a blue-haired researcher with glasses and a plum jacket, smiling softly" width="68" height="89"><span class="romance-heart" aria-hidden="true"><img class="game-heart" src="./assets/heart.svg" alt=""></span></div>
+      </aside>
+      <section id="balcony-scene" class="balcony-ui" aria-label="A walk break with Alice" hidden>
+        <div class="scene-location"><span id="scene-place">QUANTUM LABORATORY</span><span id="scene-time">Balcony · late shift</span></div>
+        <button id="skip-balcony" class="scene-skip" type="button">Skip to texting ↗</button>
+        <div id="balcony-choices" class="balcony-choices" role="group" aria-label="Bob’s reply"></div>
+        <div class="vn-dialogue">
+          <div class="vn-namebar"><strong id="balcony-speaker">Alice</strong><span id="balcony-context">IN PERSON</span></div>
+          <div class="vn-body">
+            <p id="balcony-line" aria-live="polite" aria-atomic="true" tabindex="-1"></p>
+            <div class="vn-footer"><span id="balcony-hint">Choose your reply</span><span id="balcony-next" hidden>Continue ▼</span></div>
+          </div>
+          <button id="dialogue-advance" class="dialogue-hitarea" type="button" aria-label="Continue dialogue" aria-describedby="balcony-line" disabled></button>
+        </div>
+      </section>
+      <section id="scene-transition" class="scene-transition" aria-labelledby="transition-title" hidden>
+        <img class="transition-heart game-heart" src="./assets/heart.svg" alt="">
+        <p id="transition-kicker" class="transition-kicker"></p><h2 id="transition-title"></h2>
+        <p id="transition-copy" class="transition-copy"></p><p id="transition-prompt" class="transition-prompt"></p>
+        <button id="transition-continue" class="transition-hitarea" type="button" aria-label="Continue to the next scene" aria-describedby="transition-title transition-copy transition-prompt"></button>
+      </section>
+      <section id="conversation-window" class="conversation-panel" aria-label="Conversation with Alice" inert>
+        <div class="pixel-titlebar"><span>Qrush / Alice</span><span class="channel-presence">ONLINE</span><button id="close-chat" class="window-close" type="button" aria-label="Close chat window" title="Close chat · progress is kept">×</button></div>
+        <section id="chat-view" class="chat-view">
+          <header class="chat-contact" aria-label="Texting Alice">
+            <span class="contact-avatar"><img id="contact-avatar" src="./assets/characters/mira-idle-68x89.png" width="68" height="89" alt="Alice’s profile picture"></span>
+            <div><strong>Alice</strong><span>Quantum Laboratory · late shift</span></div>
+          </header>
+          <div id="messages" class="messages" role="log" aria-label="Message history" aria-live="polite" tabindex="0"></div>
+          <button id="new-messages" class="new-messages" hidden>New messages ↓</button>
+          <div class="typing" id="typing" aria-live="polite"><span></span></div>
+          <p id="puzzle-chat-lock" class="puzzle-chat-lock" hidden>Replies paused while you work.</p>
+          <div id="story-actions" class="story-actions"></div>
+          <form id="composer" class="composer" novalidate>
+            <label for="message" id="composer-label">CHOOSE YOUR REPLY</label>
+            <div class="suggestions" id="suggestions" role="group" aria-label="Reply choices"></div>
+            <div class="compose-box"><textarea id="message" rows="2" maxlength="280" readonly tabindex="-1" placeholder="Choose a reply above…" aria-describedby="composer-hint compose-error"></textarea><button class="send-button" id="send" type="submit" aria-label="Send message" disabled><span aria-hidden="true">↗</span></button></div>
+            <div class="compose-meta"><span id="composer-hint">Choose a reply above, then send ↗</span><span id="char-count">0 / 280</span></div>
+            <p id="compose-error" class="field-error" role="alert"></p>
+          </form>
+        </section>
+      </section>
+      <section id="puzzle-window" class="puzzle-window" aria-label="Interactive puzzle" hidden>
+        <div class="pixel-titlebar"><span id="puzzle-window-title">Qrush / encryption</span><div class="window-controls"><button id="minimize-task" type="button" aria-label="Minimize task" title="Minimize · progress saved">−</button><button id="close-puzzle" class="window-close" type="button" aria-label="Close puzzle window" title="Close puzzle · progress is kept">×</button></div></div>
+        <div id="message-context" class="message-context" hidden><span id="message-context-label">YOUR PENDING INVITATION</span><p id="pending-message"></p><span id="message-context-status">Encrypting… Complete the steps below to send.</span></div>
+        <section id="encryption-summary" class="encryption-summary" hidden><span class="packet-seal" aria-hidden="true">↗</span><h2>Encrypted packet sent.</h2><p id="packet-summary"></p><p class="intercept-warning">Zeno copied the packet on its way out.</p><button id="inspect-interception" class="rose" type="button">Open Zeno’s interception ↗</button></section>
+        <section id="stage" class="stage" aria-labelledby="stage-title" hidden>
+          <h2 id="stage-title" tabindex="-1"></h2><p id="stage-subtitle" class="stage-subtitle"></p>
+          <div class="mode-control" id="execution-controls" hidden><label for="execution-mode">EXECUTION</label><select id="execution-mode"><option value="demo">Illustrative demo</option><option value="live">Live Qollab</option></select><span class="mode-indicator" id="mode-label">No quantum job.</span></div>
+          <div id="stage-body" class="stage-body"></div>
+          <p id="stage-caption" class="stage-caption" aria-live="polite"></p>
+          <div id="stage-nav" class="stage-nav"></div>
+          <div class="motion-controls"><button id="pause-animation" class="quiet" type="button" hidden>Pause</button><button id="replay-animation" class="quiet" aria-label="Replay animation">↺ Replay</button><button id="skip-animation" class="quiet" aria-label="Skip animation">Skip</button><button id="about-button" class="quiet" aria-label="Inspect the math">Inspect the math</button><span id="step-count"></span></div>
+        </section>
+      </section>
+      <dialog id="zeno-popup" class="zeno-popup" aria-labelledby="zeno-title" closedby="none"><div class="pixel-titlebar"><span id="zeno-title">ZENO / PACKET INTERCEPTED</span></div></dialog>
+      <nav id="window-dock" class="window-dock" aria-label="Reopen closed windows" hidden><button id="restore-chat" type="button" hidden><img class="game-heart" src="./assets/heart.svg" alt=""> Alice’s chat</button><button id="restore-puzzle" type="button" hidden>Resume encryption ↗</button><button id="restore-zeno" type="button" hidden>Zeno · resume interception ↗</button></nav>
+      <section id="end-screen" class="end-screen" aria-labelledby="end-title" hidden>
+        <div class="end-content">
+          <p class="end-kicker">THE END</p>
+          <h2 id="end-title" tabindex="-1">Qrush<span aria-hidden="true"><img class="game-heart" src="./assets/heart.svg" alt=""></span></h2>
+          <p class="end-tagline">Just the two of you.</p>
+          <p id="end-location"></p>
+          <div class="end-actions"><button id="end-replay" class="rose" type="button">Play again ↺</button><button id="end-about" type="button">What actually ran?</button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <dialog id="about-dialog"><div class="dialog-head"><span class="eyebrow">BEHIND THE SCENE</span><button id="close-about" class="icon-button" aria-label="Close explanation">×</button></div><h2>What actually ran?</h2><div id="run-report"></div><hr><p><strong>Real classical mathematics.</strong> Your text becomes UTF-8 bytes, each stored as fixed-width base-N digits. Each digit is encrypted with tiny, unpadded textbook RSA. After a verified period yields factors, the recovered exponent decrypts the actual packet.</p><p><strong>Quantum execution.</strong> Illustrative mode uses labeled deterministic sample measurements. Live mode runs the bounded Shor order-finding circuit on your Qollab-selected simulator. Only public N and the order-finding base are sent; the chosen primes stay in the game. A failed live job never becomes sample success. The wave animation illustrates interference; it is not a backend circuit trace.</p><p><strong>Post-quantum exchange.</strong> The ML-KEM, key derivation, and authenticated-encryption sequence is an illustration. No actual ML-KEM or authenticated encryption runs here. Both messages stay in this browser’s memory; there is no secure chat service.</p><p>This is a deliberately insecure RSA teaching example: the public modulus is capped at N ≤ 63, there is no production padding, and classical factoring is trivial at this size. For p = 3, q = 5, e = d = 3, so even the public exponent decrypts. Shor's order-finding lesson illustrates the recovery chain; it does not demonstrate breaking modern RSA. ML-KEM is designed to resist known quantum attacks; it is not a claim of invulnerability. Public keys must also be authenticated in a real protocol.</p><p>Homomorphic encryption means computation on encrypted data; it is a different concept from post-quantum cryptography.</p><p class="source-links">Read the science: <a href="https://quantum.cloud.ibm.com/docs/en/tutorials/shors-algorithm" target="_blank" rel="noreferrer">IBM: Shor’s algorithm ↗</a> · <a href="https://csrc.nist.gov/pubs/fips/203/final" target="_blank" rel="noreferrer">NIST: ML-KEM ↗</a></p></dialog>
+  <noscript>This game needs JavaScript. Enable it and reopen the page.</noscript>
+  <script type="module" src="./qollab-main.js"></script>
+</body>
+</html>

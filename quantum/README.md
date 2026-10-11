@@ -20,6 +20,7 @@ The two optional inputs preserve the original Qollab call `run_attack(backend, 1
 - `shots` must be from 1 through 4,096.
 - The phase register uses `2 × ceil(log₂ N)` bits; the work register uses `ceil(log₂ N)` bits. The maximum is 12 phase bits and 18 total qubits.
 - If the selected simulator advertises fewer qubits than the circuit needs, the function returns an error before submitting a job.
+- For the default `p=3, q=5` lesson (`N=15`), choose a shot-based Qiskit backend with at least 12 qubits. The largest supported inputs need up to 18 qubits. The backend must support `transpile(circuit, backend=backend)`, `backend.run(..., shots=...)`, and result `get_counts()`; a Qiskit Aer `AerSimulator`/QASM simulator is the recommended match.
 
 These limits protect the demo from unexpectedly large inputs. The actual Qollab simulator still determines whether a particular circuit can run; test the live connection in Qollab before describing it as live.
 
@@ -41,6 +42,6 @@ This N=15, a=2 result illustrates exact ideal-simulator peaks. Live results must
 
 ## Connect in Qollab
 
-Add the lines in [`connect.example.js.txt`](connect.example.js.txt) to the top of the root `main.js` inside the same JS / Qiskit project. The browser's illustrative mode remains separate from live execution. Verify an actual Qollab simulator run and inspect the returned `.toJs()` value before presenting a live run as successful.
+Use the Qollab entry page `index.qollab.html`, which loads the root `qollab-main.js`. That bootstrap imports `quantum.attack`, connects its `run_attack` proxy to the Qollab-injected `backend`, then loads `main.js`. Select a compatible shot-based simulator in Qollab before starting the project, then choose **Live Qollab** in the game. The normal `index.html` remains the local illustrative preview and does not import Qollab's Python module. The browser's illustrative mode remains separate from live execution. Verify an actual Qollab simulator run and inspect the returned `.toJs()` value before presenting a live run as successful.
 
 The circuit teaches Shor's order-finding idea on tiny inputs. It does not demonstrate breaking modern RSA. The toy RSA stage remains deliberately insecure and is explained by the game's disclaimer.

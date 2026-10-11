@@ -29,7 +29,7 @@ To stop the server, press **Ctrl+C** in the terminal. There is no `npm install` 
 
 Do not open `index.html` directly: the JavaScript modules need an HTTP server. The included server serves local files only; it is not an application backend.
 
-For Qollab, use **one JS / Qiskit project**. Copy the root `index.html`, `main.js`, `main.css`, plus `styles/`, `js/`, `assets/`, and `quantum/`. No JSX, npm build, Vite runtime, separate provider, API key, or hosted backend is required. Bitcount Prop Single and Handjet load from Google Fonts through `main.css`. The pre-existing `frontend/` Vite scaffold is retained but is not the game entry point. Do not include `design-archive/` in the game handoff.
+For Qollab, use **one JS / Qiskit project**. Upload `index.qollab.html`, `qollab-main.js`, `main.js`, `main.css`, plus `styles/`, `js/`, `assets/`, and `quantum/`. Use `index.qollab.html` as the project's page; if Qollab requires the entry page to be named `index.html`, use this file as the uploaded `index.html`. Its Qollab entry imports `quantum.attack`, connects Qollab's selected backend to the browser adapter, then starts the game. Keep the ordinary `index.html` for the standalone local preview, which has no Qollab Python runtime. No JSX, npm build, Vite runtime, separate provider, API key, or hosted backend is required. Bitcount Prop Single and Handjet load from Google Fonts through `main.css`. The pre-existing `frontend/` Vite scaffold is retained but is not the game entry point. Do not include `design-archive/` in the game handoff.
 
 ## What runs
 
