@@ -47,7 +47,7 @@ For Qollab, use **one JS / Qiskit project**. Copy the root `index.html`, `main.j
 
 Everything stays in memory. There is no persistence, account, database or real encrypted chat service. The story's machine is fictional and sufficiently powerful; today's tiny simulator demo is not a real-world RSA attack. It does not demonstrate breaking AES, a production messaging service, or every end-to-end encryption scheme.
 
-The player can enter distinct odd prime pairs `(3, 5)`, `(3, 11)`, `(3, 17)`, or `(5, 11)`. These keep `e=3` valid and cap `N=pq` at 55. The Shor circuit has a hard ceiling of `N≤63`, 12 measured phase bits, and 18 total qubits. The frontend sends only public `N` and the selected base to Python, never the player's `p` or `q`.
+The player can enter any distinct odd prime pair with `N=pq≤63`. The lesson chooses the smallest odd `e>1` coprime to `φ(n)=(p−1)(q−1)`; for example, `(3, 7)` gives `φ(n)=12`, so it selects `e=5` instead of incompatible `e=3`. The Shor circuit has a hard ceiling of `N≤63`, 12 measured phase bits, and 18 total qubits. The frontend sends only public `N` and the selected base to Python, never the player's `p` or `q`.
 
 This tiny, unpadded textbook example is deliberately insecure and is trivial to attack classically. For `(3, 5)`, `φ(n)=8` and `d=e=3`, so even the public exponent decrypts. The in-game disclaimer explains that factoring is used to teach the recovery chain, not because quantum computation is needed for the toy case.
 

@@ -16,14 +16,18 @@ export function inverse(e, phi) {
   for (let d = 1; d < phi; d++) if ((e * d) % phi === 1) return d;
   throw new Error('The exponent has no inverse.');
 }
+export function choosePublicExponent(phi) {
+  if (!Number.isSafeInteger(phi) || phi <= 3) throw new Error('Could not choose a public exponent for these primes.');
+  for (let e = 3; e < phi; e += 2) if (gcd(e, phi) === 1) return e;
+  throw new Error('Could not choose a public exponent for these primes.');
+}
 export function makeKeys(p, q) {
   if (!Number.isSafeInteger(p) || !Number.isSafeInteger(q) || !isPrime(p) || !isPrime(q)) throw new Error('Enter two whole prime numbers.');
   if (p === q) throw new Error('Choose two distinct primes.');
   if (p === 2 || q === 2) throw new Error('Choose odd primes; the factor 2 would make this Shor lesson trivial.');
   const n = p * q;
   if (n > 63) throw new Error('For this simulator lesson, keep p × q at 63 or below (at most 18 qubits).');
-  const phi = (p - 1) * (q - 1), e = 3;
-  if (gcd(e, phi) !== 1) throw new Error('This lesson fixes e = 3. Choose a pair with gcd(3, φ(n)) = 1; try 3 and 5, 3 and 11, 3 and 17, or 5 and 11.');
+  const phi = (p - 1) * (q - 1), e = choosePublicExponent(phi);
   return { p, q, n, phi, e, d: inverse(e, phi) };
 }
 export function encode(text, n) {
