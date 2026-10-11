@@ -1,0 +1,74 @@
+/* Alice's attachments and motion. Preserve the 30/70 geometry in puzzle-window.css
+   and the shared dock/red modal lifecycle in message-windows.css. */
+.game[data-scene='desk'] .conversation-panel {
+  animation: none; transform-origin: top left;
+}
+.game .puzzle-window {
+  transform-origin: top left; animation: none;
+}
+.window-controls { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.window-controls button {
+  display: grid; place-items: center; width: 30px; height: 28px; min-height: 28px;
+  padding: 0; font: 20px/1 var(--pixel); box-shadow: 2px 2px 0 var(--ink);
+}
+.window-controls button:last-child { background: #f6b6d7; }
+.channel-presence { display: flex; align-items: center; gap: 7px; margin-left: auto; font-size: 11px !important; color: #4b3c65 !important; }
+.channel-presence::before { content: ''; width: 7px; height: 7px; background: #448455; box-shadow: 0 0 0 2px #d2f6bc; }
+.game .message { animation: message-slide 300ms cubic-bezier(.2,.8,.2,1) both; }
+.game .message.user { animation-name: message-send; }
+.message.task-message { width: 100%; max-width: 100%; }
+.task-attachment {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; gap: 12px;
+  align-items: center; text-align: left; width: 100%; padding: 16px;
+  background: #f9f7ff; border: 2px solid #574572; box-shadow: 4px 4px 0 #ad9bcf;
+  transition: translate 180ms, background 180ms, box-shadow 180ms;
+}
+.task-attachment:hover:not(:disabled) { background: #fff; translate: 0 -2px; box-shadow: 4px 6px 0 #ad9bcf; }
+.task-icon { display: grid; place-items: center; width: 40px; height: 44px; background: #dcd4f6; border: 2px solid #574572; font-size: 25px; }
+.task-copy { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.task-copy strong { font: 600 22px/1.15 var(--pixel); }
+.task-description { font: 18px/1.3 var(--sans); color: #594971; }
+.task-status { font: 13px/1.3 var(--pixel); color: #6f3263; margin-top: 5px; }
+.task-arrow { font-size: 26px; }
+.task-attachment:disabled { opacity: 1; cursor: default; box-shadow: 2px 2px 0 #b8b1c7; background: #e7eddf; }
+.task-attachment[data-state='compromised'] { background: #f4d3df; }
+.task-attachment[data-state='complete'] .task-status { color: #365d3d; }
+.game[data-view='stage'] .task-attachment { grid-template-columns: 26px minmax(0,1fr); gap: 9px; padding: 10px; }
+.game[data-view='stage'] .task-icon { width: 26px; height: 32px; font-size: 18px; }
+.game[data-view='stage'] .task-copy strong { font-size: 17px; }
+.game[data-view='stage'] .task-description, .game[data-view='stage'] .task-arrow { display: none; }
+.game[data-view='stage'] .task-status { font-size: 11px; }
+body[data-phase='RSA'] .composer, body[data-phase='INTERCEPT'] .composer,
+body[data-phase='RECOVER'] .composer, body[data-phase='PQ'] .composer,
+body[data-phase='CHOICE'] .composer { display: none; }
+.game[data-view='chat'] .puzzle-chat-lock { display: none; }
+.puzzle-context { display: flex; align-items: center; gap: 9px; border-bottom: 1px solid #b2a1ca; padding: 0 0 12px; margin: 0 0 16px; font: 15px/1.3 var(--pixel); color: #675379; }
+.puzzle-context::before { content: '↗'; font-size: 23px; color: #943768; }
+.game[data-view='stage'] .desk-art { filter: brightness(.72); transition: filter 550ms; }
+#zeno-popup .rival-interruption { overflow: hidden; padding-top: 16px; margin-top: 18px; }
+.rival-banner { margin: 0 0 26px; padding: 13px 12px; background: #a62539; border-block: 3px solid #fff0e7; color: #fff8ed; transform: rotate(-3deg); animation: banner-swipe 650ms cubic-bezier(.16,1,.3,1) both; }
+.rival-banner h3 { margin: 0; font: 700 clamp(26px, 4vw, 48px)/1.1 var(--pixel); }
+#zeno-popup .rival-speech { margin-top: 0; }
+#zeno-popup .rival-art .rival-standing { animation: bully-arrive 700ms 160ms cubic-bezier(.16,1,.3,1) both; }
+#zeno-popup .rival-art .rival-machine { animation: machine-arrive 800ms 360ms cubic-bezier(.16,1,.3,1) both; }
+.game .rival-defeat { animation: defeated-drop 500ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes message-slide { from { opacity: 0; transform: translate(-10px,8px); } to { opacity: 1; transform: none; } }
+@keyframes message-send { from { opacity: 0; transform: translate(10px,8px); } to { opacity: 1; transform: none; } }
+@keyframes banner-swipe { from { opacity: 0; translate: -45% 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes bully-arrive { from { opacity: 0; transform: translateX(-100px) scale(.7); } to { opacity: 1; transform: none; } }
+@keyframes machine-arrive { from { opacity: 0; transform: translateY(80px) scale(.8); } to { opacity: 1; transform: none; } }
+@keyframes defeated-drop { from { opacity: 0; transform: translateY(-18px) rotate(-3deg); } to { opacity: 1; transform: none; } }
+@media (max-width: 1050px) {
+  .game[data-view='stage'] .channel-presence { font-size: 0 !important; gap: 0; }
+}
+@media (max-width: 540px) {
+  .task-attachment { padding: 12px; gap: 9px; grid-template-columns: 30px minmax(0,1fr) 20px; }
+  .task-icon { width: 30px; height: 36px; }
+  .task-copy strong { font-size: 18px; }
+  .task-description { font-size: 16px; }
+  .channel-presence { font-size: 9px !important; }
+  .puzzle-context { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

@@ -4,6 +4,8 @@
 
 `message-windows.css` is the final interaction layer: X buttons, the pending-message status, invitation context inside the puzzle, restore controls, and Zeno’s red modal with backdrop blur. `js/window-motion.js` handles short message/window motions and cancels them on reset. The animation does not decide cryptographic success or message delivery.
 
+`desktop-motion.css` (loaded before `message-windows.css`) and `js/desktop-motion.js` add the teammate's chat attachments, window layout transitions, message arrivals and Zeno reveal. The merge keeps the requested 30/70 layout, actual pending-message flight and single red modal. Minimize, X, Escape, attachments and the dock share the same state-preserving window lifecycle; there is no second reveal dialog or competing resume bar. Window scaling is uniform to preserve sprite proportions. Completed attachments become read-only history, and restarting clears them.
+
 Visual thesis: a lilac pixel desktop with cream speech balloons, stepped ink outlines, green primary keys and pink send/reply accents, matching the user's supplied pixel-window reference.
 
 Content plan: meet Alice in person on the balcony → return to Bob’s desk → give every text message a speech balloon → distinguish selected replies and the send button → carry the same window/balloon/control vocabulary through mathematics, interception, the protected retry, and dialogs.

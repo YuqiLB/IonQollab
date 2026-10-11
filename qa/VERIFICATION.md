@@ -1,5 +1,13 @@
 # Qrush verification
 
+## Frontend merge — 2026-10-11
+
+- Combined `201f303` (Alice task attachments and desktop motion) with `e792e70` (pending invitations and red Zeno popup). Conflicts in `index.html` and `main.js` were resolved by sharing one window lifecycle rather than introducing duplicate dialogs or restore bars.
+- Alice's RSA/PQ attachments and Zeno's attack attachment open/resume the corresponding existing puzzle or modal. Minimize, X and Escape preserve the mounted form and current step. Completion marks the attachment as read-only history. The actual sent invitation still automatically opens encryption and stays pending until its packet is released.
+- Incoming message/reveal animations and chat layout transitions are retained, with uniform scaling and reduced-motion support. The requested 30/70 desktop and stacked phone geometry is retained. The red popup still owns the full interception/recovery sequence and frosted backdrop.
+- Full desktop/mobile story suite passes, including selected-location endings, real toy decryption, disconnected-live failure, duplicate submission and stale-result protection. Window checks cover desktop, phone, 320×480 and 844×390. Updated captures are in this directory and [windows/](windows/README.md).
+- Math suite remains at its pre-merge 10/11 baseline, with the same expected-exception failure described below. The RSA/quantum modules and Python contracts have no changes in either side of this frontend merge. No real quantum job was run.
+
 ## Pending invitation and Zeno popup — 2026-10-11
 
 - Both invitation choices open their encryption window from the actual message. The bubble remains “Encrypting…” until the RSA lesson releases its computed packet. The invitation remains visible above the steps. Reduced motion skips the flight and window movement.
