@@ -117,20 +117,29 @@ let browser;
   const openingReply = await page.locator('#suggestions button').last().innerText();
   assert.equal(await page.locator('#message').inputValue(), openingReply);
   assert.equal(await page.locator('.message.user').count(), 0, 'selecting previews without sending');
+  // A wider, more legible layout may fit all three opening messages. Exercise
+  // reading-position preservation only after making the log actually scrollable.
+  const readingViewport = page.viewportSize();
+  await page.setViewportSize({ width: readingViewport.width, height: 650 });
+  assert(await page.locator('#messages').evaluate(m => m.scrollHeight > m.clientHeight + 45), 'reading-position check requires scrollable history');
   await page.locator('#send').evaluate(b => { b.click(); b.click(); });
   await page.locator('#messages').evaluate(m => { m.dispatchEvent(new WheelEvent('wheel')); m.scrollTop = 0; });
   await ready(page);
   assert.equal(await page.locator('#messages').evaluate(m => m.scrollTop), 0, 'new messages must not pull a reader away');
+  await page.setViewportSize(readingViewport);
   await expectPortrait(page, 'blushing');
   assert.deepEqual(await page.locator('#portrait').evaluate(image => [image.clientWidth, image.clientHeight]), portraitSize, 'expression swaps must keep the same frame dimensions');
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-flustered.png') });
   assert.equal(await page.locator('.message.user').count(), 1, 'duplicate send only sends one reply');
   assert.equal(await page.locator('#message').inputValue(), '', 'new phase starts with an empty preview');
   assert(await page.locator('#send').isDisabled());
+  await page.getByRole('button', { name: 'New messages ↓', exact: true }).click();
+  assert(await page.locator('#new-messages').isHidden(), 'returning to the latest message clears the history control');
+  await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-pixel-texting.png') });
   const invitation = await chooseReply(page);
   await page.locator('#prime-p').waitFor();
   await page.waitForTimeout(700);
-  assert.equal(await page.locator('.portrait-panel').evaluate(p => getComputedStyle(p).filter), 'blur(8px)');
+  assert.equal(await page.locator('.portrait-panel').evaluate(p => getComputedStyle(p).filter), 'none', 'pixel artwork stays crisp during mathematics');
   assert.match(await page.locator('#stage-subtitle').innerText(), /encrypt the invitation/);
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-primes.png') });
   for (const [p, q, pattern] of [['', '', /whole prime/], ['4', '5', /must be prime/], ['3', '3', /distinct/], ['3', '7', /only 3 and 5/]]) {
@@ -201,7 +210,7 @@ let browser;
   await start(page);
   assert.equal(await page.locator('.message.user').count(), 0);
   assert.equal(await page.locator('.message.alice').count(), 3);
-  console.log('PASS: complete desktop loop, click-anywhere intro, guarded entrance, Alice avatar, blurred math scene, choices, recovery, replay.');
+  console.log('PASS: complete desktop loop, click-anywhere intro, guarded entrance, Alice avatar, crisp pixel math scene, choices, recovery, replay.');
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, reducedMotion: 'reduce' });
   mobile.on('pageerror', e => errors.push(e.message));

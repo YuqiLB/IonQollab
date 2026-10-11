@@ -1,0 +1,32 @@
+{
+  "result": "passed",
+  "browser": "155.0.8059.39",
+  "concepts": [
+    "a",
+    "b",
+    "c"
+  ],
+  "viewports": [
+    "1440x900",
+    "390x844",
+    "320x568",
+    "844x390"
+  ],
+  "packet": {
+    "bytes": 51,
+    "blocks": 153
+  },
+  "pageErrors": [],
+  "checks": [
+    "actual packet equality",
+    "encrypt/send/anticipation/impact/recovery",
+    "full and mid-transition replay",
+    "skip",
+    "cross-concept cancellation",
+    "keyboard Enter/Space/focus",
+    "reduced motion",
+    "dialog Escape",
+    "sprite proportions and loading",
+    "horizontal overflow and action/footer separation"
+  ]
+}

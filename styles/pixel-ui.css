@@ -1,0 +1,339 @@
+/* Qrush — reference-inspired pixel windows and speech balloons.
+   Presentation only. The production story and crypto remain in their modules. */
+:root {
+  color-scheme: light;
+  --ink: #262234;
+  --paper: #fffef8;
+  --lilac: #7975e8;
+  --lavender: #e7e3ff;
+  --green: #74e970;
+  --pink: #fa70cf;
+  --bg: var(--lilac);
+  --panel: var(--paper);
+  --line: var(--ink);
+  --ivory: var(--ink);
+  --muted: #5c5475;
+  --cyan: #255332;
+  --blue: #45459c;
+  --rose: #8d225f;
+  --pixel: 'Bitcount Prop Single', monospace;
+  --sans: 'Handjet', sans-serif;
+  --bubble: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' shape-rendering='crispEdges'%3E%3Cpath fill='%23262234' d='M8 0h8v2h4v2h2v4h2v8h-2v4h-2v2h-4v2H8v-2H4v-2H2v-4H0V8h2V4h2V2h4z'/%3E%3Cpath fill='%23fffef8' d='M8 2h8v2h4v4h2v8h-2v4h-4v2H8v-2H4v-4H2V8h2V4h4z'/%3E%3C/svg%3E");
+  --bubble-pink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' shape-rendering='crispEdges'%3E%3Cpath fill='%23262234' d='M8 0h8v2h4v2h2v4h2v8h-2v4h-2v2h-4v2H8v-2H4v-2H2v-4H0V8h2V4h2V2h4z'/%3E%3Cpath fill='%23f9d4ef' d='M8 2h8v2h4v4h2v8h-2v4h-4v2H8v-2H4v-4H2V8h2V4h4z'/%3E%3C/svg%3E");
+  --tail: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18' shape-rendering='crispEdges'%3E%3Cpath fill='%23262234' d='M0 0h24v4h-4v4h-4v4h-4v4H8v2H4V4H0z'/%3E%3Cpath fill='%23fffef8' d='M4 0h16v2h-4v4h-4v4H8v4H6V2H4z'/%3E%3C/svg%3E");
+  --tail-pink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18' shape-rendering='crispEdges'%3E%3Cpath fill='%23262234' d='M0 0h24v4h-4v4h-4v4h-4v4H8v2H4V4H0z'/%3E%3Cpath fill='%23f9d4ef' d='M4 0h16v2h-4v4h-4v4H8v4H6V2H4z'/%3E%3C/svg%3E");
+  font-size: 16px;
+}
+
+/* Percentage slices refer to the SVG viewBox even without raster dimensions. */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Hard-edged controls. Shadows are solid, and movement is a single key press. */
+button {
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  min-height: 42px;
+  padding: 9px 14px;
+  font-size: 17px;
+  transition: background 80ms steps(1), translate 80ms steps(1), box-shadow 80ms;
+}
+button:hover:not(:disabled) { background: #e4ddff; border-color: var(--ink); }
+button:active:not(:disabled) { translate: 2px 2px; box-shadow: 1px 1px 0 var(--ink); }
+button:disabled { opacity: .5; box-shadow: none; }
+button.primary { background: var(--green); color: var(--ink); border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+button.primary:hover:not(:disabled) { background: #a3f39d; }
+button.rose { background: var(--pink); color: var(--ink); border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible,
+select:focus-visible, [tabindex]:focus-visible { outline: 3px solid #9b226c; outline-offset: 3px; }
+.quiet { box-shadow: none; color: #4e426e; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; }
+.quiet:hover:not(:disabled) { color: var(--ink); background: #e4ddff; }
+.icon-button { color: var(--ink); background: var(--pink); border: 2px solid var(--ink); min-width: 42px; }
+a { color: #4f3695; }
+
+/* One scene, two pixel windows. Existing scrolling remains inside the UI. */
+.game { grid-template-columns: 42% minmax(0, 1fr); gap: 24px; padding: 28px; background: var(--lilac); }
+.game::after { display: none; }
+.observatory { opacity: .18; image-rendering: pixelated; }
+.portrait-panel { border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); background: #a2a0ef; }
+.portrait-panel::before {
+  content: 'ALICE / LATE SHIFT';
+  position: absolute; top: 0; left: 0; right: 0; z-index: 2;
+  height: 38px; padding: 9px 14px; border-bottom: 3px solid var(--ink);
+  background: #c3bcff; color: var(--ink); font: 16px/1 var(--pixel); letter-spacing: 1px;
+}
+.portrait-panel::after {
+  content: 'QUANTUM LABORATORY · 2042';
+  position: absolute; bottom: 14px; left: 14px; z-index: 2;
+  padding: 7px 10px; border: 2px solid var(--ink); background: var(--paper);
+  color: var(--ink); font: 12px/1 var(--pixel);
+}
+.portrait-wrap { inset: 46px 8px 0; animation: none; }
+.portrait-wrap img { filter: none; }
+.romance-heart { color: #eb439e; text-shadow: 3px 0 var(--ink), -3px 0 var(--ink), 0 3px var(--ink), 0 -3px var(--ink); }
+.conversation-panel {
+  padding: 0; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink);
+  background: var(--lavender); color: var(--ink);
+}
+.pixel-titlebar {
+  min-height: 38px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 14px; border-bottom: 3px solid var(--ink); background: #c3bcff;
+  font: 16px/1.2 var(--pixel);
+}
+.pixel-titlebar>span:last-child { font-size: 21px; color: #652051; }
+.chat-view { padding: 15px 20px 16px; }
+.chat-contact { padding-bottom: 12px; border-bottom: 2px solid #aaa1cd; gap: 12px; }
+.contact-avatar { width: 48px; height: 62px; border: 2px solid var(--ink); background: var(--paper); }
+.chat-contact strong { font: 600 25px/1.1 var(--pixel); }
+.chat-contact div>span { color: #5c5273; font-size: 14px; }
+.game[data-view='stage'] .conversation-panel { background: var(--lavender); }
+.game[data-view='stage'] .portrait-panel { filter: none; opacity: 1; transform: none; }
+.game[data-view='stage'] .observatory { filter: none; transform: none; }
+
+/* The texting itself is pixel art: stepped balloons, directional tails, ink. */
+.messages { padding: 18px 8px 18px 2px; scrollbar-color: #736393 #e7e3ff; scrollbar-width: thin; }
+.message { max-width: 89%; width: fit-content; margin: 0 0 22px; text-shadow: none; animation: pixel-arrive 160ms steps(3, end) both; }
+.message-label { color: #493b69; font: 12px/1.2 var(--pixel); letter-spacing: 1px; margin: 0 8px 5px; }
+.message-text {
+  position: relative; border: 8px solid transparent; border-image: var(--bubble) 33.333333% fill / 8px / 0 stretch;
+  background: none; padding: 9px 12px; color: var(--ink); font: 20px/1.45 var(--pixel); text-align: left;
+}
+.message:not(.system) .message-text::after {
+  content: ''; position: absolute; left: 10px; bottom: -18px; width: 24px; height: 18px;
+  background: var(--tail) center / 100% 100% no-repeat; image-rendering: pixelated;
+}
+.message.user .message-text { color: var(--ink); border-image-source: var(--bubble-pink); text-align: left; }
+.message.user .message-label { color: #78265d; }
+.message.user .message-text::after { left: auto; right: 10px; transform: scaleX(-1); background-image: var(--tail-pink); }
+.message-note { color: #66526d; font-size: 12px; margin: 17px 8px 0; line-height: 1.35; }
+.message.system { width: 100%; max-width: 100%; margin: 16px 0 20px; }
+.message.system .message-text { border: 2px dashed #9b90bc; background: #f4f0ff; padding: 10px 12px; font-size: 13px; line-height: 1.55; color: #52456a; }
+.message.rival .message-label { color: #8d225f; }
+.message.rival .message-text { color: var(--ink); border-image-source: var(--bubble-pink); }
+.message.rival .message-text::after { background-image: var(--tail-pink); }
+.message.leaked .message-text { border-right-width: 8px; padding-right: 12px; }
+.typing { color: #5c5273; font-size: 13px; min-height: 24px; text-shadow: none; }
+.new-messages { position: static; flex-shrink: 0; align-self: center; margin: 0 0 6px; min-height: 34px; color: var(--ink); background: var(--green); border-color: var(--ink); padding: 7px 12px; font-size: 14px; }
+.composer { padding-top: 6px; }
+.composer>label { color: #514267; font-size: 11px; line-height: 1.3; letter-spacing: 1px; margin: 2px 0 9px; }
+.suggestions { gap: 8px; margin-bottom: 12px; padding-right: 4px; }
+.suggestions button { background: var(--paper); color: var(--ink); border: 2px solid var(--ink); border-radius: 0; font-size: 16px; line-height: 1.25; padding: 8px 11px; min-height: 44px; }
+.suggestions button[aria-pressed='true'] { background: #b7f6a9; border-color: var(--ink); color: #25382a; }
+.compose-box { background: var(--paper); border: 2px solid var(--ink); box-shadow: inset 2px 2px 0 #c9c1da; padding: 6px 8px 6px 12px; gap: 10px; }
+.compose-box:focus-within { border-color: #8d225f; }
+textarea { font: 18px/1.35 var(--pixel); color: var(--ink); height: 60px; }
+textarea::placeholder { color: #71657f; }
+.send-button { background: var(--pink); border: 2px solid var(--ink); color: var(--ink); box-shadow: 3px 3px 0 var(--ink); width: 46px; height: 46px; font-size: 28px; padding: 0; }
+.send-button:hover:not(:disabled) { background: #ffa5e3; }
+.compose-meta { color: #5c5273; font-size: 11px; line-height: 1.3; margin-top: 8px; }
+.field-error { color: #9d2044; }
+.story-actions { gap: 10px; padding: 5px 4px 10px 0; }
+.story-actions button { font-size: 17px; }
+.composer.inactive { opacity: .8; }
+
+/* The educational and antagonist screens use the same visual vocabulary. */
+.stage { padding: 20px 22px 18px; scrollbar-color: #736393 #e7e3ff; }
+.stage h2 { font: 600 clamp(26px,2.3vw,36px)/1.15 var(--pixel); color: var(--ink); text-shadow: none; margin-bottom: 10px; }
+.stage-subtitle { color: #5c5273; font-size: 16px; line-height: 1.45; }
+.stage-caption { color: #443951; font-size: 18px; line-height: 1.45; }
+.stage-body { gap: 14px; }
+.stage-body svg { max-height: 300px; }
+.stage-nav { padding: 0 4px 4px 0; }
+.stage-nav button { font-size: 18px; min-height: 52px; padding: 12px 16px; }
+.motion-controls { gap: 18px; margin-top: 9px; }
+.motion-controls .quiet { font-size: 15px; }
+.motion-controls>span:last-child { color: #625376; }
+.prime-form { background: var(--paper); border: 2px solid var(--ink); padding: 24px 20px; box-shadow: 4px 4px 0 #afa3cf; }
+.prime-inputs label { color: #2d6538; }
+.prime-inputs label:last-child { color: #654096; }
+.prime-inputs input { background: #f5f0ff; border: 2px solid var(--ink); color: var(--ink); box-shadow: inset 2px 2px 0 #c9c1da; }
+.prime-help { color: #51465f; font-size: 17px; line-height: 1.5; }
+.math-svg text { fill: var(--ink); font-family: var(--pixel); }
+.math-svg { shape-rendering: crispEdges; }
+.math-svg .cyan { fill: #28613a; }
+.math-svg .blue { fill: #554292; }
+.math-svg .rose { fill: #8d225f; }
+.math-svg .muted { fill: #625376; }
+.math-svg .line { stroke: #61536f; stroke-width: 2; }
+.math-svg .tile { fill: #fffef8; stroke: var(--ink); stroke-width: 2; }
+.math-svg .accent-tile, .math-svg .token { fill: #c7f3b4; stroke: var(--ink); stroke-width: 2; }
+.math-svg .key-rose { fill: #f9d4ef; stroke: var(--ink); stroke-width: 2; }
+.math-svg [fill='#8bd8e5'] { fill: #409a52; }
+.math-svg [fill='#91a9fb'] { fill: #a58cdd; }
+.math-svg [stroke='#8bd8e5'] { stroke: #409a52; }
+.math-svg [fill='#54637b'] { fill: #716381; }
+.math-equation { color: #385b3d; }
+.packet-preview { border: 2px solid var(--ink); background: #f8fff0; color: #335638; font: 16px/1.5 var(--pixel); }
+.math-small { color: #625376; font-size: 15px; }
+.mode-control { border-bottom: 2px solid #aaa1cd; }
+.mode-control label, .mode-indicator { color: #5c5273; }
+.mode-control select { background: var(--paper); border: 2px solid var(--ink); color: var(--ink); border-radius: 0; font-size: 14px; padding: 5px 7px; }
+.mode-control .quiet { font-size: 13px; }
+.mode-indicator { font-size: 13px; }
+.rival-interruption { background: #f1c9e8; border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); margin: 28px 16px 18px; padding: 0 16px 12px; }
+.rival-speech { background: var(--paper); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); transform: rotate(-3deg); }
+.rival-speech .message-label { color: #8d225f; }
+.rival-speech p { color: var(--ink); font: 600 22px/1.25 var(--pixel); }
+.rival-art .rival-sprite { width: 136px; height: 178px; max-width: 45%; }
+.rival-sprite { filter: none; }
+.rival-avatar p { color: #643553; font-size: 16px; }
+.scope-note { color: #625376; }
+.job-status { background: var(--paper); border: 2px solid var(--ink); color: var(--ink); font-size: 16px; }
+.job-status.error { background: #ffe0e4; color: #8f1f3c; }
+.job-status.success { background: #d7f5c6; color: #2c5734; }
+.job-status .quiet { color: #4f3695; }
+.measurement { color: #5c5273; }
+.measurement .bar { background: #74d76d; border: 2px solid var(--ink); }
+.result-label { color: #8d225f; font-size: 13px; }
+.leak-quote { background: #f9d4ef; color: var(--ink); border: 2px solid var(--ink); font-size: 19px; line-height: 1.45; }
+.rival-defeat { border: 2px solid var(--ink); background: #d7f5c6; box-shadow: 3px 3px 0 #7a9e6c; }
+.rival-defeat p { color: #314631; font-size: 19px; }
+.rival-defeat .message-label { color: #365e37; }
+.ending-stamp { color: #8d225f; font-size: 22px; }
+.security-note { color: #335638; border: 2px solid var(--ink); background: #d7f5c6; font-size: 14px; }
+
+/* Intro and explanation dialog are windows, too. */
+.start-screen { background: #7975e87d; backdrop-filter: none; -webkit-backdrop-filter: none; padding: 28px; }
+.intro-content { width: min(100%,780px); position: relative; padding: 28px 32px; background: var(--paper); border: 3px solid var(--ink); box-shadow: 8px 8px 0 var(--ink); text-shadow: none; }
+.intro-content::before { content: 'QRUSH / A QUANTUM LOVE STORY'; display: block; background: #c3bcff; border-bottom: 3px solid var(--ink); padding: 12px 18px; margin: -28px -32px 28px; font: 13px/1.2 var(--pixel); letter-spacing: 1px; }
+.intro-logo { color: var(--ink); font-size: 64px; letter-spacing: 0; margin-bottom: 20px; }
+.intro-logo span { color: #a42c73; }
+.intro-content h2 { color: var(--ink); font: 600 30px/1.2 var(--pixel); margin-bottom: 18px; }
+.intro-story { color: #443951; font: 400 20px/1.45 var(--pixel); }
+.intro-story strong { color: var(--ink); font-weight: 600; }
+.intro-story p { margin-bottom: 16px; }
+.start-prompt { display: table; background: var(--green); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); color: var(--ink); padding: 12px 18px; font: 600 19px/1.2 var(--pixel); letter-spacing: 0; margin-top: 26px; animation: none; }
+.start-hitarea { box-shadow: none; }
+.start-hitarea:active:not(:disabled) { translate: none; box-shadow: none; }
+.start-hitarea:focus-visible { outline: 3px dashed var(--ink); outline-offset: -12px; }
+dialog { background: var(--paper); border: 3px solid var(--ink); box-shadow: 7px 7px 0 var(--ink); color: var(--ink); padding: 24px 26px; }
+dialog::backdrop { background: #302653a8; }
+.dialog-head { background: #c3bcff; border-bottom: 3px solid var(--ink); padding: 7px 12px; margin: -24px -26px 22px; }
+.dialog-head .eyebrow { color: var(--ink); }
+dialog h2 { font-size: 30px; }
+dialog p { font-size: 17px; line-height: 1.5; color: #51465f; }
+dialog strong { color: var(--ink); }
+.run-report { border: 2px solid var(--ink); background: #e7e3ff; }
+hr { border-color: #aaa1cd; }
+.pink, .eyebrow { color: #8d225f; }
+
+@keyframes pixel-arrive { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+
+/* Compact screens keep both choices and send reachable, with internal scroll. */
+@media (min-width:1800px) {
+  .game { grid-template-columns: 44% minmax(0,1fr); }
+  .conversation-panel { padding: 0; justify-self: stretch; }
+}
+@media (max-width:1050px) and (min-width:701px) {
+  .game { grid-template-columns: 36% minmax(0,1fr); gap: 16px; padding: 20px; }
+  .conversation-panel { padding: 0; }
+  .chat-view { padding: 12px 15px; }
+  .message-text { font-size: 18px; }
+  .portrait-panel::after { font-size: 9px; left: 8px; bottom: 8px; padding: 6px; }
+}
+@media (max-width:700px) {
+  .game { grid-template-columns: minmax(0,1fr); grid-template-rows: 152px minmax(0,1fr); padding: 12px; gap: 12px; }
+  .portrait-panel, .conversation-panel { box-shadow: 4px 4px 0 var(--ink); }
+  .portrait-panel::before { height: 28px; padding: 6px 9px; font-size: 12px; }
+  .portrait-panel::after { font-size: 9px; left: 8px; bottom: 8px; max-width: 100px; line-height: 1.3; padding: 5px; }
+  .portrait-wrap { inset: 29px 5px 0; }
+  .romance-heart { font-size: 22px; right: 20%; top: 32%; }
+  .conversation-panel { padding: 0; }
+  .pixel-titlebar { min-height: 29px; padding: 4px 10px; font-size: 13px; }
+  .pixel-titlebar>span:last-child { font-size: 17px; }
+  .chat-view { padding: 10px 12px 11px; }
+  .chat-contact { gap: 9px; padding-bottom: 8px; }
+  .contact-avatar { width: 32px; height: 42px; }
+  .chat-contact strong { font-size: 21px; }
+  .chat-contact div>span { font-size: 11px; margin-top: 2px; }
+  .messages { padding: 13px 4px 12px 0; }
+  .message { max-width: 94%; margin-bottom: 21px; }
+  .message-label { font-size: 10px; margin-bottom: 3px; }
+  .message-text { font-size: 17px; line-height: 1.35; padding: 6px 8px; }
+  .message.system .message-text { font-size: 12px; padding: 8px; }
+  .message-note { font-size: 10px; }
+  .typing { min-height: 19px; font-size: 11px; }
+  .composer>label { font-size: 9px; margin: 2px 0 6px; letter-spacing: .6px; }
+  .suggestions { gap: 6px; margin-bottom: 10px; }
+  .suggestions button { padding: 7px 8px; font-size: 14px; min-height: 40px; }
+  .compose-box { padding: 3px 6px 3px 8px; gap: 8px; }
+  textarea { font-size: 16px; height: 49px; }
+  .send-button { width: 40px; height: 40px; min-height: 40px; }
+  .compose-meta { font-size: 9px; gap: 8px; margin-top: 6px; }
+  .stage { padding: 13px 12px; }
+  .stage h2 { font-size: 26px; }
+  .stage-subtitle { font-size: 14px; }
+  .stage-caption { font-size: 16px; }
+  .stage-nav button { font-size: 16px; min-height: 48px; padding: 10px; }
+  .stage-body svg { max-height: 240px; }
+  .motion-controls { gap: 10px; }
+  .motion-controls .quiet { font-size: 13px; }
+  .prime-form { padding: 15px 12px; }
+  .prime-inputs { gap: 12px; }
+  .prime-inputs input { width: 62px; }
+  .prime-help { font-size: 15px; }
+  .mode-control .quiet, .mode-indicator { font-size: 11px; }
+  .mode-control select { font-size: 13px; }
+  .rival-interruption { margin: 24px 10px 15px; padding: 0 10px 10px; }
+  .rival-speech { padding: 10px; }
+  .rival-speech .message-label { font-size: 10px; }
+  .rival-speech p { font-size: 19px; }
+  .rival-art { gap: 12px; }
+  .rival-art .rival-sprite { width: 102px; height: 134px; }
+  .rival-avatar { flex-wrap: wrap; }
+  .rival-avatar p { flex-basis: 100%; }
+  .story-actions button { font-size: 15px; min-height: 44px; }
+  .start-screen { padding: 18px; }
+  .intro-content { padding: 18px; }
+  .intro-content::before { margin: -18px -18px 18px; font-size: 10px; padding: 10px; }
+  .intro-logo { font-size: 44px; margin-bottom: 15px; }
+  .intro-content h2 { font-size: 25px; margin-bottom: 14px; }
+  .intro-story { font-size: 17px; line-height: 1.35; }
+  .intro-story p { margin-bottom: 12px; }
+  .start-prompt { font-size: 16px; padding: 10px 12px; margin-top: 18px; }
+  dialog { padding: 20px; }
+  .dialog-head { margin: -20px -20px 18px; }
+  dialog p { font-size: 16px; }
+}
+@media (max-height:560px) {
+  .game { padding: 10px; gap: 12px; }
+  .pixel-titlebar { min-height: 27px; font-size: 12px; padding-block: 3px; }
+  .chat-view { padding: 6px 10px 8px; }
+  .chat-contact { padding-bottom: 5px; gap: 7px; }
+  .contact-avatar { width: 24px; height: 31px; }
+  .chat-contact strong { font-size: 18px; }
+  .chat-contact div>span { font-size: 10px; margin-top: 0; }
+  .message-text { font-size: 16px; }
+  .typing { min-height: 16px; font-size: 10px; }
+  .composer>label { font-size: 9px; margin: 2px 0 5px; }
+  .suggestions { margin-bottom: 8px; gap: 5px; }
+  .suggestions button { min-height: 32px; font-size: 13px; padding: 5px 7px; }
+  .compose-box { padding: 2px 6px; }
+  textarea { height: 42px; font-size: 15px; }
+  .send-button { width: 36px; height: 36px; min-height: 36px; }
+  .compose-meta { font-size: 8px; margin-top: 5px; }
+  .stage { padding: 12px; }
+  .stage h2 { font-size: 26px; }
+  .stage-caption { font-size: 16px; }
+  .start-screen { padding: 14px 20px; }
+  .intro-content { padding: 16px 20px; }
+  .intro-content::before { margin: -16px -20px 12px; padding: 7px 12px; font-size: 10px; }
+  .intro-logo { font-size: 34px; margin-bottom: 10px; }
+  .intro-content h2 { font-size: 23px; margin-bottom: 8px; }
+  .intro-story { font-size: 16px; line-height: 1.25; }
+  .intro-story p { margin-bottom: 8px; }
+  .start-prompt { margin-top: 14px; font-size: 15px; padding: 8px 12px; }
+}
+@media (max-width:700px) and (max-height:560px) {
+  .game { grid-template-rows: 68px minmax(0,1fr); gap: 10px; }
+  .portrait-panel::before { height: 22px; padding: 4px 8px; font-size: 10px; }
+  .portrait-panel::after { display: none; }
+  .portrait-wrap { inset: 22px 6px 0; }
+  .romance-heart { font-size: 15px; }
+  .suggestions { max-height: 82px; overflow: auto; padding-bottom: 4px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

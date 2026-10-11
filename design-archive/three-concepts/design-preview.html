@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#292332">
+  <title>Qrush — three ways to lose a private message</title>
+  <link rel="icon" href="../../assets/heart.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./preview/concepts.css">
+</head>
+<body>
+  <header class="review-bar">
+    <a class="review-brand" href="../../" aria-label="Qrush original game">Qrush<span>♥</span></a>
+    <nav aria-label="Visual concepts">
+      <a href="#a" data-concept="a"><b>A</b><span>Intimate handheld</span></a>
+      <a href="#b" data-concept="b"><b>B</b><span>Graphic confrontation</span></a>
+      <a href="#c" data-concept="c"><b>C</b><span>Hijacked interface</span></a>
+    </nav>
+    <span class="review-note">DESIGN STUDIES / 01–03</span>
+  </header>
+  <main id="preview" tabindex="-1"></main>
+  <p class="sr-only" id="announcement" role="status" aria-live="polite" aria-atomic="true"></p>
+  <dialog id="packet-dialog" aria-labelledby="packet-title">
+    <form method="dialog"><button class="dialog-close" aria-label="Close packet details">Close ×</button></form>
+    <p class="eyebrow">BEHIND THE SCENE</p>
+    <h2 id="packet-title">An envelope, not a promise.</h2>
+    <p>The invitation is encrypted locally by Qrush’s existing toy RSA code: p = 3, q = 5, n = 15, e = d = 3. These tiny, unpadded keys offer no security.</p>
+    <p>The interception is scripted. Zeno copies the packet; this preview does not run a quantum job or decrypt it. The moving envelope is a visual metaphor, not a trace of network traffic. Nothing is sent to a server.</p>
+    <p>Qrush is set in a fictional future. This scene does not demonstrate present-day quantum hardware breaking deployed messaging encryption.</p>
+    <h3 id="packet-label">Your actual packet</h3>
+    <pre id="packet-data">Encrypt the message to create its packet.</pre>
+  </dialog>
+  <noscript>Enable JavaScript to play the three local concepts.</noscript>
+  <script type="module" src="./preview/concepts.js"></script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 # Qrush
 
+The game uses the reference-inspired [pixel UI skin](styles/README.md). The three rejected design studies, including their screenshots and tooling, are isolated in [design-archive/three-concepts](design-archive/three-concepts/README.md). That archive is not loaded by the game and can be removed as one folder.
+
 A playable, deterministic quantum love story for the IonQ × Qollab hackathon. Play as Bob on a late shift at the Quantum Laboratory. Text your coworker Alice, choose an invitation, watch Zeno recover its toy RSA ciphertext, and arrange a protected retry through an **illustrative** post-quantum exchange.
 
 ## Download and run
@@ -27,7 +29,7 @@ To stop the server, press **Ctrl+C** in the terminal. There is no `npm install` 
 
 Do not open `index.html` directly: the JavaScript modules need an HTTP server. The included server serves local files only; it is not an application backend.
 
-For Qollab, use **one JS / Qiskit project**. Copy the root `index.html`, `main.js`, `main.css`, plus `js/`, `assets/`, and `quantum/`. No JSX, npm build, Vite runtime, separate provider, API key, or hosted backend is required. The fonts load from Google Fonts through the import in `main.css`. The pre-existing `frontend/` Vite scaffold is retained but is not the game entry point.
+For Qollab, use **one JS / Qiskit project**. Copy the root `index.html`, `main.js`, `main.css`, plus `styles/`, `js/`, `assets/`, and `quantum/`. No JSX, npm build, Vite runtime, separate provider, API key, or hosted backend is required. Bitcount Prop Single and Handjet load from Google Fonts through `main.css`. The pre-existing `frontend/` Vite scaffold is retained but is not the game entry point. Do not include `design-archive/` in the game handoff.
 
 ## What runs
 
@@ -57,10 +59,10 @@ The adapter in `js/quantum-adapter.js` converts `.toJs()` proxies and nested Map
 
 ## Controls and accessibility
 
-The observatory fills the visible viewport, including on mobile. Alice and the transparent dialogue share a single panoramic background. There is no outer header, footer, reset button or page scrolling; conversation history and long mathematics remain scrollable inside the scene. Execution settings appear within the attack sequence, and replay remains available at the ending.
+The observatory fills the visible viewport, including on mobile. Alice and the conversation use lilac pixel windows, cream speech balloons with stepped outlines, and green/pink controls. The mathematics and explanation dialog use the same visual language. There is no outer website navigation or page scrolling; conversation history and long mathematics remain scrollable inside the scene. Execution settings appear within the attack sequence, and replay remains available at the ending.
 
-- The opening shows only the blurred skyline. Click anywhere or press Enter/Space to start; Alice enters with a bounce, then gently moves in place. Her supplied sprite also appears in the chat contact header.
-- During the mathematics, the scenery and Alice blur and her whole portrait moves slightly back. All expressions share the same proportions; reduced-motion mode disables entrance, idle motion, and animated transitions.
+- The opening is a pixel window over the skyline. Click anywhere or press Enter/Space to start; Alice enters with a bounce and then stays still. Her supplied sprite also appears in the chat contact header.
+- Artwork stays crisp during the mathematics. All expressions share the same proportions; reduced-motion mode disables entrance and animated transitions.
 - Prime entry explains how the two primes build the RSA key for the waiting invitation. “Toy RSA” is explicitly defined as an insecure small-number teaching example.
 - Reply choices appear above the unchanged composer. Choose one to preview it, then use the send arrow; direct typing is disabled. Choices and send remain keyboard-accessible.
 - Direct task headings, larger Back/Next controls, Replay animation, and Skip animation. The story returns to the preserved conversation after each sequence.
@@ -95,7 +97,7 @@ The browser suite starts its own static test server on port 4175 and records scr
 
 To refresh the game PNGs after editing the Aseprite source files, run `powershell -ExecutionPolicy Bypass -File tools/export-portraits.ps1` (or pass `-AsepritePath` for another installation). The helper exports the native canvas and verifies the source files remain unchanged.
 - **Zeno and his machine:** native PNG exports of `art/sprites/redcoat_standing_136x178_v001/redcoat-standing_136x178.aseprite` (136 × 178), plus `machine_68x89.aseprite` and `redcoat-fallen_68x89.aseprite` in `art/sprites/redcoat_and_machine_68x89_v001/` (68 × 89). Refresh with `powershell -ExecutionPolicy Bypass -File tools/export-rival-sprites.ps1`; the helper checks PNG dimensions and verifies the editable sources remain unchanged.
-- **Fonts:** Bitcount Prop Single for pixel text and Handjet for other text, imported from Google Fonts in `main.css`. The unused local Pixelify Sans font and its [license](assets/fonts/OFL.txt) are retained. See [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
+- **Fonts:** the original Bitcount Prop Single and Handjet pairing is restored, imported from Google Fonts in `main.css`. The unused local Pixelify Sans font and its [license](assets/fonts/OFL.txt) are retained. See [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
 - All diagrams and observatory scenery are code-native SVG/CSS. Character sprites use the supplied artwork. No generated equation images or external runtime dependencies.
 
 Scientific references: [IBM's Shor tutorial](https://quantum.cloud.ibm.com/docs/en/tutorials/shors-algorithm) and [NIST FIPS 203, ML-KEM](https://csrc.nist.gov/pubs/fips/203/final). The latter describes key establishment: the shared secret is used with symmetric algorithms; ML-KEM does not encrypt the chat text directly. A real protocol must authenticate the public key. Homomorphic encryption is a separate concept.
