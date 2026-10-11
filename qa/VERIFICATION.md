@@ -2,7 +2,8 @@
 
 - 11 Node mathematical/adapter tests passed.
 - Automated desktop and 390px mobile full playthroughs passed in Chrome.
-- Unicode invitations (including 140 emoji), leading zeroes, safe HTML-like text, invalid and reversed primes verified.
+- Earlier typed-input verification covered Unicode invitations (including 140 emoji), leading zeroes, and safe HTML-like text. The current game uses scripted reply choices; the reversible encoding is unchanged.
+- Current browser checks cover read-only preview behavior, keyboard selection, duplicate-send prevention, both invitation choices, and invalid/reversed primes.
 - Skip/Replay animation, Back, returning to conversation, reduced motion, and restart verified.
 - Deliberate reading position preserved. Automatic following survives composer resizing.
 - Disconnected live mode remains an error; explicitly switching to samples is required.

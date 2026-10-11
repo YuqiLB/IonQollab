@@ -33,15 +33,14 @@
           <div class="typing" id="typing" aria-live="polite"><span></span></div>
           <div id="story-actions" class="story-actions"></div>
           <form id="composer" class="composer" novalidate>
-            <label for="message" id="composer-label">YOUR TURN</label>
-            <div class="compose-box"><textarea id="message" rows="2" maxlength="280" placeholder="Say something. She’s still here." aria-describedby="composer-hint compose-error"></textarea><button class="send-button" id="send" type="submit" aria-label="Send message"><span aria-hidden="true">↗</span></button></div>
-            <div class="compose-meta"><span id="composer-hint">Enter to send · Shift + Enter for a new line</span><span id="char-count">0 / 280</span></div>
+            <label for="message" id="composer-label">CHOOSE YOUR REPLY</label>
+            <div class="suggestions" id="suggestions" role="group" aria-label="Reply choices"></div>
+            <div class="compose-box"><textarea id="message" rows="2" maxlength="280" readonly tabindex="-1" placeholder="Choose a reply above…" aria-describedby="composer-hint compose-error"></textarea><button class="send-button" id="send" type="submit" aria-label="Send message" disabled><span aria-hidden="true">↗</span></button></div>
+            <div class="compose-meta"><span id="composer-hint">Choose a reply above, then send ↗</span><span id="char-count">0 / 280</span></div>
             <p id="compose-error" class="field-error" role="alert"></p>
-            <div class="suggestions" id="suggestions" aria-label="Suggested replies"></div>
           </form>
         </section>
         <section id="stage" class="stage" aria-labelledby="stage-title" hidden>
-          <div class="stage-top"><span id="stage-kicker" class="eyebrow">UNDER THE HOOD</span><button id="return-chat" class="quiet">← Conversation</button></div>
           <h2 id="stage-title" tabindex="-1"></h2><p id="stage-subtitle" class="stage-subtitle"></p>
           <div class="mode-control" id="execution-controls" hidden><label for="execution-mode">EXECUTION</label><select id="execution-mode"><option value="demo">Illustrative demo</option><option value="live">Live Qollab</option></select><span class="mode-indicator" id="mode-label">Illustrative demo—no quantum job executed.</span><button id="about-button" class="quiet">What actually ran?</button></div>
           <div id="stage-body" class="stage-body"></div>
