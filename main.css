@@ -62,6 +62,36 @@ textarea::placeholder{color:#a9b4c8}textarea:focus-visible{outline:none}
 .job-status{background:#231b3177;font-size:16px}.leak-quote{background:#30223877;font-size:18px}
 .prime-form>button{font-size:17px;min-height:44px}.math-small,.packet-preview{font-size:15px}.rival-avatar p{font-size:17px}.mode-control select,.mode-control .quiet{font-size:14px}.mode-indicator{font-size:13px}.measurements,.measurement{font-size:14px}
 
+/* Keep every stage's natural height. Short screens scroll instead of squeezing
+   the attack dialogue, diagrams and captions into the same space. */
+.stage>*,.stage-body>*{flex-shrink:0}
+.stage>.stage-body{flex:1 0 auto;min-width:0;gap:12px}
+.stage-body .visual{min-width:0}
+.stage-caption,.stage-subtitle{overflow-wrap:anywhere}
+.mode-control>*{min-width:0;max-width:100%}
+.measurements{justify-content:flex-start;overflow-x:auto;overflow-y:hidden;height:171px;padding:20px 8px 8px;gap:12px}
+.measurement{flex:1 0 54px;min-width:max-content;height:143px}
+.measurement .bar{flex-shrink:0}
+
+/* Zeno barges across the speech-box edge. The surrounding space includes the
+   diagonal's full extent, so the intrusion never covers the mathematics. */
+.rival-interruption{margin:28px 16px 18px;padding:0 16px 12px;border:1px solid #e8a4bb77;border-left:3px solid var(--rose);background:linear-gradient(135deg,#48253a88,#141d3080);box-shadow:5px 5px 0 #080f1c55}
+.rival-speech{position:relative;z-index:1;margin:-18px 0 28px;padding:12px 16px;background:#341f32;border:2px solid var(--rose);box-shadow:4px 5px 0 #0b1326;transform:rotate(-5deg);transform-origin:center;overflow-wrap:anywhere}
+.rival-speech .message-label{font-size:12px;line-height:1.5;color:#ffb5cc}
+.rival-speech p{margin:4px 0 0;font:650 clamp(22px,1.9vw,28px)/1.25 var(--sans);color:#ffe2ed}
+.rival-art{display:flex;justify-content:center;align-items:flex-end;gap:24px;min-width:0;overflow:hidden}
+.rival-sprite{display:block;object-fit:contain;image-rendering:pixelated;flex-shrink:0;filter:drop-shadow(4px 5px 0 #080e1c66)}
+.rival-art .rival-sprite{width:122px;height:160px;max-width:45%;animation:zeno-intrude .5s ease-out both}
+.rival-avatar{gap:10px;margin:10px 0;align-items:center}
+.rival-avatar .rival-sprite{width:54px;height:71px}
+.rival-avatar p{min-width:0;overflow-wrap:anywhere}
+.rival-defeat{display:flex;align-items:center;gap:18px;padding:12px 14px;margin:20px 0;border-left:2px solid var(--cyan);background:#10263299}
+.rival-defeat .rival-sprite{width:102px;height:134px;max-width:35%}
+.rival-defeat>div{min-width:0}
+.rival-defeat .message-label{color:var(--cyan);line-height:1.6}
+.rival-defeat p{font-size:21px;line-height:1.4;color:#d4e6ec;margin:8px 0;overflow-wrap:anywhere}
+@keyframes zeno-intrude{from{opacity:0;translate:60px 0}to{opacity:1;translate:0 0}}
+
 /* Start in the city; Alice only enters once the player begins. */
 .start-screen{position:absolute;inset:0;z-index:10;display:grid;place-items:center;padding:clamp(24px,5vh,64px) 28px;overflow:auto;background:#09132185;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .intro-content{width:min(100%,740px);margin:auto;pointer-events:none;text-shadow:0 2px 12px #07101d80}

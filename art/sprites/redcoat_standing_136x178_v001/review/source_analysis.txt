@@ -1,0 +1,1 @@
+redcoat-standing source: 1097x1434; alpha zero=1068879 partial=501472 opaque=2747; threshold=128; content crop=(257,12,610,1419)

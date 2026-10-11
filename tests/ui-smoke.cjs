@@ -27,6 +27,42 @@ let browser;
     assert.equal(await p.locator('#portrait').evaluate(image => getComputedStyle(image).objectFit), 'contain');
   };
   const clickNext = async p => { await p.waitForTimeout(280); await p.locator('#stage-nav button').last().click(); };
+  const assertStageLayout = async p => {
+    const problems = await p.evaluate(() => {
+      const issues = [];
+      const checkStack = selector => {
+        const children = [...document.querySelector(selector).children].filter(e => e.getClientRects().length);
+        for (let i = 1; i < children.length; i++) {
+          if (children[i - 1].getBoundingClientRect().bottom > children[i].getBoundingClientRect().top + 1) {
+            issues.push(selector + ': ' + children[i - 1].className + ' overlaps ' + children[i].className);
+          }
+        }
+      };
+      checkStack('#stage'); checkStack('#stage-body');
+      const stage = document.getElementById('stage');
+      if (stage.scrollWidth > stage.clientWidth + 1) issues.push('stage overflows horizontally');
+      const speech = document.querySelector('.rival-speech');
+      if (speech) {
+        const box = speech.getBoundingClientRect();
+        const art = document.querySelector('.rival-art').getBoundingClientRect();
+        if (box.bottom > art.top) issues.push('diagonal speech covers sprites');
+        if (box.left < stage.getBoundingClientRect().left || box.right > stage.getBoundingClientRect().right) issues.push('diagonal speech is clipped');
+      }
+      return issues;
+    });
+    if (problems.length) await p.screenshot({ animations: 'disabled', path: path.join(root, 'qa/attack-layout-failure.png') });
+    assert.deepEqual(problems, [], 'stage contents stay separated at ' + JSON.stringify(p.viewportSize()));
+  };
+  const checkAttackSizes = async p => {
+    const original = p.viewportSize();
+    for (const viewport of [{ width: 1440, height: 1000 }, { width: 1366, height: 768 }, { width: 390, height: 844 }, { width: 320, height: 480 }, { width: 844, height: 390 }]) {
+      await p.setViewportSize(viewport); await assertStageLayout(p);
+    }
+    await p.setViewportSize(original);
+  };
+  const expectRival = async (p, pose, width, height) => {
+    await p.waitForFunction(({ pose, width, height }) => [...document.querySelectorAll('.rival-' + pose)].some(image => image.complete && image.naturalWidth === width && image.naturalHeight === height), { pose, width, height });
+  };
   const ready = p => p.waitForFunction(() => !document.getElementById('message').disabled);
   const start = async p => { await p.getByRole('button', { name: 'Start Qrush', exact: true }).click(); await ready(p); };
   const chooseReply = async (p, index = 0) => {
@@ -110,20 +146,30 @@ let browser;
   for (let i = 0; i < 6; i++) await clickNext(page);
   assert.equal(await page.locator('body').getAttribute('data-phase'), 'INTERCEPT');
   await expectPortrait(page, 'surprised');
+  await expectRival(page, 'standing', 136, 178); await expectRival(page, 'machine', 68, 89);
+  await checkAttackSizes(page);
+  assert.notEqual(await page.locator('.rival-speech').evaluate(e => getComputedStyle(e).transform), 'none');
+  await page.locator('#stage').evaluate(e => { e.scrollTop = 0; });
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-interception.png') });
   await clickNext(page);
+  await checkAttackSizes(page);
   await page.locator('#execution-mode').selectOption('live');
   await page.getByRole('button', { name: 'Run quantum attack →', exact: true }).click();
   await page.locator('.job-status.error').waitFor();
+  await checkAttackSizes(page);
   assert.match(await page.locator('#job-status').innerText(), /not connected/);
   assert.equal(await page.locator('.leak-quote').count(), 0);
   await page.getByRole('button', { name: 'Explicitly switch to illustrative demo', exact: true }).click();
   await page.getByRole('button', { name: 'Run quantum attack →', exact: true }).evaluate(b => { b.click(); b.click(); });
   await page.locator('.job-status.success').waitFor();
+  await checkAttackSizes(page);
   await clickNext(page);
   assert.match(await page.locator('#stage-body').innerText(), /SAMPLE MEASUREMENTS/);
+  await checkAttackSizes(page);
+  await page.locator('#stage-body summary').click(); await checkAttackSizes(page);
+  await page.locator('#stage-body summary').click();
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-measurements.png') });
-  for (let i = 0; i < 4; i++) await clickNext(page);
+  for (let i = 0; i < 4; i++) { await clickNext(page); await checkAttackSizes(page); }
   assert.equal(await page.locator('.leak-quote').innerText(), invitation);
   assert.equal(await page.evaluate(() => window.BAD), undefined);
   await clickNext(page);
@@ -136,16 +182,21 @@ let browser;
   await clickNext(page); await clickNext(page);
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-exchange.png') });
   await clickNext(page); await clickNext(page); await ready(page);
+  await expectRival(page, 'fallen', 68, 89);
+  await page.locator('.rival-defeat').scrollIntoViewIfNeeded();
+  await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-zeno-defeated.png') });
+  await page.locator('#messages').evaluate(e => { e.scrollTop = e.scrollHeight; });
   await chooseReply(page);
   await page.getByRole('button', { name: 'Play again ↺', exact: true }).waitFor();
   assert.match(await page.locator('#messages').innerText(), /It’s a date/);
   await expectPortrait(page, 'happy');
-  assert.deepEqual([...portraitRequests].sort(), ['idle', 'blushing', 'happy', 'serious', 'surprised'].map(name => 'mira-' + name + '-68x89.png').sort(), 'only the five new runtime portraits may load');
+  assert.deepEqual([...portraitRequests].sort(), [...['idle', 'blushing', 'happy', 'serious', 'surprised'].map(name => 'mira-' + name + '-68x89.png'), 'redcoat-standing-136x178.png', 'machine-68x89.png', 'redcoat-fallen-68x89.png'].sort(), 'the five portraits and three supplied rival sprites load');
   assert.match(await page.locator('[data-draft] .message-note').innerText(), /Leaked/);
   assert.equal(await page.locator('.ending-stamp').count(), 1);
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-ending.png') });
   await page.getByRole('button', { name: 'Play again ↺', exact: true }).click();
   assert.equal(await page.locator('body').getAttribute('data-phase'), 'MENU');
+  assert.equal(await page.locator('.rival-defeat').count(), 0, 'replay clears the defeated pose');
   assert(await page.locator('#portrait').isHidden());
   await start(page);
   assert.equal(await page.locator('.message.user').count(), 0);
@@ -175,6 +226,8 @@ let browser;
   assert(await fits(mobile), 'mobile prime-entry layout must fit');
   await mobile.screenshot({ animations: 'disabled', path: path.join(root, 'qa/mobile-primes.png'), fullPage: true });
   await toIntercept(mobile);
+  await expectRival(mobile, 'standing', 136, 178); await expectRival(mobile, 'machine', 68, 89);
+  await assertStageLayout(mobile);
   assert(await fits(mobile), 'mobile circuit layout must fit');
   await mobile.getByRole('button', { name: 'Run quantum attack →', exact: true }).click();
   await mobile.locator('.job-status.success').waitFor(); await clickNext(mobile);
@@ -185,7 +238,11 @@ let browser;
   await clickNext(mobile); await mobile.getByRole('button', { name: 'Upgrade the protection →', exact: true }).waitFor();
   await mobile.getByRole('button', { name: 'Upgrade the protection →', exact: true }).click();
   for (let i = 0; i < 4; i++) await clickNext(mobile);
-  await ready(mobile); await chooseReply(mobile, 1);
+  await ready(mobile); await expectRival(mobile, 'fallen', 68, 89);
+  await mobile.locator('.rival-defeat').scrollIntoViewIfNeeded();
+  await mobile.screenshot({ animations: 'disabled', path: path.join(root, 'qa/mobile-zeno-defeated.png') });
+  await mobile.locator('#messages').evaluate(e => { e.scrollTop = e.scrollHeight; });
+  await chooseReply(mobile, 1);
   await mobile.getByRole('button', { name: 'Play again ↺', exact: true }).waitFor();
   assert(await fits(mobile));
   await mobile.waitForTimeout(200);

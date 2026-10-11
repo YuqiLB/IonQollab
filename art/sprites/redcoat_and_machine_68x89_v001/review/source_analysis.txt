@@ -1,0 +1,3 @@
+redcoat-standing source: 1097x1434; alpha zero=1068879 partial=501472 opaque=2747; threshold=128; content crop=(257,12,610,1419)
+redcoat-fallen source: 1536x1024; alpha zero=1108535 partial=464329 opaque=0; threshold=128; content crop=(33,220,1484,661)
+machine source: 1097x1434; alpha zero=611876 partial=958712 opaque=2510; threshold=128; content crop=(109,70,962,1319)

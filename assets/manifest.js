@@ -27,6 +27,12 @@ export const character = Object.freeze({
   }),
 });
 
+export const rivalSprites = Object.freeze({
+  standing: Object.freeze({ src: './assets/characters/redcoat-standing-136x178.png', width: 136, height: 178, alt: 'Zeno standing arrogantly in his red coat' }),
+  machine: Object.freeze({ src: './assets/characters/machine-68x89.png', width: 68, height: 89, alt: 'Zeno’s quantum computer' }),
+  fallen: Object.freeze({ src: './assets/characters/redcoat-fallen-68x89.png', width: 68, height: 89, alt: 'Zeno fallen in defeat after the protection upgrade' }),
+});
+
 export const storyExpressions = Object.freeze({
   INTRO: 'idle',
   INVITE: 'blushing',

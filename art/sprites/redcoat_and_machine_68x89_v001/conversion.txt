@@ -1,0 +1,6 @@
+redcoat-standing source: 1097x1434; alpha zero=1068879 partial=501472 opaque=2747; threshold=128; content crop=(257,12,610,1419)
+redcoat-fallen source: 1536x1024; alpha zero=1108535 partial=464329 opaque=0; threshold=128; content crop=(33,220,1484,661)
+machine source: 1097x1434; alpha zero=611876 partial=958712 opaque=2510; threshold=128; content crop=(109,70,962,1319)
+redcoat-standing output: canvas=68x89; fitted=38x89; offset=(15,0); sampling phase=0.75
+redcoat-fallen output: canvas=68x89; fitted=68x30; offset=(0,59); sampling phase=0.5
+machine output: canvas=68x89; fitted=65x89; offset=(1,0); sampling phase=0.5

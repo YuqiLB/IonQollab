@@ -20,6 +20,8 @@
 - Intro screenshots include desktop, 390px mobile, and 320×480 compact layouts; all remain within the viewport.
 - Story and diagram labels consistently use Bob, Alice, and Zeno. Original artwork filenames remain unchanged for provenance.
 - Existing Python files remain empty and unchanged.
+- Zeno intrusion update: all 11 mathematical/adapter tests and the full desktop/mobile browser suite pass. Layout checks cover 1440×1000, 1366×768, 390×844, 320×480, and 844×390 across the entrance, circuit, error/success states, measurements (including expanded details), and every recovery step. Stage sections and body blocks do not overlap or overflow horizontally; the tilted speech remains inside the panel and clear of the sprites.
+- The supplied standing (136×178), quantum computer (68×89), and fallen (68×89) PNGs load successfully. The native export helper verifies unchanged editable sources. The fallen pose appears after the protection upgrade and clears on replay. Desktop entrance, measurements, and desktop/mobile defeat screenshots were visually inspected.
 
 Screenshots in this directory document the tested scene, RSA stages, measurements, post-quantum exchange, and endings. Finite animations were completed for screenshots.
 

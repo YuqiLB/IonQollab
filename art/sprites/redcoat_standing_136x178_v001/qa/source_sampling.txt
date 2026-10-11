@@ -1,0 +1,1 @@
+﻿redcoat-standing: PASS: all 24208 pixels equal direct source sampling plus alpha normalization; 7587 opaque and 16621 transparent.

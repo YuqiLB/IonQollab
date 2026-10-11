@@ -1,4 +1,4 @@
-import { character, storyExpressions } from './assets/manifest.js';
+import { character, rivalSprites, storyExpressions } from './assets/manifest.js';
 import { makeKeys, encode, encrypt, decrypt, modPow, inverse } from './js/rsa.js';
 import { runAttack, liveAvailable } from './js/quantum-adapter.js';
 import { primesVisual, phiVisual, keyVisual, encodingVisual, ringVisual, sequenceVisual, circuitVisual, factorVisual, pqVisual } from './js/visuals.js';
@@ -52,6 +52,30 @@ function portrait(expression) {
   image.dataset.expression = resolved;
   $('contact-avatar').src = character[resolved];
   document.querySelector('.portrait-panel').classList.toggle('romantic', ['blushing', 'happy'].includes(resolved));
+}
+
+function rivalSprite(pose) {
+  const sprite = rivalSprites[pose];
+  const image = el('img', 'rival-sprite rival-' + pose);
+  Object.assign(image, sprite);
+  return image;
+}
+function rivalInterruption() {
+  const scene = el('aside', 'rival-interruption');
+  scene.setAttribute('aria-label', 'Zeno interrupts with his quantum computer');
+  const speech = el('div', 'rival-speech');
+  speech.append(el('div', 'message-label', 'ZENO · UNINVITED'), el('p', '', 'A private invitation? Cute. Let’s see how private.'));
+  const art = el('div', 'rival-art');
+  art.append(rivalSprite('standing'), rivalSprite('machine'));
+  scene.append(speech, art);
+  return scene;
+}
+function rivalDefeat() {
+  const scene = el('article', 'rival-defeat');
+  const copy = el('div');
+  copy.append(el('div', 'message-label', 'ZENO · DEFEATED'), el('p', '', '“Wait. My factoring trick doesn’t work on this?”'));
+  scene.append(rivalSprite('fallen'), copy);
+  $('messages').append(scene);
 }
 
 function appendMessage(role, content, note = '') {
@@ -159,7 +183,7 @@ function stageAction(action) {
   if (!action || now - lastStageAction < 250) return;
   lastStageAction = now; action();
 }
-function setStep(step) { state.step = step; renderStage(); }
+function setStep(step) { state.step = step; renderStage(); $('stage').scrollTop = 0; }
 function stageBase(title, subtitle, count) {
   $('stage-title').textContent = title; $('stage-subtitle').textContent = subtitle;
   $('step-count').textContent = count;
@@ -236,16 +260,20 @@ function intercept() {
   appendMessage('system', 'PACKET COPIED · n = 15, e = 3 and the ciphertext are visible on the channel.');
   appendMessage('rival', 'A private invitation? Cute. Let’s see how private.');
   renderStage();
+  $('stage').scrollTop = 0;
 }
 function renderIntercept() {
   stageBase(state.step === 0 ? 'Find the repeating pattern' : 'Run the quantum attack', 'Zeno copied the ciphertext. Copying it is easy. Reading it takes the next step.', '');
-  const rival = el('div', 'rival-avatar'); rival.append(el('div', 'rival-face', '>_'), el('p', '', '“If I find the factors of 15, I can recover the toy key. And maybe get to your date first.”')); $('stage-body').append(rival);
   if (state.step === 0 && state.job === 'idle') {
+    $('stage-body').append(rivalInterruption());
     visual(sequenceVisual());
     caption('The public modulus is n = 15. For a = 2, modular powers repeat. Quantum order finding estimates that repetition; at this tiny size we can also see it directly.');
     stageNavigation('See the quantum circuit →', () => setStep(1));
     return;
   }
+  const rival = el('div', 'rival-avatar');
+  rival.append(rivalSprite('standing'), rivalSprite('machine'), el('p', '', '“If I find the factors of 15, I can recover the toy key. And maybe get to your date first.”'));
+  $('stage-body').append(rival);
   visual(circuitVisual());
   const status = el('div', 'job-status ' + state.job);
   status.id = 'job-status'; status.setAttribute('role', 'status');
@@ -258,7 +286,7 @@ function renderIntercept() {
   if (state.job === 'inconclusive' && state.result) status.append(button('Inspect returned measurements', () => { const detail = el('pre', 'packet-preview', JSON.stringify(state.result.distribution, null, 2)); detail.setAttribute('aria-label', state.result.distribution_kind); status.append(detail); }, 'quiet'));
   $('stage-body').append(status);
   caption('Fictional future machine; tiny simulator demonstration. The attack targets RSA’s public-key mathematics—not AES, a production messaging service, or all end-to-end encryption.');
-  if (state.job === 'success') stageNavigation('Inspect the measurements →', () => { transition('RECOVER'); renderStage(); });
+  if (state.job === 'success') stageNavigation('Inspect the measurements →', () => { transition('RECOVER'); setStep(0); });
   else {
     const b = button(['waiting', 'submitting'].includes(state.job) ? 'Job in progress…' : state.job === 'idle' ? 'Run quantum attack →' : 'Retry quantum attack →', launchAttack, 'primary rose');
     b.disabled = ['waiting', 'submitting'].includes(state.job); $('stage-nav').replaceChildren(b);
@@ -358,6 +386,7 @@ async function retryConversation() {
   if (state.phase !== 'PQ') return;
   const epoch = generation; transition('RETRY'); setActions([]); showChat();
   appendMessage('system', 'ILLUSTRATIVE POST-QUANTUM EXCHANGE COMPLETE\nThe RSA factoring attack no longer applies to this key-establishment scheme. This is not a proof that every attack is impossible.');
+  rivalDefeat();
   if (!(await speak(['Better mathematics. Same butterflies.', 'The first invitation is still out there. Let’s make a new plan—somewhere the intercom can’t follow us.'], epoch))) return;
   updateComposer(); focusChoices();
 }

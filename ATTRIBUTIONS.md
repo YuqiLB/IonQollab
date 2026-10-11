@@ -5,6 +5,7 @@
 - The previous game portraits, screenshot crops and unused neutral exports have been removed from the runtime assets. Original creative sources and their history remain under `art/`; see the source folders' README files for their original screenshot and conversion provenance. Artwork retains its existing ownership; this project does not assert an additional artwork license.
 - Pixelify Sans: Copyright 2021 The Pixelify Sans Project Authors. Distributed under the SIL Open Font License, Version 1.1, reproduced in `assets/fonts/OFL.txt`. Original source: https://github.com/google/fonts/tree/main/ofl/pixelifysans . The font is hosted locally; no Google Fonts runtime connection.
 - Existing Python modules, package lockfiles and ignore rules are unchanged by this portrait update. No changes to teammates' frontend work are part of this asset replacement.
-- Observatory scene, heart icon, quantum/RSA diagrams, and rival avatar are code-native SVG/CSS artwork made for Qrush.
+- **Zeno and quantum computer:** user-supplied editable sprites in `art/sprites/redcoat_standing_136x178_v001/` and `art/sprites/redcoat_and_machine_68x89_v001/`. The game uses fresh native PNG exports of the 136 × 178 standing pose and the 68 × 89 machine and fallen pose. `tools/export-rival-sprites.ps1` verifies canvas sizes and unchanged source hashes.
+- Observatory scene, heart icon, and quantum/RSA diagrams are code-native SVG/CSS artwork made for Qrush.
 
 No repository-wide license file was present during the initial game implementation. This change does not invent a license for pre-existing work or supersede upstream obligations.
