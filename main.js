@@ -1,6 +1,6 @@
 import { character, rivalSprites, storyExpressions } from './assets/manifest.js';
 import { makeKeys, encode, encrypt, decrypt, modPow, inverse } from './js/rsa.js';
-import { runAttack, liveAvailable } from './js/quantum-adapter.js';
+import { runAttack, liveAvailable, lessonBase } from './js/quantum-adapter.js';
 import { primesVisual, phiVisual, keyVisual, encodingVisual, ringVisual, sequenceVisual, circuitVisual, factorVisual, pqVisual } from './js/visuals.js';
 
 const $ = id => document.getElementById(id);
@@ -17,6 +17,10 @@ const replyChoices = {
 let generation = 0, submission = 0, state, view = 'chat';
 let followMessages = true, lastStageAction = 0, userScrollUntil = 0;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+function orderOfBase(n, a) {
+  for (let r = 1; r <= n; r++) if (modPow(a, r, n) === 1) return r;
+  throw new Error('No modular order found within the bounded lesson input.');
+}
 const el = (tag, cls, content) => {
   const node = document.createElement(tag);
   if (cls) node.className = cls;
@@ -210,17 +214,17 @@ function renderRSA() {
     const fields = el('div', 'prime-inputs');
     ['p', 'q'].forEach(name => {
       const label = el('label', '', name + ' ='); const input = el('input');
-      input.type = 'text'; input.inputMode = 'numeric'; input.id = 'prime-' + name; input.name = name; input.maxLength = 5; input.autocomplete = 'off'; input.setAttribute('aria-describedby', 'prime-help prime-error');
+      input.type = 'text'; input.inputMode = 'numeric'; input.id = 'prime-' + name; input.name = name; input.maxLength = 2; input.autocomplete = 'off'; input.setAttribute('aria-describedby', 'prime-help prime-error');
       input.value = state.primeDraft[name]; input.addEventListener('input', () => { state.primeDraft[name] = input.value; });
       label.append(input); fields.append(label);
     });
-    const help = el('p', 'prime-help', 'Multiplying these primes creates n, part of the public key used to encrypt your message. This demo supports only 3 and 5, in either order.'); help.id = 'prime-help';
+    const help = el('p', 'prime-help', 'Choose two distinct odd primes with p × q ≤ 63. This lesson fixes e = 3; try (3, 5), (3, 11), (3, 17), or (5, 11). The largest circuit uses 18 qubits.'); help.id = 'prime-help';
     const error = el('p', 'field-error'); error.id = 'prime-error'; error.setAttribute('role', 'alert');
     form.append(fields, help, button('Use demo values', () => { $('prime-p').value = '3'; $('prime-q').value = '5'; state.primeDraft = { p: '3', q: '5' }; error.textContent = ''; }), error);
     const validate = () => {
       try {
         const p = $('prime-p').value.trim(), q = $('prime-q').value.trim();
-        if (!/^\d+$/.test(p) || !/^\d+$/.test(q)) throw new Error('Enter whole prime numbers in both fields. Use 3 and 5 to begin.');
+        if (!/^\d+$/.test(p) || !/^\d+$/.test(q)) throw new Error('Enter whole prime numbers in both fields. Try 3 and 5 to begin.');
         state.keys = makeKeys(Number(p), Number(q)); state.encoded = encode(state.invitation, state.keys.n);
         state.packet = encrypt(state.invitation, state.keys);
         state.selectedBlock = state.encoded.digits.findIndex((m, i) => state.packet.ciphertext[i] !== m);
@@ -229,25 +233,25 @@ function renderRSA() {
       } catch (e) { error.textContent = e.message; }
     };
     form.addEventListener('submit', e => { e.preventDefault(); validate(); }); $('stage-body').append(form);
-    caption('Toy RSA means a small teaching example: tiny numbers so we can see the mathematics. These unpadded keys are deliberately insecure; they do not provide secure chat.');
+    caption('Deliberately insecure textbook RSA: tiny parameters, no production padding. Your primes stay in the game; only their public product N is sent to the quantum attack.');
     stageNavigation('Calculate n →', validate); return;
   }
   const keys = state.keys;
   if (state.step === 1) { visual(primesVisual(keys.p, keys.q, true)); caption('Multiply the two primes. The product n = ' + keys.n + ' becomes public; the two factors are meant to stay private.'); }
   if (state.step === 2) { visual(phiVisual(keys)); caption('φ(n) counts numbers below n that share no factor with it. For two distinct primes, φ(n) = (p − 1)(q − 1) = ' + keys.phi + '.'); }
-  if (state.step === 3) { visual(keyVisual(keys)); caption('Choose e = 3, coprime to 8. The private exponent d solves e × d ≡ 1 (mod 8): here d = 3. Here e = d: even the public exponent decrypts. Factoring illustrates the recovery route; this toy never provides security.'); }
+  if (state.step === 3) { visual(keyVisual(keys)); caption('This lesson fixes e = 3. The private exponent d solves e × d ≡ 1 (mod φ(n)). These tiny textbook values are deliberately insecure; the disclaimer explains the limits.'); }
   if (state.step === 4) {
-    const byte = new TextEncoder().encode(state.invitation)[0]; visual(encodingVisual(byte, state.encoded.digits.slice(0, 3)));
-    caption('Your actual first UTF-8 byte is ' + byte + '. Each byte uses exactly three base-15 digits, including leading zeroes. Every digit is smaller than 15; Unicode round-trips too.');
+    const byte = new TextEncoder().encode(state.invitation)[0]; visual(encodingVisual(byte, state.encoded.digits.slice(0, state.encoded.width), keys.n));
+    caption('Your actual first UTF-8 byte is ' + byte + '. Each byte uses ' + state.encoded.width + ' fixed-width base-' + keys.n + ' digits, including leading zeroes. Unicode round-trips too.');
   }
   if (state.step === 5) {
-    const m = state.encoded.digits[state.selectedBlock], c = state.packet.ciphertext[state.selectedBlock]; visual(ringVisual(m));
-    caption('Selected block #' + (state.selectedBlock + 1) + ': m = ' + m + '. Multiply by m three times from 1, keeping the remainder: c = m³ mod 15 = ' + c + '. The path connects those residues.');
+    const m = state.encoded.digits[state.selectedBlock], c = state.packet.ciphertext[state.selectedBlock]; visual(ringVisual(m, keys.n, keys.e));
+    caption('Selected block #' + (state.selectedBlock + 1) + ': m = ' + m + '. Raise m to the public exponent and keep the remainder: c = m^' + keys.e + ' mod ' + keys.n + ' = ' + c + '. The path connects those residues.');
   }
   if (state.step === 6) {
-    $('stage-body').append(el('div', 'math-equation', 'c = m³ mod 15'), el('p', 'math-small', state.packet.byteLength + ' UTF-8 bytes · ' + state.packet.ciphertext.length + ' encrypted blocks'));
+    $('stage-body').append(el('div', 'math-equation', 'c = m^' + keys.e + ' mod ' + keys.n), el('p', 'math-small', state.packet.byteLength + ' UTF-8 bytes · ' + state.packet.ciphertext.length + ' encrypted blocks'));
     const packet = el('div', 'packet-preview', state.packet.ciphertext.slice(0, 54).join(' · ') + (state.packet.ciphertext.length > 54 ? ' …' : '')); $('stage-body').append(packet);
-    $('stage-body').append(el('p', 'math-small', 'Public metadata: n = 15 · e = 3 · 3 digits / byte'));
+    $('stage-body').append(el('p', 'math-small', 'Public metadata: n = ' + keys.n + ' · e = ' + keys.e + ' · ' + state.packet.width + ' digits / byte'));
     caption('The full packet contains every encrypted block and its decoding metadata. Someone on the channel can copy the envelope without knowing what it says.');
   }
   stageNavigation(state.step === 6 ? 'Send encrypted packet ↗' : ['','','Calculate φ(n) →','Choose the exponent →','Encode my message →','Encrypt a block →','Prepare the packet →'][state.step + 1] || 'Next →', state.step === 6 ? intercept : next, back);
@@ -257,24 +261,23 @@ function intercept() {
   markDraft('Toy RSA packet sent · copied by an observer');
   state.intercepted = structuredClone(state.packet);
   transition('INTERCEPT');
-  appendMessage('system', 'PACKET COPIED · n = 15, e = 3 and the ciphertext are visible on the channel.');
+  appendMessage('system', 'PACKET COPIED · n = ' + state.packet.n + ', e = ' + state.packet.e + ' and the ciphertext are visible on the channel.');
   appendMessage('rival', 'A private invitation? Cute. Let’s see how private.');
   renderStage();
   $('stage').scrollTop = 0;
 }
 function renderIntercept() {
-  stageBase(state.step === 0 ? 'Find the repeating pattern' : 'Run the quantum attack', 'Zeno copied the ciphertext. Copying it is easy. Reading it takes the next step.', '');
+  stageBase('An uninvited observer.', 'Cas copied the ciphertext. Copying it is easy. Reading it takes the next step.', '02 / THE RIVAL’S VIEW', 'INTERCEPTION');
+  const rival = el('div', 'rival-avatar'); rival.append(el('div', 'rival-face', '>_'), el('p', '', '“If I factor ' + state.intercepted.n + ', I can recover the toy key. And maybe get to your date first.”')); $('stage-body').append(rival);
   if (state.step === 0 && state.job === 'idle') {
-    $('stage-body').append(rivalInterruption());
-    visual(sequenceVisual());
-    caption('The public modulus is n = 15. For a = 2, modular powers repeat. Quantum order finding estimates that repetition; at this tiny size we can also see it directly.');
+    const base = lessonBase(state.intercepted.n);
+    visual(sequenceVisual(state.intercepted.n, base, orderOfBase(state.intercepted.n, base)));
+    caption('The public modulus is N = ' + state.intercepted.n + '. For a = ' + base + ', modular powers repeat. Quantum order finding estimates that repetition; at this tiny size we can also see it directly.');
     stageNavigation('See the quantum circuit →', () => setStep(1));
     return;
   }
-  const rival = el('div', 'rival-avatar');
-  rival.append(rivalSprite('standing'), rivalSprite('machine'), el('p', '', '“If I find the factors of 15, I can recover the toy key. And maybe get to your date first.”'));
-  $('stage-body').append(rival);
-  visual(circuitVisual());
+  const base = lessonBase(state.intercepted.n);
+  visual(circuitVisual(state.intercepted.n, base));
   const status = el('div', 'job-status ' + state.job);
   status.id = 'job-status'; status.setAttribute('role', 'status');
   status.textContent = state.job === 'idle' ? (state.mode === 'demo' ? 'Illustrative demo—no quantum job executed. Run the sequence with deterministic sample measurements.' : 'Live Qollab: select a simulator with Select QPU. ' + (liveAvailable() ? 'Python adapter connected.' : 'Python adapter is not yet connected.')) :
@@ -285,8 +288,8 @@ function renderIntercept() {
   }
   if (state.job === 'inconclusive' && state.result) status.append(button('Inspect returned measurements', () => { const detail = el('pre', 'packet-preview', JSON.stringify(state.result.distribution, null, 2)); detail.setAttribute('aria-label', state.result.distribution_kind); status.append(detail); }, 'quiet'));
   $('stage-body').append(status);
-  caption('Fictional future machine; tiny simulator demonstration. The attack targets RSA’s public-key mathematics—not AES, a production messaging service, or all end-to-end encryption.');
-  if (state.job === 'success') stageNavigation('Inspect the measurements →', () => { transition('RECOVER'); setStep(0); });
+  caption('Fictional future machine; tiny simulator demonstration. The attack receives public N = ' + state.intercepted.n + ' and a = ' + base + ', not your selected prime factors. It does not break production RSA, AES, or every end-to-end scheme.');
+  if (state.job === 'success') stageNavigation('Inspect the measurements →', () => { transition('RECOVER'); renderStage(); });
   else {
     const b = button(['waiting', 'submitting'].includes(state.job) ? 'Job in progress…' : state.job === 'idle' ? 'Run quantum attack →' : 'Retry quantum attack →', launchAttack, 'primary rose');
     b.disabled = ['waiting', 'submitting'].includes(state.job); $('stage-nav').replaceChildren(b);
@@ -297,7 +300,7 @@ async function launchAttack() {
   const epoch = generation, ticket = ++submission; const mode = state.mode;
   state.error = ''; state.result = null; state.recoveredText = null;
   try {
-    const result = await runAttack({ mode, onStatus: value => { if (epoch !== generation || ticket !== submission) return; state.job = value; $('execution-mode').disabled = true; if (view === 'stage') renderStage(); } });
+    const result = await runAttack({ mode, modulus: state.intercepted.n, base: lessonBase(state.intercepted.n), onStatus: value => { if (epoch !== generation || ticket !== submission) return; state.job = value; $('execution-mode').disabled = true; if (view === 'stage') renderStage(); } });
     if (epoch !== generation || ticket !== submission) return;
     state.result = result; state.job = result.status;
     if (result.status === 'success') {
@@ -333,12 +336,12 @@ function renderRecovery() {
   const titles = ['Read the measurements', 'Verify the period', 'Recover the prime factors', 'Recover the private key', 'Read the decrypted message'];
   stageBase(titles[state.step], state.result.source === 'sample' ? 'Illustrative demo—no quantum job executed. Classical recovery is computed.' : 'Live Qollab measurements. Classical recovery is computed in this browser.', (state.step + 1) + ' / 5');
   if (state.step === 0) { measurements(); caption('Read each bitstring as y / 2ᵗ. Continued fractions propose a period; modular arithmetic must verify it. A returned job alone is not a successful attack.'); }
-  if (state.step === 1) { visual(sequenceVisual()); caption('The returned phases yield the verified candidate r = ' + state.result.period + '. In 2ˣ mod 15, the values 1, 2, 4, 8 repeat. Checking every smaller exponent confirms the smallest period is 4.'); }
-  if (state.step === 2) { visual(factorVisual(state.result.period, state.result.factors)); caption('r is even, and 2^(r/2) = 4 is neither 1 nor −1 modulo 15. The two greatest common divisors recover 3 and 5. Their product is the intercepted modulus.'); }
+  if (state.step === 1) { visual(sequenceVisual(state.intercepted.n, state.result.base, state.result.period)); caption('The returned phases yield the verified candidate r = ' + state.result.period + '. Checking ' + state.result.base + '^r mod ' + state.intercepted.n + ' and every smaller positive exponent confirms the order.'); }
+  if (state.step === 2) { visual(factorVisual(state.result.period, state.result.factors, state.intercepted.n, state.result.base)); caption('The even period gives gcd(a^(r/2) − 1, N) and gcd(a^(r/2) + 1, N). These recover ' + state.result.factors.join(' and ') + ', whose product is the intercepted modulus.'); }
   if (state.step === 3) {
     visual(keyVisual(state.recoveredKey));
     const c = state.intercepted.ciphertext[state.selectedBlock], m = modPow(c, state.recoveredKey.d, state.intercepted.n);
-    caption('From the recovered factors: φ = 8, d = 3. Selected block: ' + c + '³ mod 15 = ' + m + '. Decrypt every block, restore the three-digit bytes, then decode UTF-8.');
+    caption('From the recovered factors: φ = ' + state.recoveredKey.phi + ', d = ' + state.recoveredKey.d + '. Selected block: ' + c + '^' + state.recoveredKey.d + ' mod ' + state.intercepted.n + ' = ' + m + '. Decrypt every block, restore the fixed-width bytes, then decode UTF-8.');
   }
   if (state.step === 4) {
     if (state.job !== 'success' || typeof state.recoveredText !== 'string') throw new Error('Recovery required before reveal.');
