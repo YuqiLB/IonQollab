@@ -1,0 +1,147 @@
+/* The same chat becomes a companion window; tasks grow out of attachments. */
+.game[data-scene='desk'][data-view='chat'],
+.game[data-scene='desk'][data-view='stage'] { display: block; padding: 0; }
+.game[data-scene='desk'] .conversation-panel {
+  position: absolute; left: max(24px, calc((100% - 900px) / 2)); top: 5%;
+  width: min(900px, calc(100% - 48px)); height: 88%; max-height: none; max-width: none;
+  animation: none; transform-origin: top left; z-index: 4;
+  box-shadow: 0 0 0 2px #b3a6cf, 8px 10px 0 #0b102780, 0 24px 80px #060b2240;
+}
+.game[data-view='stage'] .conversation-panel {
+  left: 2%; top: 33%; width: 32%; height: 62%; max-height: none;
+}
+.game .puzzle-window {
+  position: absolute; left: 32%; top: 5%; width: 65%; height: 87%; max-height: none;
+  z-index: 3; transform-origin: top left; animation: none;
+  box-shadow: 0 0 0 2px #c6b6f6, 8px 10px 0 #0b102780, 0 24px 80px #060b2255;
+}
+.game .puzzle-window .stage { padding: 22px 24px 20px calc(2vw + 24px); }
+.window-controls { display: flex; gap: 7px; flex-shrink: 0; }
+.window-controls button {
+  display: grid; place-items: center; width: 30px; height: 28px; min-height: 28px;
+  padding: 0; font: 20px/1 var(--pixel); box-shadow: 2px 2px 0 var(--ink);
+}
+.window-controls button:last-child { background: #f6b6d7; }
+.game .puzzle-window .pixel-titlebar { min-height: 47px; padding: 7px 12px 7px 18px; }
+.game .puzzle-window .pixel-titlebar>span:first-child { min-width: 0; font-size: 14px; }
+.channel-presence { display: flex; align-items: center; gap: 7px; font-size: 11px !important; color: #4b3c65 !important; }
+.channel-presence::before { content: ''; width: 7px; height: 7px; background: #448455; box-shadow: 0 0 0 2px #d2f6bc; }
+.game[data-view='stage'] .chat-contact div>span { font-size: 13px; }
+.game[data-view='stage'] .chat-view { padding: 10px 14px; }
+.game[data-view='stage'] .contact-avatar { width: 30px; height: 39px; }
+.game[data-view='stage'] .chat-contact strong { font-size: 20px; }
+.game[data-view='stage'] .message-text { font-size: 16px; }
+.game[data-view='stage'] .message.system .message-text { font-size: 13px; }
+.game[data-view='stage'] .puzzle-chat-lock { font-size: 14px; }
+.game .message { animation: message-slide 300ms cubic-bezier(.2,.8,.2,1) both; }
+.game .message.user { animation-name: message-send; }
+.message.task-message { width: 100%; max-width: 100%; }
+.task-attachment {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; gap: 12px;
+  align-items: center; text-align: left; width: 100%; padding: 16px;
+  background: #f9f7ff; border: 2px solid #574572; box-shadow: 4px 4px 0 #ad9bcf;
+  transition: translate 180ms, background 180ms, box-shadow 180ms;
+}
+.task-attachment:hover:not(:disabled) { background: #fff; translate: 0 -2px; box-shadow: 4px 6px 0 #ad9bcf; }
+.task-icon { display: grid; place-items: center; width: 40px; height: 44px; background: #dcd4f6; border: 2px solid #574572; font-size: 25px; }
+.task-copy { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.task-copy strong { font: 600 22px/1.15 var(--pixel); }
+.task-description { font: 18px/1.3 var(--sans); color: #594971; }
+.task-status { font: 13px/1.3 var(--pixel); color: #6f3263; margin-top: 5px; }
+.task-arrow { font-size: 26px; }
+.task-attachment:disabled { opacity: 1; cursor: default; box-shadow: 2px 2px 0 #b8b1c7; background: #e7eddf; }
+.task-attachment[data-state='compromised'] { background: #f4d3df; }
+.task-attachment[data-state='complete'] .task-status { color: #365d3d; }
+.game[data-view='stage'] .task-attachment { grid-template-columns: 26px minmax(0,1fr); gap: 9px; padding: 10px; }
+.game[data-view='stage'] .task-icon { width: 26px; height: 32px; font-size: 18px; }
+.game[data-view='stage'] .task-copy strong { font-size: 17px; }
+.game[data-view='stage'] .task-description, .game[data-view='stage'] .task-arrow { display: none; }
+.game[data-view='stage'] .task-status { font-size: 11px; }
+.task-resume {
+  position: absolute; z-index: 6; left: 50%; bottom: 1%; transform: translateX(-50%);
+  max-width: calc(100% - 32px); min-height: 38px; font-size: 16px;
+  background: #c6eab5; padding: 7px 16px;
+}
+body[data-phase='RSA'] .composer, body[data-phase='INTERCEPT'] .composer,
+body[data-phase='RECOVER'] .composer, body[data-phase='PQ'] .composer,
+body[data-phase='CHOICE'] .composer { display: none; }
+.game[data-view='chat'] .puzzle-chat-lock { display: none; }
+.puzzle-context { display: flex; align-items: center; gap: 9px; border-bottom: 1px solid #b2a1ca; padding: 0 0 12px; margin: 0 0 16px; font: 15px/1.3 var(--pixel); color: #675379; }
+.puzzle-context::before { content: '↗'; font-size: 23px; color: #943768; }
+.game[data-view='stage'] .desk-art { filter: brightness(.72); transition: filter 550ms; }
+.rival-reveal {
+  width: min(960px, calc(100% - 44px)); max-height: 92dvh; padding: 28px 36px;
+  overflow-y: auto; overflow-x: hidden; color: #fff1f6; background: radial-gradient(ellipse at 65% 55%, #683951 0, #232137 50%, #17192d 80%);
+  border: 2px solid #f9b2d2; box-shadow: 10px 10px 0 #100f26, 0 0 80px #ed77b933;
+  animation: reveal-window 450ms cubic-bezier(.22,1,.36,1) both;
+}
+.rival-reveal::backdrop { background: #0e1020a8; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.rival-kicker { margin: 0 0 16px; color: #f1b1d1; font: 13px var(--pixel); letter-spacing: 3px; }
+.rival-banner { margin: 0 -48px; padding: 13px 36px; background: #f3a7ce; border-block: 3px solid #fff0f7; color: #271d35; transform: rotate(-3deg); box-shadow: 0 8px 0 #100f2688; animation: banner-swipe 650ms cubic-bezier(.16,1,.3,1) both; }
+.rival-banner h2 { margin: 0; font: 700 clamp(32px, 5.3vw, 68px)/1 var(--pixel); letter-spacing: 1px; }
+.rival-reveal .reveal-copy { color: #f0dce9; font: 23px/1.3 var(--pixel); margin: 25px 0 0; }
+.reveal-cast { display: flex; align-items: flex-end; justify-content: center; gap: 40px; min-height: 220px; margin: 8px 0 10px; }
+.reveal-cast .rival-sprite { width: auto; height: clamp(190px, 33vh, 340px); max-width: 44%; object-fit: contain; }
+.reveal-cast .rival-standing { animation: bully-arrive 700ms 160ms cubic-bezier(.16,1,.3,1) both; filter: drop-shadow(0 8px 0 #080b2580); }
+.reveal-cast .rival-machine { animation: machine-arrive 800ms 360ms cubic-bezier(.16,1,.3,1) both; filter: drop-shadow(0 0 18px #eec35d77); }
+.rival-reveal .reveal-footer { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.rival-reveal .reveal-footer p { color: #d9c6df; font: 17px/1.4 var(--sans); max-width: 430px; margin: 0; }
+.rival-reveal .reveal-footer button { flex-shrink: 0; }
+.game .rival-defeat { animation: defeated-drop 500ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes message-slide { from { opacity: 0; transform: translate(-10px,8px); } to { opacity: 1; transform: none; } }
+@keyframes message-send { from { opacity: 0; transform: translate(10px,8px); } to { opacity: 1; transform: none; } }
+@keyframes reveal-window { from { opacity: 0; translate: 0 25px; } to { opacity: 1; translate: 0 0; } }
+@keyframes banner-swipe { from { opacity: 0; translate: -45% 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes bully-arrive { from { opacity: 0; transform: translateX(-100px) scale(.7); } to { opacity: 1; transform: none; } }
+@keyframes machine-arrive { from { opacity: 0; transform: translateY(80px) scale(.8); filter: none; } to { opacity: 1; transform: none; } }
+@keyframes defeated-drop { from { opacity: 0; transform: translateY(-18px) rotate(-3deg); } to { opacity: 1; transform: none; } }
+@media (max-width: 900px) {
+  .game[data-view='stage'] .conversation-panel { left: 2%; top: 2%; width: 61%; height: 23%; }
+  .game .puzzle-window { left: 4%; top: 23%; width: 94%; height: 74%; }
+  .game .puzzle-window .stage { padding: 18px; }
+  .game[data-view='stage'] .chat-contact, .game[data-view='stage'] .puzzle-chat-lock { display: none; }
+  .game[data-view='stage'] .conversation-panel .pixel-titlebar { min-height: 29px; padding-block: 4px; }
+  .game[data-view='stage'] .chat-view { padding: 0 10px 3px; }
+  .game[data-view='stage'] .messages { padding-block: 5px; }
+  .game[data-view='stage'] .message-text { font-size: 14px; padding: 3px 5px; }
+  .game[data-view='stage'] .typing:not(.busy) { display: none; }
+  .game .puzzle-window .pixel-titlebar { padding-left: 20px; padding-top: 20px; min-height: 62px; }
+  .rival-reveal { padding: 22px; }
+  .reveal-cast { gap: 20px; }
+}
+@media (max-width: 540px) {
+  .game[data-scene='desk'][data-view='chat'] .conversation-panel { left: 12px; top: 2%; width: calc(100% - 24px); height: 91%; }
+  .game[data-view='stage'] .conversation-panel { width: 80%; }
+  .game .puzzle-window { left: 3%; width: 94%; }
+  .game .puzzle-window .stage { padding: 14px 12px; }
+  .game .puzzle-window .pixel-titlebar>span:first-child { font-size: 11px; }
+  .task-attachment { padding: 12px; gap: 9px; grid-template-columns: 30px minmax(0,1fr) 20px; }
+  .task-icon { width: 30px; height: 36px; }
+  .task-copy strong { font-size: 18px; }
+  .task-description { font-size: 16px; }
+  .task-resume { font-size: 12px; white-space: nowrap; padding: 5px 10px; min-height: 32px; }
+  .channel-presence { font-size: 9px !important; }
+  .rival-reveal { width: calc(100% - 28px); padding: 20px; }
+  .rival-reveal .reveal-copy { font-size: 18px; }
+  .rival-kicker { font-size: 10px; letter-spacing: 2px; }
+  .rival-banner { padding: 14px 40px; }
+  .reveal-cast { min-height: 150px; gap: 10px; }
+  .reveal-cast .rival-sprite { height: 200px; }
+  .rival-reveal .reveal-footer { flex-direction: column; gap: 16px; align-items: stretch; }
+}
+@media (max-height: 550px) and (min-width: 650px) {
+  .game[data-view='stage'] .conversation-panel { left: 2%; top: 25%; width: 32%; height: 69%; }
+  .game .puzzle-window { left: 32%; top: 3%; width: 65%; height: 93%; }
+  .game .puzzle-window .stage { padding-left: calc(2vw + 16px); }
+  .game .puzzle-window .pixel-titlebar { padding-top: 5px; min-height: 38px; }
+  .rival-reveal { padding: 16px 24px; }
+  .rival-kicker { margin-bottom: 10px; }
+  .rival-banner h2 { font-size: 32px; }
+  .rival-reveal .reveal-copy { font-size: 17px; margin-top: 16px; }
+  .reveal-cast { min-height: 80px; position: absolute; right: 24px; bottom: 72px; }
+  .reveal-cast .rival-sprite { height: 110px; }
+  .rival-reveal .reveal-footer { margin-top: 95px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

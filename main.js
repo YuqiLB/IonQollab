@@ -5,6 +5,8 @@ import { makeKeys, encode, encrypt, decrypt, modPow, inverse } from './js/rsa.js
 import { runAttack, liveAvailable, lessonBase } from './js/quantum-adapter.js';
 import { primesVisual, phiVisual, keyVisual, encodingVisual, ringVisual, sequenceVisual, circuitVisual, factorVisual, pqVisual } from './js/visuals.js';
 
+import { moveWindows, resetMotion } from './js/desktop-motion.js';
+
 const $ = id => document.getElementById(id);
 const allowed = {
   MENU: ['BALCONY'], BALCONY: ['RETURN'], RETURN: ['INTRO'],
@@ -20,6 +22,8 @@ const replyChoices = {
 let generation = 0, submission = 0, state, view = 'chat';
 let followMessages = true, lastStageAction = 0, userScrollUntil = 0;
 let puzzleChatTimer = null, puzzleChatQueue = [];
+const taskCards = new Map();
+let savedTaskScroll = 0;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 function orderOfBase(n, a) {
   for (let r = 1; r <= n; r++) if (modPow(a, r, n) === 1) return r;
@@ -50,6 +54,9 @@ function updateChapter() {
 for (const expression of character.expressionsAvailable) {
   const image = new Image(character.width, character.height);
   image.src = character[expression];
+}
+for (const sprite of Object.values(rivalSprites)) {
+  const image = new Image(sprite.width, sprite.height); image.src = sprite.src;
 }
 function portrait(expression) {
   const resolved = character.expressionsAvailable.includes(expression) ? expression : 'idle';
@@ -99,7 +106,7 @@ function appendMessage(role, content, note = '') {
   return item;
 }
 function busy(value) {
-  state.busy = value; updateComposer();
+  state.busy = value; updateComposer(); syncTask();
   renderTyping();
 }
 function renderTyping() {
@@ -161,18 +168,89 @@ function updateComposer() {
 function focusChoices() { $('suggestions').querySelector('button:not(:disabled)')?.focus({ preventScroll: true }); }
 function updateCount() { $('char-count').textContent = $('message').value.length + ' / 280'; $('compose-error').textContent = ''; }
 function setActions(actions) { $('story-actions').replaceChildren(...actions.map(a => button(a.label, a.run, a.cls || 'primary'))); }
+function currentTask() {
+  return { RSA: 'rsa', INTERCEPT: 'attack', RECOVER: 'attack', CHOICE: 'pq', PQ: 'pq' }[state.phase];
+}
+function offerTask(id, title, description, open, role = 'alice') {
+  if (taskCards.has(id)) return;
+  const item = el('article', 'message task-message ' + role);
+  item.append(el('div', 'message-label', role === 'rival' ? 'ZENO · INTERCEPTED PACKET' : 'ALICE · SHARED WITH YOU'));
+  const card = button('', () => { if (!state.busy && !card.disabled) open(card); }, 'task-attachment');
+  card.dataset.task = id;
+  card.setAttribute('aria-controls', 'puzzle-window');
+  const icon = el('span', 'task-icon', id === 'attack' ? '!' : '◇'); icon.setAttribute('aria-hidden', 'true');
+  const copy = el('span', 'task-copy');
+  copy.append(el('strong', '', title), el('span', 'task-description', description), el('span', 'task-status', 'Open attachment ↗'));
+  const arrow = el('span', 'task-arrow', '↗'); arrow.setAttribute('aria-hidden', 'true');
+  card.append(icon, copy, arrow); item.append(card); $('messages').append(item);
+  taskCards.set(id, { card, title });
+  syncTask();
+  if (followMessages) $('messages').scrollTop = $('messages').scrollHeight;
+}
+function finishTask(id, text, compromised = false) {
+  const entry = taskCards.get(id);
+  if (!entry) return;
+  entry.card.disabled = true;
+  entry.card.dataset.state = compromised ? 'compromised' : 'complete';
+  entry.card.setAttribute('aria-expanded', 'false');
+  entry.card.querySelector('.task-status').textContent = text;
+}
+function syncTask() {
+  const id = currentTask(), entry = taskCards.get(id);
+  $('task-resume').hidden = !entry || !entry.opened || entry.card.disabled || view !== 'chat' || state.busy;
+  if (entry && !entry.card.disabled) {
+    const total = { RSA: 7, RECOVER: 5, PQ: 4 }[state.phase];
+    const progress = total ? ` · ${state.step + 1}/${total}` : '';
+    const status = state.phase === 'CHOICE' ? 'Open Alice’s attachment ↗' : view === 'stage' ? 'Open on your desktop' + progress : (entry.opened ? 'Resume task' : 'Open task') + progress + ' ↗';
+    entry.card.querySelector('.task-status').textContent = status;
+    entry.card.setAttribute('aria-expanded', String(view === 'stage'));
+    $('task-resume').textContent = '↗ ' + entry.title + progress;
+  }
+}
 function showChat() {
   cancelPuzzleChatter();
-  $('game').dataset.view = 'chat';
-  view = 'chat'; $('puzzle-window').hidden = true; $('stage').hidden = true; $('chat-view').hidden = false;
+  moveWindows(() => {
+    $('game').dataset.view = 'chat';
+    view = 'chat'; $('puzzle-window').hidden = true; $('stage').hidden = true; $('chat-view').hidden = false;
+  });
   if (followMessages) { $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; }
-  updateComposer();
+  updateComposer(); syncTask();
 }
-function showStage() {
-  $('game').dataset.view = 'stage';
-  view = 'stage'; $('chat-view').hidden = false; $('stage').hidden = false; $('puzzle-window').hidden = false;
-  setActions([]); updateComposer();
-  renderStage(); $('stage-title').focus({ preventScroll: true });
+function showStage(source = null) {
+  if (view === 'stage') { $('stage-title').focus({ preventScroll: true }); return; }
+  const resume = state.renderedPhase === state.phase && !state.stageDirty;
+  const entry = taskCards.get(currentTask());
+  if (entry) entry.opened = true;
+  if (source) {
+    const bounds = source.getBoundingClientRect(), history = $('messages').getBoundingClientRect();
+    if (bounds.bottom < history.top || bounds.top > history.bottom) source = $('task-resume').hidden ? document.querySelector('.chat-contact') : $('task-resume');
+  }
+  moveWindows(() => {
+    $('game').dataset.view = 'stage';
+    view = 'stage'; $('chat-view').hidden = false; $('stage').hidden = false; $('puzzle-window').hidden = false;
+    setActions([]); updateComposer();
+    if (!resume) { renderStage(); $('stage').scrollTop = 0; }
+    else { $('stage').scrollTop = savedTaskScroll; queuePuzzleMessage(); }
+  }, source);
+  syncTask(); $('stage-title').focus({ preventScroll: true });
+}
+function minimizeTask() {
+  if (view !== 'stage') return;
+  savedTaskScroll = $('stage').scrollTop;
+  showChat(); $('task-resume').focus({ preventScroll: true });
+}
+function openCurrentTask() {
+  const entry = taskCards.get(currentTask());
+  if (entry && !entry.card.disabled) entry.card.click();
+}
+function revealZeno() {
+  $('reveal-cast').replaceChildren(rivalSprite('standing'), rivalSprite('machine'));
+  $('rival-reveal').showModal();
+  $('rival-continue').focus({ preventScroll: true });
+}
+function faceZeno() {
+  $('rival-reveal').close();
+  if (state.phase === 'INTERCEPT') showStage(taskCards.get('attack')?.card);
 }
 function markDraft(note) {
   const draft = $('messages').querySelector('[data-draft]');
@@ -194,8 +272,9 @@ async function sendMessage(event) {
     state.invitation = raw;
     const draft = appendMessage('user', raw, 'Draft · held before delivery'); draft.dataset.draft = 'true';
     busy(true);
-    if (!(await speak(['Before we send your invitation, let’s encrypt it. RSA starts with two prime numbers that we use to build the encryption key.'], epoch))) return;
-    transition('RSA'); updateComposer(); showStage();
+    if (!(await speak(['Let’s keep this between us. I sent you a little key builder—open it and choose two primes to lock your invitation.'], epoch))) return;
+    transition('RSA'); updateComposer();
+    offerTask('rsa', 'Lock our invitation', 'Choose two primes → build a key → send the encrypted message.', card => showStage(card));
   } else {
     state.retry = raw;
     state.dateLocation = dateLocations.find(location => location.invitation === raw).id;
@@ -221,7 +300,7 @@ function stageAction(action) {
   if (!action || now - lastStageAction < 250) return;
   lastStageAction = now; action();
 }
-function setStep(step) { state.step = step; renderStage(); $('stage').scrollTop = 0; }
+function setStep(step) { state.step = step; renderStage(); $('stage').scrollTop = 0; $('stage-title').focus({ preventScroll: true }); }
 function stageBase(title, subtitle, count) {
   $('stage-title').textContent = title; $('stage-subtitle').textContent = subtitle;
   $('step-count').textContent = count;
@@ -234,12 +313,15 @@ function stageBase(title, subtitle, count) {
 function visual(markup) { const holder = el('div', 'visual'); holder.innerHTML = markup; $('stage-body').append(holder); }
 function caption(content) { $('stage-caption').textContent = content; }
 function renderStage() {
+  if (state.renderedPhase !== state.phase) $('stage').scrollTop = 0;
   $('puzzle-window-title').textContent = 'Qrush / ' + ({ RSA: 'encrypt your invitation', INTERCEPT: 'interception', RECOVER: 'recover the message', PQ: 'new protection' }[state.phase] || 'puzzle');
   if (state.phase === 'RSA') renderRSA();
   if (state.phase === 'INTERCEPT') renderIntercept();
   if (state.phase === 'RECOVER') renderRecovery();
   if (state.phase === 'PQ') renderPQ();
-  queuePuzzleMessage();
+  state.renderedPhase = state.phase; state.stageDirty = false;
+  $('puzzle-context').textContent = ({ RSA: 'Alice’s attachment / Lock our invitation', INTERCEPT: 'Zeno’s machine / Your copied invitation', RECOVER: 'Zeno’s machine / Recovering your message', PQ: 'Alice’s attachment / A better envelope' })[state.phase];
+  syncTask(); queuePuzzleMessage();
 }
 function renderRSA() {
   const titles = ['Enter two prime numbers', 'Calculate the public modulus', 'Calculate φ(n)', 'Set the RSA exponents', 'Encode your message', 'Encrypt a message block', 'Send the encrypted packet'];
@@ -299,12 +381,14 @@ function intercept() {
   transition('INTERCEPT');
   appendMessage('system', 'PACKET COPIED · n = ' + state.packet.n + ', e = ' + state.packet.e + ' and the ciphertext are visible on the channel.');
   appendMessage('rival', 'A private invitation? Cute. Let’s see how private.');
-  renderStage();
-  $('stage').scrollTop = 0;
+  finishTask('rsa', 'Packet sent · intercepted by Zeno', true);
+  showChat();
+  offerTask('attack', 'Inspect Zeno’s attack', 'He copied the packet. Follow the attempt to recover your key.', card => showStage(card), 'rival');
+  revealZeno();
 }
 function renderIntercept() {
-  stageBase('An uninvited observer.', 'Cas copied the ciphertext. Copying it is easy. Reading it takes the next step.', '02 / THE RIVAL’S VIEW', 'INTERCEPTION');
-  const rival = el('div', 'rival-avatar'); rival.append(el('div', 'rival-face', '>_'), el('p', '', '“If I factor ' + state.intercepted.n + ', I can recover the toy key. And maybe get to your date first.”')); $('stage-body').append(rival);
+  stageBase('An uninvited observer.', 'Zeno copied your invitation’s ciphertext. Now he is trying to recover the key.', '02 / THE RIVAL’S VIEW', 'INTERCEPTION');
+  const rival = el('div', 'rival-avatar'); rival.append(rivalSprite('standing'), el('p', '', '“If I factor ' + state.intercepted.n + ', I can recover the toy key. And maybe get to your date first.”')); $('stage-body').append(rival);
   if (state.step === 0 && state.job === 'idle') {
     const base = lessonBase(state.intercepted.n);
     visual(sequenceVisual(state.intercepted.n, base, orderOfBase(state.intercepted.n, base)));
@@ -336,7 +420,7 @@ async function launchAttack() {
   const epoch = generation, ticket = ++submission; const mode = state.mode;
   state.error = ''; state.result = null; state.recoveredText = null;
   try {
-    const result = await runAttack({ mode, modulus: state.intercepted.n, base: lessonBase(state.intercepted.n), onStatus: value => { if (epoch !== generation || ticket !== submission) return; state.job = value; $('execution-mode').disabled = true; if (view === 'stage') renderStage(); } });
+    const result = await runAttack({ mode, modulus: state.intercepted.n, base: lessonBase(state.intercepted.n), onStatus: value => { if (epoch !== generation || ticket !== submission) return; state.job = value; state.stageDirty = true; $('execution-mode').disabled = true; if (view === 'stage') renderStage(); } });
     if (epoch !== generation || ticket !== submission) return;
     state.result = result; state.job = result.status;
     if (result.status === 'success') {
@@ -350,7 +434,7 @@ async function launchAttack() {
     if (epoch !== generation || ticket !== submission) return;
     state.job = 'error'; state.error = error.message || String(error); state.recoveredText = null;
   } finally {
-    if (epoch === generation && ticket === submission) { $('execution-mode').disabled = state.job === 'success'; updateModeLabel(); if (view === 'stage') renderStage(); }
+    if (epoch === generation && ticket === submission) { state.stageDirty = true; $('execution-mode').disabled = state.job === 'success'; updateModeLabel(); if (view === 'stage') renderStage(); }
   }
 }
 function measurements() {
@@ -388,6 +472,7 @@ function renderRecovery() {
 }
 async function consequence() {
   if (state.phase !== 'RECOVER' || state.recoveredText == null) return;
+  finishTask('attack', 'Key recovered · invitation leaked', true);
   const epoch = generation; transition('CHOICE');
   setActions([]); showChat();
   const excerpt = [...state.recoveredText].slice(0, 110).join('') + ([...state.recoveredText].length > 110 ? '…' : '');
@@ -404,10 +489,14 @@ function choiceActions() {
     setActions([]); const epoch = generation;
     appendMessage('user', 'What if I just change the wording?');
     if (await speak(['New words, same vulnerable key. Zeno could factor the same RSA modulus again. Let’s change how we establish the key.'], epoch)) choiceActions();
-  } }, { label: 'Upgrade the protection →', run: () => {
-    if (state.phase !== 'CHOICE' || state.busy) return;
-    appendMessage('user', 'Let’s upgrade the protection.'); transition('PQ'); showStage();
   } }]);
+  offerTask('pq', 'A better envelope', 'Switch our key exchange so Zeno’s RSA trick won’t work.', card => {
+    if (state.phase === 'CHOICE') {
+      appendMessage('user', 'Let’s upgrade the protection.'); transition('PQ');
+    }
+    if (state.phase === 'PQ') showStage(card);
+  });
+  syncTask();
 }
 function renderPQ() {
   const titles = ['Receive Alice’s ML-KEM public key', 'Encapsulate a shared secret', 'Recover the same shared secret', 'Protect the message with a symmetric key'];
@@ -423,6 +512,7 @@ function renderPQ() {
 }
 async function retryConversation() {
   if (state.phase !== 'PQ') return;
+  finishTask('pq', 'Exchange illustrated · ready for a new invitation');
   const epoch = generation; transition('RETRY'); setActions([]); showChat();
   appendMessage('system', 'ILLUSTRATIVE POST-QUANTUM EXCHANGE COMPLETE\nThe RSA factoring attack no longer applies to this key-establishment scheme. This is not a proof that every attack is impossible.');
   rivalDefeat();
@@ -447,6 +537,9 @@ function openAbout() {
 export async function restart() {
   const pending = state && ['waiting', 'submitting'].includes(state.job) && state.mode === 'live';
   generation++; submission++;
+  resetMotion(); taskCards.clear(); savedTaskScroll = 0;
+  $('task-resume').hidden = true;
+  if ($('rival-reveal').open) $('rival-reveal').close();
   cancelPuzzleChatter();
   state = { phase: 'MENU', step: 0, balconyStep: 0, balconyChoice: 0, dateStep: 0, dateLocation: null, chatterTyping: false, puzzleNotes: new Set(), busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
   lastStageAction = 0; followMessages = true; userScrollUntil = 0;
@@ -574,6 +667,14 @@ window.addEventListener('resize', fitScene);
 window.visualViewport?.addEventListener('resize', fitScene);
 fitScene();
 
+$('minimize-task').addEventListener('click', minimizeTask);
+$('close-task').addEventListener('click', minimizeTask);
+$('task-resume').addEventListener('click', openCurrentTask);
+$('rival-continue').addEventListener('click', faceZeno);
+$('rival-reveal').addEventListener('cancel', event => { event.preventDefault(); faceZeno(); });
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && view === 'stage' && !$('about-dialog').open && !$('rival-reveal').open) { event.preventDefault(); minimizeTask(); }
+});
 $('start-game').addEventListener('click', startGame);
 $('dialogue-advance').addEventListener('click', advanceBalcony);
 $('skip-balcony').addEventListener('click', returnToDesk);
