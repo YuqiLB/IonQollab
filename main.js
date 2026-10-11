@@ -562,9 +562,9 @@ function choiceActions() {
 }
 function protectionReady() {
   if (state.phase !== 'PQ') return;
-  stageNavigation('Choose a new invitation ♥', retryConversation, () => { state.pqDetails = true; state.step = 0; renderStage(); });
-  $('stage-nav').firstElementChild.textContent = 'Explore the toy math';
-  $('step-count').textContent = 'Ready for a new plan';
+  state.pqDetails = true;
+  state.step = 0;
+  renderStage();
 }
 function renderPQ() {
   if (state.pqDetails) return renderPQDetails();
