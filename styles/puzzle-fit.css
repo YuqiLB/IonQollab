@@ -1,0 +1,136 @@
+/* One visual, one explanation, reachable actions. Optional reading lives in Details. */
+.game .puzzle-window .stage, #zeno-popup .stage {
+  padding: clamp(10px, 2vh, 24px) clamp(12px, 2vw, 28px);
+  overflow: visible; min-height: 0; gap: 0;
+}
+.stage>*, .stage-body>* { min-width: 0; }
+.game .stage h2 { font-size: clamp(23px, 2.1vw, 32px); margin: 0 0 4px; line-height: 1.15; }
+.stage-subtitle { font: 18px/1.2 var(--sans); margin: 0 0 8px; }
+.stage-subtitle:empty { display: none; }
+.stage>.stage-body { flex: 1 1 0; min-height: 0; gap: 8px; container-type: size; container-name: puzzle-body; }
+.stage-body .visual { flex: 1 1 0; min-height: 0; display: grid; place-items: center; }
+.stage-body .visual svg { width: 100%; height: 100%; max-height: 310px; min-height: 0; }
+.compact-visual { display: none; text-align: center; color: var(--ink); font: 600 clamp(20px, 2vw, 28px)/1.3 var(--pixel); }
+.compact-visual>div+div { margin-top: 12px; color: #614682; }
+.stage-caption { flex: 0 0 auto; min-height: 0; font: 20px/1.25 var(--sans); margin: 10px 0; }
+.stage-nav { gap: 8px; padding: 0 3px 3px 0; }
+.stage-nav button { min-height: 42px; font: 22px/1.1 var(--sans); padding: 8px 12px; }
+.motion-controls { flex-wrap: nowrap; gap: 16px; margin-top: 5px; }
+.motion-controls .quiet { font: 18px/1.1 var(--sans); min-height: 30px; padding: 3px 0; }
+.motion-controls>span:last-child { font-size: 12px; }
+.message-context { padding: 10px 20px; }
+.message-context>span:first-child { display: none; }
+#pending-message { max-height: none; overflow: visible; font: 23px/1.15 var(--sans); margin: 0 0 4px; }
+#message-context-status { font-size: 16px; }
+.prime-form { padding: 12px; box-shadow: none; border-width: 1px; }
+.prime-inputs { margin: 0 0 8px; gap: 24px; }
+.prime-inputs input { width: 70px; padding: 5px; font-size: 32px; }
+.prime-inputs label { font-size: 26px; gap: 8px; }
+.prime-help { font: 18px/1.2 var(--sans); margin: 6px 0; text-align: center; }
+.prime-form>button { min-height: 32px; padding: 4px 9px; font: 19px/1.1 var(--sans); }
+.prime-form .field-error { font: 17px/1.15 var(--sans); margin: 7px 0 0; }
+.prime-form .field-error:empty { display: none; }
+.stage[data-step='rsa-0'] .stage-caption { display: none; }
+.math-equation { margin: 0; font-size: 28px; }
+.math-small { font: 18px/1.2 var(--sans); margin: 0; }
+.stage-body .packet-preview { overflow: visible; max-height: none; padding: 10px; margin: 0; font: 19px/1.3 var(--sans); }
+.stage[data-step='rsa-6'] .stage-body { justify-content: center; }
+.mode-control { flex-wrap: nowrap; padding: 0 0 7px; margin: 0 0 7px; gap: 8px; border-width: 1px; }
+.mode-control label { display: none; }
+.mode-control select { font: 18px/1.1 var(--sans); min-height: 32px; padding: 3px 5px; max-width: 155px; }
+.mode-indicator { font: 16px/1.1 var(--sans); }
+.job-status { flex: 0 0 auto; margin: 0; padding: 7px 10px; font: 19px/1.2 var(--sans); border-width: 1px; }
+.job-status .quiet { font: 18px/1.1 var(--sans); min-height: 28px; margin-top: 4px; padding: 3px 0; }
+.measurements { flex: 1 1 0; min-height: 0; max-height: 220px; width: 100%; overflow: visible; height: auto; gap: 12px; padding: 6px 0; margin: 0; align-items: stretch; }
+.measurement { flex: 1 1 0; width: auto; min-width: 0; min-height: 0; height: 100%; font: 18px/1 var(--sans); }
+.measurement .bar { height: calc(var(--bar-size) * .65); max-height: none; width: min(38px, 60%); min-height: 2px; margin: 5px 0; }
+.result-label { font: 14px/1.2 var(--sans); }
+.results-details { align-self: center; min-height: 28px; padding: 3px; font: 18px/1 var(--sans); }
+.leak-quote { font: 26px/1.25 var(--pixel); margin: 0; padding: 20px; overflow-wrap: anywhere; }
+.measurement-data { white-space: pre-wrap; overflow-wrap: anywhere; font: 18px/1.3 var(--sans); }
+
+/* Zeno gets one scene; the circuit appears on the next beat. */
+#zeno-popup #zeno-title { color: #fff8ed; }
+#zeno-popup .rival-interruption {
+  flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr); align-items: center; gap: 12px;
+  padding: 14px; margin: 8px 4px; overflow: visible; box-shadow: none;
+}
+.rival-banner { grid-column: 1/-1; margin: 0; padding: 8px 12px; }
+.rival-banner h3 { font-size: clamp(23px, 3vw, 38px); }
+#zeno-popup .rival-speech { padding: 12px; margin: 8px 0; box-shadow: 2px 3px 0 #762e3a; }
+.rival-speech .message-label { display: none; }
+.rival-speech p { font: 23px/1.25 var(--sans); }
+.rival-art { height: 100%; min-height: 0; gap: 12px; align-items: center; }
+.rival-art .rival-sprite { width: auto; height: min(356px, 65cqh); max-height: 100%; max-width: 45%; object-fit: contain; }
+
+@container puzzle-body (max-width: 480px) or (max-height: 165px) {
+  .visual svg { display: none; }
+  .compact-visual { display: block; font-size: 22px; }
+  .compact-visual>div+div { margin-top: 8px; }
+}
+@container puzzle-body (min-width: 481px) and (max-height: 120px) {
+  .compact-visual { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 24px; font-size: 20px; }
+  .compact-visual>div+div { margin: 0; }
+}
+@media (max-width: 760px) {
+  .game .stage h2, #zeno-popup .stage h2 { font-size: 24px; }
+  .stage-subtitle { font-size: 17px; margin-bottom: 6px; }
+  .stage-caption { font-size: 18px; margin: 7px 0; }
+  .message-context { padding: 7px 12px; }
+  #pending-message { font-size: 21px; }
+  #message-context-status { font-size: 15px; }
+  .motion-controls { gap: 12px; }
+  .motion-controls .quiet { font-size: 17px; }
+  .leak-quote { font-size: 23px; padding: 12px; }
+  #zeno-popup .rival-interruption { gap: 8px; padding: 10px; grid-template-columns: 1fr; grid-template-rows: auto auto minmax(0, 1fr); }
+  #zeno-popup .rival-speech { margin: 4px 0; }
+  .rival-art .rival-sprite { height: min(178px, 42cqh); }
+}
+@media (max-height: 650px) {
+  .game .puzzle-window .stage, #zeno-popup .stage { padding: 8px 12px; }
+  .game .stage h2, #zeno-popup .stage h2 { font-size: 22px; margin-bottom: 3px; }
+  .stage-subtitle { font-size: 16px; margin-bottom: 4px; }
+  .stage-caption { font-size: 17px; margin: 5px 0; }
+  .stage-nav button { min-height: 34px; font-size: 19px; padding: 5px 8px; }
+  .motion-controls { margin-top: 3px; gap: 12px; }
+  .motion-controls .quiet { min-height: 26px; font-size: 16px; }
+  .motion-controls>span:last-child { font-size: 10px; }
+  .game .puzzle-window .pixel-titlebar { min-height: 32px; padding: 4px 10px; }
+  .message-context { padding: 5px 12px; }
+  #pending-message { font-size: 18px; margin-bottom: 2px; }
+  #message-context-status { font-size: 14px; }
+  .prime-form { padding: 7px 9px; }
+  .prime-inputs { margin-bottom: 4px; gap: 18px; }
+  .prime-inputs input { font-size: 27px; width: 54px; padding: 3px; }
+  .prime-inputs label { font-size: 22px; }
+  .prime-help { font-size: 16px; margin: 4px 0; }
+  .prime-form>button { font-size: 17px; min-height: 28px; }
+  .compact-visual { font-size: 20px; }
+  .math-equation { font-size: 24px; }
+  .job-status { font-size: 17px; padding: 5px 7px; }
+  .mode-control { margin-bottom: 4px; padding-bottom: 4px; }
+  .mode-control select { min-height: 28px; font-size: 17px; }
+  .mode-indicator { font-size: 15px; }
+  #zeno-popup>.pixel-titlebar { min-height: 34px; padding-block: 5px; }
+  #zeno-popup .rival-interruption { grid-template-columns: 1fr 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 8px; margin: 6px 2px; padding: 8px; }
+  .rival-banner { padding: 4px 8px; }
+  .rival-banner h3 { font-size: 22px; }
+  .rival-speech p { font-size: 20px; }
+  .rival-art .rival-sprite { height: min(134px, 54cqh); }
+}
+@media (max-width: 760px) and (max-height: 650px) {
+  .game[data-view='stage']:not(.chat-closed):not(.puzzle-closed) { grid-template-rows: 72px minmax(0, 1fr); gap: 8px; padding: 8px; }
+  .game[data-view='stage'] .puzzle-chat-lock, .game[data-view='stage'] .typing { display: none; }
+  .game[data-view='stage'] .conversation-panel .pixel-titlebar { min-height: 25px; }
+  .game.has-closed-windows[data-view='stage'] { padding-bottom: 56px; }
+  .stage[data-step='rsa-0'] .stage-subtitle { display: none; }
+  .prime-form .field-error { font-size: 16px; margin-top: 4px; }
+}
+@media (min-width: 761px) and (max-height: 650px) {
+  .game[data-view='stage'] { padding-block: 8px; }
+  .game.has-closed-windows[data-view='stage'] { padding-bottom: 50px; }
+  .window-dock { bottom: 7px; }
+  .window-dock button { min-height: 34px; padding: 5px 10px; font-size: 18px; }
+  .stage[data-step='rsa-0'] .stage-subtitle { display: none; }
+}

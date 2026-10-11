@@ -2,9 +2,13 @@
 
 `pixel-ui.css` is the shared reference-inspired visual skin, loaded after the structural `main.css`. `story-scenes.css` follows it and owns the in-person scenes, centered desk and end screen. `puzzle-window.css` owns the independent 30/70 chat/puzzle composition and its stacked phone layout. None imports rejected concept code.
 
-`message-windows.css` is the final interaction layer: X buttons, the pending-message status, invitation context inside the puzzle, restore controls, and Zeno’s red modal with backdrop blur. `js/window-motion.js` handles short message/window motions and cancels them on reset. The animation does not decide cryptographic success or message delivery.
+`message-windows.css` supplies X buttons for Alice's chat/puzzle, pending-message status, restore controls, and Zeno’s red modal with backdrop blur. Zeno has no close button and prevents native cancel events; only finishing recovery closes his popup. `js/window-motion.js` handles short message/window motions and cancels them on reset. The animation does not decide cryptographic success or message delivery.
 
-`desktop-motion.css` (loaded before `message-windows.css`) and `js/desktop-motion.js` add the teammate's chat attachments, window layout transitions, message arrivals and Zeno reveal. The merge keeps the requested 30/70 layout, actual pending-message flight and single red modal. Minimize, X, Escape, attachments and the dock share the same state-preserving window lifecycle; there is no second reveal dialog or competing resume bar. Window scaling is uniform to preserve sprite proportions. Completed attachments become read-only history, and restarting clears them.
+`desktop-motion.css` (loaded before `message-windows.css`) and `js/desktop-motion.js` add the teammate's chat attachments, window layout transitions, message arrivals and Zeno reveal. Alice's minimize, X, Escape, attachments and dock share the same state-preserving window lifecycle. Window scaling is uniform to preserve sprite proportions. Completed attachments become read-only history, and restarting clears them.
+
+`puzzle-fit.css` is the final puzzle layout layer. Its visual thesis is one readable mathematical result per pixel window. Content is a short heading, the current diagram or compact equivalent, one sentence, and persistent navigation. The actual-message flight, step reveal and Zeno entrance/exit retain causal motion. On narrow or short screens, compact formulas replace dense SVGs using the same computed values; chat uses less vertical space on short phones. Extended explanations, errors and complete measurements remain in the optional Details dialog. Gameplay needs no scrolling; optional reference reading can scroll.
+
+Every heart illustration uses `assets/heart.svg`, the favicon. `js/ui-text.js` draws inline text hearts with that asset while preserving their original `textContent`; actual message bytes and RSA round trips remain unchanged.
 
 Visual thesis: a lilac pixel desktop with cream speech balloons, stepped ink outlines, green primary keys and pink send/reply accents, matching the user's supplied pixel-window reference.
 

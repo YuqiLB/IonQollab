@@ -7,6 +7,7 @@ import { runAttack, liveAvailable, lessonBase } from './js/quantum-adapter.js';
 import { primesVisual, phiVisual, keyVisual, encodingVisual, ringVisual, sequenceVisual, circuitVisual, factorVisual, pqVisual } from './js/visuals.js';
 
 import { moveWindows, resetMotion } from './js/desktop-motion.js';
+import { uiText } from './js/ui-text.js';
 
 const $ = id => document.getElementById(id);
 const allowed = {
@@ -32,7 +33,7 @@ function orderOfBase(n, a) {
 const el = (tag, cls, content) => {
   const node = document.createElement(tag);
   if (cls) node.className = cls;
-  if (content != null) node.textContent = content;
+  if (content != null) uiText(node, content);
   return node;
 };
 function button(label, action, cls = '') {
@@ -80,7 +81,7 @@ function rivalInterruption() {
   const scene = el('aside', 'rival-interruption');
   scene.setAttribute('aria-label', 'Zeno interrupts with his quantum computer');
   const speech = el('div', 'rival-speech');
-  speech.append(el('div', 'message-label', 'ZENO · UNINVITED'), el('p', '', 'A private invitation? Cute. Let’s see how private.'));
+  speech.append(el('div', 'message-label', 'ZENO · UNINVITED'), el('p', '', 'A private invitation? Cute.'));
   const art = el('div', 'rival-art');
   art.append(rivalSprite('standing'), rivalSprite('machine'));
   const banner = el('div', 'rival-banner'); banner.append(el('h3', '', 'ZENO INTERCEPTS!'));
@@ -267,7 +268,7 @@ function showStage(source = null) {
     state.puzzleClosed = false; updateWindowDock();
   }, sourceRect ? null : source);
   $('message-context').hidden = false;
-  $('pending-message').textContent = state.phase === 'RSA' ? state.invitation : source?.querySelector('.message-text')?.textContent || 'Let’s upgrade the protection.';
+  uiText($('pending-message'), state.phase === 'RSA' ? state.invitation : source?.querySelector('.message-text')?.textContent || 'Let’s upgrade the protection.');
   $('message-context-label').textContent = state.phase === 'RSA' ? 'YOUR PENDING INVITATION' : 'A NEW ENVELOPE';
   $('message-context-status').textContent = state.phase === 'RSA' ? 'Encrypting… Complete the steps below to send.' : 'Illustrative protection upgrade · then choose a new invitation.';
   setActions([]); updateComposer();
@@ -331,14 +332,20 @@ function setStep(step) { state.step = step; renderStage(); $('stage').scrollTop 
 function stageBase(title, subtitle, count) {
   $('stage-title').textContent = title; $('stage-subtitle').textContent = subtitle;
   $('step-count').textContent = count;
-  $('execution-controls').hidden = !['INTERCEPT', 'RECOVER'].includes(state.phase);
+  $('execution-controls').hidden = state.phase !== 'INTERCEPT' || state.step === 0;
+  $('stage').dataset.step = state.phase.toLowerCase() + '-' + state.step;
   $('stage-caption').textContent = ''; $('stage-nav').replaceChildren(); $('stage-body').replaceChildren();
   $('stage-body').className = 'stage-body animate';
   $('stage').classList.toggle('rival-stage', ['INTERCEPT', 'RECOVER'].includes(state.phase));
-  $('skip-animation').textContent = 'Skip animation';
+  $('skip-animation').textContent = 'Skip';
 }
-function visual(markup) { const holder = el('div', 'visual'); holder.innerHTML = markup; $('stage-body').append(holder); }
-function caption(content) { $('stage-caption').textContent = content; }
+function visual(markup, compact = []) {
+  const holder = el('div', 'visual'); holder.innerHTML = markup;
+  const small = el('div', 'compact-visual');
+  compact.forEach(line => small.append(el('div', '', line)));
+  holder.append(small); $('stage-body').append(holder);
+}
+function caption(content, brief = content) { state.explanation = content; $('stage-caption').textContent = brief; }
 function renderStage() {
   if (state.renderedPhase !== state.phase) $('stage').scrollTop = 0;
   if (['INTERCEPT', 'RECOVER'].includes(state.phase)) $('zeno-title').textContent = state.phase === 'INTERCEPT' ? 'ZENO / PACKET INTERCEPTED' : 'ZENO / THE COPIED PACKET';
@@ -348,12 +355,11 @@ function renderStage() {
   if (state.phase === 'RECOVER') renderRecovery();
   if (state.phase === 'PQ') renderPQ();
   state.renderedPhase = state.phase; state.stageDirty = false;
-  $('puzzle-context').textContent = ({ RSA: 'Alice’s attachment / Lock our invitation', INTERCEPT: 'Zeno’s machine / Your copied invitation', RECOVER: 'Zeno’s machine / Recovering your message', PQ: 'Alice’s attachment / A better envelope' })[state.phase];
   syncTask(); queuePuzzleMessage();
 }
 function renderRSA() {
-  const titles = ['Enter two prime numbers', 'Calculate the public modulus', 'Calculate φ(n)', 'Set the RSA exponents', 'Encode your message', 'Encrypt a message block', 'Send the encrypted packet'];
-  stageBase(titles[state.step], state.step === 0 ? 'Build an RSA key to encrypt the invitation you’re about to send to Alice.' : 'RSA encryption · turning your invitation into ciphertext.', (state.step + 1) + ' / 7');
+  const titles = ['Choose two primes', 'Find the public modulus', 'Calculate φ(n)', 'Build the key pair', 'Encode your message', 'Encrypt one block', 'Ready to send'];
+  stageBase(titles[state.step], 'Toy RSA · deliberately insecure', (state.step + 1) + ' / 7');
   const next = () => setStep(state.step + 1), back = state.step ? () => setStep(state.step - 1) : null;
   if (state.step === 0) {
     const form = el('form', 'prime-form'); form.noValidate = true;
@@ -361,10 +367,10 @@ function renderRSA() {
     ['p', 'q'].forEach(name => {
       const label = el('label', '', name + ' ='); const input = el('input');
       input.type = 'text'; input.inputMode = 'numeric'; input.id = 'prime-' + name; input.name = name; input.maxLength = 2; input.autocomplete = 'off'; input.setAttribute('aria-describedby', 'prime-help prime-error');
-      input.value = state.primeDraft[name]; input.addEventListener('input', () => { state.primeDraft[name] = input.value; });
+      input.value = state.primeDraft[name]; input.addEventListener('input', () => { state.primeDraft[name] = input.value; $('prime-error').textContent = ''; });
       label.append(input); fields.append(label);
     });
-    const help = el('p', 'prime-help', 'Choose two distinct odd primes with p × q ≤ 63. This lesson fixes e = 3; try (3, 5), (3, 11), (3, 17), or (5, 11). The largest circuit uses 18 qubits.'); help.id = 'prime-help';
+    const help = el('p', 'prime-help', 'Distinct odd primes · p × q ≤ 63 · e = 3'); help.id = 'prime-help';
     const error = el('p', 'field-error'); error.id = 'prime-error'; error.setAttribute('role', 'alert');
     form.append(fields, help, button('Use demo values', () => { $('prime-p').value = '3'; $('prime-q').value = '5'; state.primeDraft = { p: '3', q: '5' }; error.textContent = ''; }), error);
     const validate = () => {
@@ -376,29 +382,32 @@ function renderRSA() {
         state.selectedBlock = state.encoded.digits.findIndex((m, i) => state.packet.ciphertext[i] !== m);
         if (state.selectedBlock < 0) state.selectedBlock = Math.min(2, state.encoded.digits.length - 1);
         next();
-      } catch (e) { error.textContent = e.message; }
+      } catch (e) {
+        state.explanation = e.message;
+        error.textContent = e.message.includes('fixes e = 3') ? 'This lesson fixes e = 3. Try 3 and 5.' : e.message.includes('odd primes') ? 'Choose odd primes. Try 3 and 5.' : e.message.includes('63 or below') ? 'Keep p × q ≤ 63. Try 3 and 5.' : e.message;
+      }
     };
     form.addEventListener('submit', e => { e.preventDefault(); validate(); }); $('stage-body').append(form);
-    caption('Deliberately insecure textbook RSA: tiny parameters, no production padding. Your primes stay in the game; only their public product N is sent to the quantum attack.');
+    caption('Choose distinct odd primes with p × q ≤ 63 and e = 3. Try (3, 5), (3, 11), (3, 17), or (5, 11). This is deliberately insecure textbook RSA with no padding. Only the public product N goes to the attack.', 'Your primes stay private; their product becomes public.');
     stageNavigation('Calculate n →', validate); return;
   }
   const keys = state.keys;
-  if (state.step === 1) { visual(primesVisual(keys.p, keys.q, true)); caption('Multiply the two primes. The product n = ' + keys.n + ' becomes public; the two factors are meant to stay private.'); }
-  if (state.step === 2) { visual(phiVisual(keys)); caption('φ(n) counts numbers below n that share no factor with it. For two distinct primes, φ(n) = (p − 1)(q − 1) = ' + keys.phi + '.'); }
-  if (state.step === 3) { visual(keyVisual(keys)); caption('This lesson fixes e = 3. The private exponent d solves e × d ≡ 1 (mod φ(n)). These tiny textbook values are deliberately insecure; the disclaimer explains the limits.'); }
+  if (state.step === 1) { visual(primesVisual(keys.p, keys.q, true), [keys.p + ' × ' + keys.q, 'n = ' + keys.n]); caption('Multiply the two primes. The product n = ' + keys.n + ' becomes public; the two factors are meant to stay private.', 'Multiply your primes to get the public modulus.'); }
+  if (state.step === 2) { visual(phiVisual(keys), ['(' + keys.p + ' − 1) × (' + keys.q + ' − 1)', 'φ(n) = ' + keys.phi]); caption('φ(n) counts numbers below n that share no factor with it. For two distinct primes, φ(n) = (p − 1)(q − 1) = ' + keys.phi + '.', 'Count the residues that share no factor with n.'); }
+  if (state.step === 3) { visual(keyVisual(keys), ['PUBLIC: n = ' + keys.n + ' · e = ' + keys.e, 'PRIVATE: d = ' + keys.d]); caption('This lesson fixes e = 3. The private exponent d solves e × d ≡ 1 (mod φ(n)). These tiny textbook values are deliberately insecure; the disclaimer explains the limits.', keys.e + ' × ' + keys.d + ' ≡ 1 (mod ' + keys.phi + '). Keep d private.'); }
   if (state.step === 4) {
-    const byte = new TextEncoder().encode(state.invitation)[0]; visual(encodingVisual(byte, state.encoded.digits.slice(0, state.encoded.width), keys.n));
-    caption('Your actual first UTF-8 byte is ' + byte + '. Each byte uses ' + state.encoded.width + ' fixed-width base-' + keys.n + ' digits, including leading zeroes. Unicode round-trips too.');
+    const byte = new TextEncoder().encode(state.invitation)[0], digits = state.encoded.digits.slice(0, state.encoded.width);
+    visual(encodingVisual(byte, digits, keys.n), ['UTF-8 byte: ' + byte, 'Base ' + keys.n + ': ' + digits.join(' · ')]);
+    caption('Your actual first UTF-8 byte is ' + byte + '. Each byte uses ' + state.encoded.width + ' fixed-width base-' + keys.n + ' digits, including leading zeroes. Unicode round-trips too.', 'Each byte becomes ' + state.encoded.width + ' base-' + keys.n + ' digits. Keep leading zeroes.');
   }
   if (state.step === 5) {
-    const m = state.encoded.digits[state.selectedBlock], c = state.packet.ciphertext[state.selectedBlock]; visual(ringVisual(m, keys.n, keys.e));
-    caption('Selected block #' + (state.selectedBlock + 1) + ': m = ' + m + '. Raise m to the public exponent and keep the remainder: c = m^' + keys.e + ' mod ' + keys.n + ' = ' + c + '. The path connects those residues.');
+    const m = state.encoded.digits[state.selectedBlock], c = state.packet.ciphertext[state.selectedBlock]; visual(ringVisual(m, keys.n, keys.e), [m + '^' + keys.e + ' mod ' + keys.n, 'c = ' + c]);
+    caption('Selected block #' + (state.selectedBlock + 1) + ': m = ' + m + '. Raise m to the public exponent and keep the remainder: c = m^' + keys.e + ' mod ' + keys.n + ' = ' + c + '. The path connects those residues.', 'Raise the block to e, then keep the remainder.');
   }
   if (state.step === 6) {
-    $('stage-body').append(el('div', 'math-equation', 'c = m^' + keys.e + ' mod ' + keys.n), el('p', 'math-small', state.packet.byteLength + ' UTF-8 bytes · ' + state.packet.ciphertext.length + ' encrypted blocks'));
-    const packet = el('div', 'packet-preview', state.packet.ciphertext.slice(0, 54).join(' · ') + (state.packet.ciphertext.length > 54 ? ' …' : '')); $('stage-body').append(packet);
-    $('stage-body').append(el('p', 'math-small', 'Public metadata: n = ' + keys.n + ' · e = ' + keys.e + ' · ' + state.packet.width + ' digits / byte'));
-    caption('The full packet contains every encrypted block and its decoding metadata. Someone on the channel can copy the envelope without knowing what it says.');
+    $('stage-body').append(el('p', 'math-small', state.packet.byteLength + ' UTF-8 bytes · ' + state.packet.ciphertext.length + ' encrypted blocks'));
+    const packet = el('div', 'packet-preview', state.packet.ciphertext.slice(0, 8).join(' · ') + ' …'); $('stage-body').append(packet);
+    caption('The full packet contains every encrypted block and its decoding metadata. Someone on the channel can copy the envelope without knowing what it says.', 'First 8 encrypted blocks. The full packet is ready.');
   }
   stageNavigation(state.step === 6 ? 'Send encrypted packet ↗' : ['','','Calculate φ(n) →','Choose the exponent →','Encode my message →','Encrypt a block →','Prepare the packet →'][state.step + 1] || 'Next →', state.step === 6 ? intercept : next, back);
 }
@@ -431,43 +440,27 @@ function openZeno() {
   syncTask();
   $('stage-title').focus({ preventScroll: true });
 }
-async function dismissZeno() {
-  if (state.phase === 'RECOVER' && state.step === 4 && state.recoveredText != null) return consequence();
-  if (state.zenoClosing || !$('zeno-popup').open) return;
-  const epoch = generation;
-  state.zenoClosing = true; $('close-zeno').disabled = true; $('stage').inert = true; $('zeno-popup').classList.add('closing');
-  await closePopup($('zeno-popup'));
-  if (epoch !== generation) return;
-  $('zeno-popup').close(); $('zeno-popup').classList.remove('closing'); $('stage').inert = false;
-  state.zenoClosing = false; state.zenoDismissed = true; $('close-zeno').disabled = false;
-  updateWindowDock(); $('restore-zeno').focus({ preventScroll: true });
-}
 function renderIntercept() {
-  stageBase(state.step === 0 ? 'Your invitation. My window.' : 'Run the quantum attack', 'Zeno copied the ciphertext. Copying it is easy. Reading it takes the next step.', '');
+  stageBase(state.step === 0 ? 'Your invitation. My window.' : 'Run the quantum attack', state.step === 0 ? '' : 'Toy order finding · not modern encryption', '');
   if (state.step === 0 && state.job === 'idle') {
     $('stage-body').append(rivalInterruption());
-    const base = lessonBase(state.intercepted.n);
-    visual(sequenceVisual(state.intercepted.n, base, orderOfBase(state.intercepted.n, base)));
-    caption('The public modulus is N = ' + state.intercepted.n + '. For a = ' + base + ', modular powers repeat. Quantum order finding estimates that repetition; at this tiny size we can also see it directly.');
+    caption('Zeno copied the public modulus and ciphertext. The next step uses order finding to try to recover the toy key.', 'He copied your encrypted packet. Now he wants the key.');
     stageNavigation('See the quantum circuit →', () => setStep(1));
     return;
   }
-  const rival = el('div', 'rival-avatar');
-  rival.append(rivalSprite('standing'), rivalSprite('machine'), el('p', '', '“If I factor ' + state.intercepted.n + ', I can recover the toy key. And maybe get to your date first.”'));
-  $('stage-body').append(rival);
   const base = lessonBase(state.intercepted.n);
-  visual(circuitVisual(state.intercepted.n, base));
+  visual(circuitVisual(state.intercepted.n, base), ['H → controlled powers', 'QFT⁻¹ → measure', 'Schematic · N = ' + state.intercepted.n + ', a = ' + base]);
   const status = el('div', 'job-status ' + state.job);
   status.id = 'job-status'; status.setAttribute('role', 'status');
-  status.textContent = state.job === 'idle' ? (state.mode === 'demo' ? 'Illustrative demo—no quantum job executed. Run the sequence with deterministic sample measurements.' : 'Live Qollab: select a simulator with Select QPU. ' + (liveAvailable() ? 'Python adapter connected.' : 'Python adapter is not yet connected.')) :
-    state.job === 'submitting' ? 'Submitting the quantum job…' : state.job === 'waiting' ? (state.mode === 'demo' ? 'Preparing labeled sample measurements…' : 'Waiting for Qollab’s actual result. The interface remains available.') :
-    state.job === 'success' ? (state.result.source === 'sample' ? 'Sample measurements processed. ' : 'Live measurements received. ') + 'A candidate period passed mathematical verification.' : state.job === 'inconclusive' ? 'Measurements returned, but no useful period was recovered. Nothing has been decrypted.' : state.error;
+  status.textContent = state.job === 'idle' ? (state.mode === 'demo' ? 'Ready to use sample measurements.' : liveAvailable() ? 'Ready. Select a simulator with Select QPU.' : 'Live adapter not connected.') :
+    state.job === 'submitting' ? 'Submitting the quantum job…' : state.job === 'waiting' ? (state.mode === 'demo' ? 'Preparing sample measurements…' : 'Waiting for Qollab’s result…') :
+    state.job === 'success' ? (state.result.source === 'sample' ? 'Sample' : 'Live') + ' result · period verified.' : state.job === 'inconclusive' ? 'No useful period found. Nothing decrypted.' : !liveAvailable() && state.mode === 'live' ? 'Live adapter not connected. Nothing decrypted.' : 'Attack failed. See Details. Nothing decrypted.';
   if (state.job === 'error' || state.job === 'inconclusive') {
     if (state.mode === 'live') status.append(button('Explicitly switch to illustrative demo', () => { if (!['error', 'inconclusive'].includes(state.job)) return; changeMode('demo'); renderStage(); }, 'quiet'));
   }
-  if (state.job === 'inconclusive' && state.result) status.append(button('Inspect returned measurements', () => { const detail = el('pre', 'packet-preview', JSON.stringify(state.result.distribution, null, 2)); detail.setAttribute('aria-label', state.result.distribution_kind); status.append(detail); }, 'quiet'));
+  if (state.job === 'inconclusive' && state.result) status.append(button('Inspect returned measurements', openAbout, 'quiet'));
   $('stage-body').append(status);
-  caption('Fictional future machine; tiny simulator demonstration. The attack receives public N = ' + state.intercepted.n + ' and a = ' + base + ', not your selected prime factors. It does not break production RSA, AES, or every end-to-end scheme.');
+  caption('Fictional future machine; tiny simulator demonstration. The attack receives public N = ' + state.intercepted.n + ' and a = ' + base + ', not your selected prime factors. It does not break production RSA, AES, or every end-to-end scheme.', 'Only public N = ' + state.intercepted.n + ' and a = ' + base + ' go to the attack.');
   if (state.job === 'success') stageNavigation('Inspect the measurements →', () => { transition('RECOVER'); renderStage(); });
   else {
     const b = button(['waiting', 'submitting'].includes(state.job) ? 'Job in progress…' : state.job === 'idle' ? 'Run quantum attack →' : 'Retry quantum attack →', launchAttack, 'primary rose');
@@ -502,41 +495,41 @@ function measurements() {
   const chart = el('div', 'measurements');
   const entries = Object.entries(distribution).sort((a, b) => b[1] - a[1]);
   const max = Math.max(...entries.map(x => x[1]));
-  for (const [key, value] of entries.slice(0, 8)) {
+  for (const [key, value] of entries.slice(0, 4)) {
     const col = el('div', 'measurement'); const bar = el('div', 'bar');
-    bar.style.height = (value / max * 95) + 'px';
-    col.append(el('span', '', kind === 'counts' ? value : (value * 100).toFixed(1) + '%'), bar, el('span', '', key));
+    bar.style.setProperty('--bar-size', (value / max * 100) + '%');
+    col.append(el('span', '', kind === 'counts' ? value : (value * 100).toFixed(1) + '%'), bar, el('span', '', 'y=' + parseInt(key, 2)));
     col.setAttribute('aria-label', key + ': ' + value + ' ' + kind); chart.append(col);
   }
-  $('stage-body').append(chart, el('p', 'math-small', kind === 'counts' ? total + ' measured shots · binary phase-register outcomes' : 'Returned probabilities · not integer shot counts'));
-  const details = el('details'); details.append(el('summary', 'quiet', 'All returned values (' + kind + ')'), el('pre', 'packet-preview', JSON.stringify(distribution, null, 2))); $('stage-body').append(details);
+  $('stage-body').append(chart, el('p', 'math-small', 'Largest ' + Math.min(4, entries.length) + ' outcomes · ' + (kind === 'counts' ? total + ' shots' : 'probabilities')));
+  $('stage-body').append(button('All measurements ↗', openAbout, 'quiet results-details'));
 }
 function renderRecovery() {
-  const titles = ['Read the measurements', 'Verify the period', 'Recover the prime factors', 'Recover the private key', 'Read the decrypted message'];
-  stageBase(titles[state.step], state.result.source === 'sample' ? 'Illustrative demo—no quantum job executed. Classical recovery is computed.' : 'Live Qollab measurements. Classical recovery is computed in this browser.', (state.step + 1) + ' / 5');
-  if (state.step === 0) { measurements(); caption('Read each bitstring as y / 2ᵗ. Continued fractions propose a period; modular arithmetic must verify it. A returned job alone is not a successful attack.'); }
-  if (state.step === 1) { visual(sequenceVisual(state.intercepted.n, state.result.base, state.result.period)); caption('The returned phases yield the verified candidate r = ' + state.result.period + '. Checking ' + state.result.base + '^r mod ' + state.intercepted.n + ' and every smaller positive exponent confirms the order.'); }
-  if (state.step === 2) { visual(factorVisual(state.result.period, state.result.factors, state.intercepted.n, state.result.base)); caption('The even period gives gcd(a^(r/2) − 1, N) and gcd(a^(r/2) + 1, N). These recover ' + state.result.factors.join(' and ') + ', whose product is the intercepted modulus.'); }
+  const titles = ['Read the measurements', 'Verify the period', 'Recover the factors', 'Recover the private key', 'Your message, decrypted'];
+  stageBase(titles[state.step], state.result.source === 'sample' ? 'Sample measurements · no quantum job' : 'Live Qollab measurements', (state.step + 1) + ' / 5');
+  if (state.step === 0) { measurements(); caption('Read each bitstring as y / 2ᵗ. Continued fractions propose a period; modular arithmetic must verify it. A returned job alone is not a successful attack.', 'Measured phases suggest a period. Verify it next.'); }
+  if (state.step === 1) { visual(sequenceVisual(state.intercepted.n, state.result.base, state.result.period), [state.result.base + '^' + state.result.period + ' mod ' + state.intercepted.n + ' = 1', 'Period r = ' + state.result.period]); caption('The returned phases yield the verified candidate r = ' + state.result.period + '. Checking ' + state.result.base + '^r mod ' + state.intercepted.n + ' and every smaller positive exponent confirms the order.', 'r = ' + state.result.period + ' is the first exponent that returns to 1.'); }
+  if (state.step === 2) { visual(factorVisual(state.result.period, state.result.factors, state.intercepted.n, state.result.base), ['Factors: ' + state.result.factors.join(' and '), state.result.factors.join(' × ') + ' = ' + state.intercepted.n]); caption('The even period gives gcd(a^(r/2) − 1, N) and gcd(a^(r/2) + 1, N). These recover ' + state.result.factors.join(' and ') + ', whose product is the intercepted modulus.', 'gcd(a^(r/2) ± 1, N) reveals the two factors.'); }
   if (state.step === 3) {
-    visual(keyVisual(state.recoveredKey));
+    visual(keyVisual(state.recoveredKey), ['φ(n) = ' + state.recoveredKey.phi, 'Recovered d = ' + state.recoveredKey.d]);
     const c = state.intercepted.ciphertext[state.selectedBlock], m = modPow(c, state.recoveredKey.d, state.intercepted.n);
-    caption('From the recovered factors: φ = ' + state.recoveredKey.phi + ', d = ' + state.recoveredKey.d + '. Selected block: ' + c + '^' + state.recoveredKey.d + ' mod ' + state.intercepted.n + ' = ' + m + '. Decrypt every block, restore the fixed-width bytes, then decode UTF-8.');
+    caption('From the recovered factors: φ = ' + state.recoveredKey.phi + ', d = ' + state.recoveredKey.d + '. Selected block: ' + c + '^' + state.recoveredKey.d + ' mod ' + state.intercepted.n + ' = ' + m + '. Decrypt every block, restore the fixed-width bytes, then decode UTF-8.', 'Decrypt a block: ' + c + '^' + state.recoveredKey.d + ' mod ' + state.intercepted.n + ' = ' + m + '.');
   }
   if (state.step === 4) {
     if (state.job !== 'success' || typeof state.recoveredText !== 'string') throw new Error('Recovery required before reveal.');
-    $('stage-body').append(el('div', 'result-label', 'ACTUAL INTERCEPTED MESSAGE · DECRYPTED'), el('blockquote', 'leak-quote', state.recoveredText));
-    caption('Zeno recovered your actual words from the ciphertext. The quantum sample/live distinction changes where the measurements came from; the toy decryption is real.');
+    $('stage-body').append(el('blockquote', 'leak-quote', state.recoveredText));
+    caption('Zeno recovered your actual words from the ciphertext. The quantum sample/live distinction changes where the measurements came from; the toy decryption is real.', 'Your actual words, recovered from the toy ciphertext.');
   }
   stageNavigation(state.step === 4 ? 'Return to the conversation →' : 'Next →', state.step === 4 ? consequence : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : null);
 }
 async function consequence() {
   if (state.phase !== 'RECOVER' || state.recoveredText == null || state.zenoClosing) return;
   const epoch = generation;
-  state.zenoClosing = true; $('close-zeno').disabled = true; $('stage').inert = true; $('zeno-popup').classList.add('closing');
+  state.zenoClosing = true; $('stage').inert = true; $('zeno-popup').classList.add('closing');
   await closePopup($('zeno-popup'));
   if (epoch !== generation) return;
   $('zeno-popup').close(); $('zeno-popup').classList.remove('closing'); $('stage').inert = false;
-  state.zenoClosing = false; $('close-zeno').disabled = false;
+  state.zenoClosing = false;
   finishTask('attack', 'Key recovered · invitation leaked', true);
   transition('CHOICE');
   setActions([]); showChat();
@@ -564,15 +557,17 @@ function choiceActions() {
   syncTask();
 }
 function renderPQ() {
-  const titles = ['Receive Alice’s ML-KEM public key', 'Encapsulate a shared secret', 'Recover the same shared secret', 'Protect the message with a symmetric key'];
+  const titles = ['Alice shares a public key', 'Make a shared secret', 'Alice recovers the secret', 'Protect the message'];
   const captions = [
     'Alice provides an ML-KEM public key, authenticated as hers. Her decapsulation key stays private. This scheme uses different mathematics from RSA factoring.',
     'You encapsulate: the public key produces a shared secret S and encapsulation data Cₖₑₘ. Only Cₖₑₘ crosses the channel. The shared secret is not sent.',
     'Alice decapsulates Cₖₑₘ with her private key to recover the same S. Matching tokens illustrate that agreement; they are not computed cryptographic secrets.',
     'Both sides derive a symmetric key K from S. Authenticated encryption then protects the text and detects tampering. ML-KEM establishes a secret; it does not encrypt chat text directly.',
   ];
-  stageBase(titles[state.step], 'Illustrative post-quantum exchange · no ML-KEM or authenticated encryption is executed.', (state.step + 1) + ' / 4');
-  visual(pqVisual(state.step)); caption(captions[state.step]);
+  const compact = [['ALICE → YOU', 'ML-KEM public key'], ['YOU: secret S', 'Send Cₖₑₘ → ALICE'], ['Decaps(sk, Cₖₑₘ)', 'ALICE: same secret S'], ['KDF(S) → key K', 'Text + auth tag']];
+  const briefs = ['Her authenticated public key travels. Her private key stays.', 'Keep S. Send only the encapsulation data Cₖₑₘ.', 'Her private key recovers S. Matching tokens are illustrative.', 'A derived symmetric key protects the text and its integrity.'];
+  stageBase(titles[state.step], 'Illustration only · no post-quantum computation', (state.step + 1) + ' / 4');
+  visual(pqVisual(state.step), compact[state.step]); caption(captions[state.step], briefs[state.step]);
   stageNavigation(state.step === 3 ? 'Choose a new invitation ♥' : 'Next →', state.step === 3 ? retryConversation : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : null);
 }
 async function retryConversation() {
@@ -591,12 +586,17 @@ function changeMode(mode) {
   if (view === 'stage' && state.phase === 'INTERCEPT') renderStage();
 }
 function updateModeLabel() {
-  $('mode-label').textContent = state.mode === 'demo' ? 'Illustrative demo—no quantum job executed.' : 'Live Qollab · ' + (liveAvailable() ? 'Python adapter connected' : 'Python connection required');
+  $('mode-label').textContent = state.mode === 'demo' ? 'No quantum job.' : liveAvailable() ? 'Adapter connected.' : 'Connection required.';
 }
 function openAbout() {
   const report = el('div', 'run-report');
   const description = state.result ? 'This playthrough: ' + (state.result.source === 'sample' ? 'sample measurements (no quantum job)' : 'live Qollab measurements') + '; job status: ' + state.job + '.' : 'This playthrough: ' + (state.job === 'error' ? 'the attack failed. No successful quantum result.' : ['waiting', 'submitting'].includes(state.job) ? 'the attack is still pending.' : 'no attack completed yet.');
   report.append(el('p', '', description), el('p', '', 'Dialogue uses scripted reply choices. No messages are sent to a server or stored persistently.'));
+  if (view === 'stage' && state.explanation) report.append(el('p', '', state.explanation));
+  if (state.error) report.append(el('p', '', state.error));
+  if (state.result?.distribution) {
+    report.append(el('h3', '', 'All returned measurements (' + state.result.distribution_kind + ')'), el('pre', 'measurement-data', JSON.stringify(state.result.distribution, null, 2)));
+  }
   $('run-report').replaceChildren(report); $('about-dialog').showModal();
 }
 export async function restart() {
@@ -605,7 +605,7 @@ export async function restart() {
   resetMotion(); taskCards.clear();
   cancelPuzzleChatter(); cancelWindowMotion();
   if ($('zeno-popup').open) $('zeno-popup').close();
-  $('zeno-popup').classList.remove('closing'); $('close-zeno').disabled = false; $('stage').inert = false;
+  $('zeno-popup').classList.remove('closing'); $('stage').inert = false;
   $('puzzle-window').append($('stage')); $('encryption-summary').hidden = true;
   state = { phase: 'MENU', step: 0, balconyStep: 0, balconyChoice: 0, dateStep: 0, dateLocation: null, chatClosed: false, puzzleClosed: false, zenoDismissed: false, zenoClosing: false, chatterTyping: false, puzzleNotes: new Set(), busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
   lastStageAction = 0; followMessages = true; userScrollUntil = 0;
@@ -666,7 +666,7 @@ function renderBalcony() {
     });
   }
   $('balcony-next').hidden = choosing;
-  $('balcony-next').textContent = beat.last ? (meeting ? 'Finish ♥' : 'Back to my desk ↗') : 'Continue ▼';
+  uiText($('balcony-next'), beat.last ? (meeting ? 'Finish ♥' : 'Back to my desk ↗') : 'Continue ▼');
   $('balcony-hint').textContent = choosing ? 'Choose your reply' : 'Click anywhere in this box';
   $('dialogue-advance').disabled = choosing;
   $('dialogue-advance').setAttribute('aria-label', beat.last ? (meeting ? 'Finish the date' : 'Back to my desk') : 'Continue dialogue');
@@ -747,8 +747,7 @@ $('close-chat').addEventListener('click', () => { moveWindows(() => { state.chat
 $('restore-chat').addEventListener('click', restoreChat);
 $('close-puzzle').addEventListener('click', minimizeTask);
 $('restore-puzzle').addEventListener('click', restorePuzzle);
-$('close-zeno').addEventListener('click', dismissZeno);
-$('zeno-popup').addEventListener('cancel', event => { event.preventDefault(); dismissZeno(); });
+$('zeno-popup').addEventListener('cancel', event => event.preventDefault());
 $('restore-zeno').addEventListener('click', openZeno);
 $('inspect-interception').addEventListener('click', openZeno);
 $('composer').addEventListener('submit', sendMessage);
@@ -764,7 +763,7 @@ new ResizeObserver(() => {
   if (followMessages && ['chat', 'stage'].includes(view)) { $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; }
 }).observe($('messages'));
 $('new-messages').addEventListener('click', () => { followMessages = true; $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; });
-$('replay-animation').addEventListener('click', () => { $('stage-body').classList.remove('animate', 'still'); void $('stage-body').offsetWidth; $('stage-body').classList.add('animate'); $('skip-animation').textContent = 'Skip animation'; });
+$('replay-animation').addEventListener('click', () => { $('stage-body').classList.remove('animate', 'still'); void $('stage-body').offsetWidth; $('stage-body').classList.add('animate'); $('skip-animation').textContent = 'Skip'; });
 $('skip-animation').addEventListener('click', () => { $('stage-body').classList.add('still'); $('skip-animation').textContent = 'Motion skipped ✓'; });
 $('about-button').addEventListener('click', openAbout);
 $('close-about').addEventListener('click', () => $('about-dialog').close());

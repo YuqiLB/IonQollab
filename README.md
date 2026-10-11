@@ -63,7 +63,7 @@ The adapter in `js/quantum-adapter.js` converts `.toJs()` proxies and nested Map
 
 ## Controls and accessibility
 
-The opening balcony fills the visible viewport, with Alice in the foreground and a lavender visual-novel dialogue box along the bottom. After the walk, a centered chat window sits over Bob’s desk and wall. Puzzles open in a separate window: chat takes the left 30% of the available window space and the puzzle takes the remaining 70%. On narrow screens, compact chat sits above the puzzle. Cream speech balloons, stepped outlines, and green/pink controls carry through the mathematics and explanation dialog. Both windows scroll independently.
+The opening balcony fills the visible viewport, with Alice in the foreground and a lavender visual-novel dialogue box along the bottom. After the walk, a centered chat window sits over Bob’s desk and wall. Puzzles open in a separate window: chat takes the left 30% of the available window space and the puzzle takes the remaining 70%. On narrow screens, compact chat sits above the puzzle. Chat history scrolls independently; every puzzle step keeps its result and navigation in view. Short screens use concise mathematical views and a smaller chat area. Longer reference explanations and raw measurements live in Details.
 
 - Click anywhere on the introduction or press Enter/Space to start. Bob has two in-person replies; each gives Alice a different immediate response and expression. Continue at your own pace, then choose “Back to my desk.” “Skip to texting” is available throughout the balcony scene.
 - The scene change lasts half a second, or is immediate with reduced motion. No dialogue advances on a timer. Alice’s supplied sprite becomes the chat contact avatar once Bob returns to his desk.
@@ -71,13 +71,14 @@ The opening balcony fills the visible viewport, with Alice in the foreground and
 - During puzzles, Alice sends a few scripted texts tied to the current phase. They do not steal focus, duplicate when going Back, or imply a computed result. Replies stay disabled until the story returns to conversation. Reading old messages still preserves your position.
 - Sending an invitation leaves its bubble marked “Encrypting…” and opens the encryption window from that message. The actual text travels into the window and remains visible above the lesson. The status stays pending until the player completes the RSA sequence and releases the real packet; it is an indeterminate teaching-workflow status, not a cryptographic progress percentage.
 - Zeno’s interception/recovery runs in a red modal popup. Gaussian backdrop blur gives the existing chat and encryption windows a frosted-glass appearance. Finishing recovery closes the popup with a short exit animation and returns to Alice. Reduced motion removes the movement.
-- Window X controls close views without discarding progress. Reopen chat or a puzzle from the small restore bar; a held message can also reopen its encryption window. Closing Zeno early does not finish the attack or cancel a remote job. Reopening shows its current state, including a job result that arrived while closed.
+- Alice's window X controls preserve progress. Reopen chat or a puzzle from the restore bar, a task attachment, or the pending invitation. Zeno has no X button and ignores Escape/backdrop dismissal; completing recovery closes his popup through the story action.
 - After the final replacement invitation, select “Meet Alice.” The meeting takes place in the chosen quiet garden or east dome, with its own background and dialogue. Finish the date to reach the end screen, replay, or inspect what actually ran. The original leaked location is not reused for the new plan.
 - Artwork stays crisp during the mathematics. All expressions share the same proportions; reduced-motion mode disables entrance and animated transitions.
 - Prime entry explains how the two primes build the RSA key for the waiting invitation. “Toy RSA” is explicitly defined as an insecure small-number teaching example.
 - Reply choices appear above the unchanged composer. Choose one to preview it, then use the send arrow; direct typing is disabled. Choices and send remain keyboard-accessible.
 - Direct task headings, larger Back/Next controls, Replay animation, and Skip animation. The story returns to the preserved conversation after each sequence.
-- Attack content keeps its natural height and scrolls on short screens, keeping dialogue, diagrams, job results and captions apart. Zeno interrupts with diagonal dialogue across his speech-box edge, accompanied by the supplied standing and quantum-computer sprites. His fallen pose appears once the illustrative protection upgrade is complete.
+- Attack content fits without scrolling. Zeno's entrance and the circuit occupy separate beats; later steps show one result and a concise caption. Compact screens use the same computed values in readable formulas. The supplied standing, machine and fallen sprites remain unchanged.
+- All in-game heart artwork uses the website favicon, `assets/heart.svg`. Rendered text hearts keep their original text content and encrypted bytes.
 - Reduced-motion support reveals the same mathematical states without movement.
 - Reading old messages disables automatic following; a New messages button returns to the latest.
 - Job states are separate from story state: `idle`, `submitting`, `waiting`, `success`, `inconclusive`, `error`.
@@ -102,7 +103,7 @@ The browser suite starts its own static test server on port 4175 and records scr
 
 `node tests/opening-smoke.cjs /path/to/node_modules /path/to/chrome` additionally exercises both balcony replies, keyboard progression, reduced motion, skip, reset during the scene change, and centered desk layouts at four viewport sizes. It uses port 4176 and writes captures to `qa/scenes/`. See [scene design notes](docs/balcony-and-desk.md).
 
-`node tests/message-windows.cjs /path/to/node_modules /path/to/chrome` checks actual invitation text in the animation, pending/sent status, all window close/restore controls, popup blur and keyboard dismissal, job completion while closed, exact recovery for N=15 and N=33, and reset during the opening animation. It uses port 4177 and writes to `qa/windows/`. See [current verification notes](qa/VERIFICATION.md) for test results and any pre-existing failures.
+`node tests/message-windows.cjs /path/to/node_modules /path/to/chrome` checks actual invitation text in the animation, pending/sent status, Alice's close/restore controls, every RSA/attack/recovery/PQ step without scrolling, Zeno's non-dismissible modal, exact recovery for N=15 and N=33, shared heart artwork, and reset during the opening animation. It uses port 4177 and writes to `qa/windows/`. See [current verification notes](qa/VERIFICATION.md) for test results and any pre-existing failures.
 
 ## Files and provenance
 

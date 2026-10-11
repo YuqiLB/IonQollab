@@ -1,4 +1,5 @@
 // Presentation only: no animation can mark a packet sent or an attack successful.
+import { uiText } from './ui-text.js';
 const animations = new Set();
 const flights = new Set();
 const receivers = new Set();
@@ -30,7 +31,7 @@ export function openFromMessage(windowElement, sourceRect, target, text) {
   const receiver = target.parentElement;
   receiver.classList.add('receiving-message'); receivers.add(receiver);
   const flight = document.createElement('div');
-  flight.className = 'message-flight'; flight.textContent = text; flight.setAttribute('aria-hidden', 'true');
+  flight.className = 'message-flight'; uiText(flight, text); flight.setAttribute('aria-hidden', 'true');
   Object.assign(flight.style, { left: sourceRect.left + 'px', top: sourceRect.top + 'px', width: Math.min(sourceRect.width, 440) + 'px' });
   document.body.append(flight); flights.add(flight);
   const x = end.left - sourceRect.left, y = end.top - sourceRect.top;

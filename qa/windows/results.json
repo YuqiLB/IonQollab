@@ -1,9 +1,9 @@
 {
   "checks": [
-    "desktop: pending actual text, attachment/minimize/resume, modal blur, job completion while closed, exact decryption, popup exit and PQ attachment",
-    "phone: pending actual text, attachment/minimize/resume, modal blur, job completion while closed, exact decryption, popup exit and PQ attachment",
-    "compact: pending actual text, attachment/minimize/resume, modal blur, job completion while closed, exact decryption, popup exit and PQ attachment",
-    "landscape: pending actual text, attachment/minimize/resume, modal blur, job completion while closed, exact decryption, popup exit and PQ attachment",
+    "desktop: every RSA/attack/recovery/PQ step fits without scrolling, form errors fit, Zeno resists dismissal, exact decryption and attachment resume",
+    "phone: every RSA/attack/recovery/PQ step fits without scrolling, form errors fit, Zeno resists dismissal, exact decryption and attachment resume",
+    "compact: every RSA/attack/recovery/PQ step fits without scrolling, form errors fit, Zeno resists dismissal, exact decryption and attachment resume",
+    "landscape: every RSA/attack/recovery/PQ step fits without scrolling, form errors fit, Zeno resists dismissal, exact decryption and attachment resume",
     "restart cancels pending open animation; no page errors"
   ],
   "errors": []

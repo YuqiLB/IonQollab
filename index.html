@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="./styles/puzzle-window.css">
   <link rel="stylesheet" href="./styles/desktop-motion.css">
   <link rel="stylesheet" href="./styles/message-windows.css">
+  <link rel="stylesheet" href="./styles/puzzle-fit.css">
 </head>
 <body data-phase="MENU">
   <div class="app">
@@ -23,7 +24,7 @@
 
       <section id="start-screen" class="start-screen" aria-labelledby="intro-title">
         <div class="intro-content">
-          <div class="intro-logo" aria-hidden="true">Qrush<span>♥</span></div>
+          <div class="intro-logo" aria-hidden="true">Qrush<span><img class="game-heart" src="./assets/heart.svg" alt=""></span></div>
           <h2 id="intro-title">Hi there, Bob!</h2>
           <div id="intro-story" class="intro-story">
             <p>It’s 2042. Your late shift at the <strong>Quantum Laboratory</strong> is almost over. After hours researching trapped-ion quantum information, you step out for a short walk.</p>
@@ -36,7 +37,7 @@
         <button id="start-game" class="start-hitarea" type="button" aria-label="Start Qrush" aria-describedby="intro-title intro-story"></button>
       </section>
       <aside class="portrait-panel" aria-label="Alice, quantum researcher">
-        <div class="portrait-wrap"><img id="portrait" src="./assets/characters/mira-idle-68x89.png" alt="Alice, a blue-haired researcher with glasses and a plum jacket, smiling softly" width="68" height="89"><span class="romance-heart" aria-hidden="true">♥</span></div>
+        <div class="portrait-wrap"><img id="portrait" src="./assets/characters/mira-idle-68x89.png" alt="Alice, a blue-haired researcher with glasses and a plum jacket, smiling softly" width="68" height="89"><span class="romance-heart" aria-hidden="true"><img class="game-heart" src="./assets/heart.svg" alt=""></span></div>
       </aside>
       <section id="balcony-scene" class="balcony-ui" aria-label="A walk break with Alice" hidden>
         <div class="scene-location"><span id="scene-place">QUANTUM LABORATORY</span><span id="scene-time">Balcony · late shift</span></div>
@@ -78,21 +79,20 @@
         <div id="message-context" class="message-context" hidden><span id="message-context-label">YOUR PENDING INVITATION</span><p id="pending-message"></p><span id="message-context-status">Encrypting… Complete the steps below to send.</span></div>
         <section id="encryption-summary" class="encryption-summary" hidden><span class="packet-seal" aria-hidden="true">↗</span><h2>Encrypted packet sent.</h2><p id="packet-summary"></p><p class="intercept-warning">Zeno copied the packet on its way out.</p><button id="inspect-interception" class="rose" type="button">Open Zeno’s interception ↗</button></section>
         <section id="stage" class="stage" aria-labelledby="stage-title" hidden>
-          <p id="puzzle-context" class="puzzle-context"></p>
           <h2 id="stage-title" tabindex="-1"></h2><p id="stage-subtitle" class="stage-subtitle"></p>
-          <div class="mode-control" id="execution-controls" hidden><label for="execution-mode">EXECUTION</label><select id="execution-mode"><option value="demo">Illustrative demo</option><option value="live">Live Qollab</option></select><span class="mode-indicator" id="mode-label">Illustrative demo—no quantum job executed.</span><button id="about-button" class="quiet">What actually ran?</button></div>
+          <div class="mode-control" id="execution-controls" hidden><label for="execution-mode">EXECUTION</label><select id="execution-mode"><option value="demo">Illustrative demo</option><option value="live">Live Qollab</option></select><span class="mode-indicator" id="mode-label">No quantum job.</span></div>
           <div id="stage-body" class="stage-body"></div>
           <p id="stage-caption" class="stage-caption" aria-live="polite"></p>
           <div id="stage-nav" class="stage-nav"></div>
-          <div class="motion-controls"><button id="replay-animation" class="quiet">↺ Replay animation</button><button id="skip-animation" class="quiet">Skip animation</button><span id="step-count"></span></div>
+          <div class="motion-controls"><button id="replay-animation" class="quiet" aria-label="Replay animation">↺ Replay</button><button id="skip-animation" class="quiet" aria-label="Skip animation">Skip</button><button id="about-button" class="quiet" aria-label="What actually ran?">Details</button><span id="step-count"></span></div>
         </section>
       </section>
-      <dialog id="zeno-popup" class="zeno-popup" aria-labelledby="zeno-title"><div class="pixel-titlebar"><span id="zeno-title">ZENO / PACKET INTERCEPTED</span><button id="close-zeno" class="window-close" type="button" aria-label="Close Zeno window" title="Close popup · progress is kept">×</button></div></dialog>
-      <nav id="window-dock" class="window-dock" aria-label="Reopen closed windows" hidden><button id="restore-chat" type="button" hidden>♥ Alice’s chat</button><button id="restore-puzzle" type="button" hidden>Resume encryption ↗</button><button id="restore-zeno" type="button" hidden>Zeno · resume interception ↗</button></nav>
+      <dialog id="zeno-popup" class="zeno-popup" aria-labelledby="zeno-title" closedby="none"><div class="pixel-titlebar"><span id="zeno-title">ZENO / PACKET INTERCEPTED</span></div></dialog>
+      <nav id="window-dock" class="window-dock" aria-label="Reopen closed windows" hidden><button id="restore-chat" type="button" hidden><img class="game-heart" src="./assets/heart.svg" alt=""> Alice’s chat</button><button id="restore-puzzle" type="button" hidden>Resume encryption ↗</button><button id="restore-zeno" type="button" hidden>Zeno · resume interception ↗</button></nav>
       <section id="end-screen" class="end-screen" aria-labelledby="end-title" hidden>
         <div class="end-content">
           <p class="end-kicker">THE END</p>
-          <h2 id="end-title" tabindex="-1">Qrush<span aria-hidden="true">♥</span></h2>
+          <h2 id="end-title" tabindex="-1">Qrush<span aria-hidden="true"><img class="game-heart" src="./assets/heart.svg" alt=""></span></h2>
           <p class="end-tagline">Just the two of you.</p>
           <p id="end-location"></p>
           <div class="end-actions"><button id="end-replay" class="rose" type="button">Play again ↺</button><button id="end-about" type="button">What actually ran?</button></div>

@@ -133,6 +133,13 @@ textarea::placeholder { color: #71657f; }
 .story-actions button { font-size: 17px; }
 .composer.inactive { opacity: .8; }
 
+/* One heart asset for branding, character reactions and rendered message text. */
+.game .game-heart, .message-flight .game-heart {
+  display: inline-block; width: 1em; height: 1em; max-width: none; object-fit: contain;
+  vertical-align: -.12em; color: transparent; text-shadow: none; image-rendering: pixelated;
+  background: url('../assets/heart.svg') center / contain no-repeat;
+}
+
 /* The educational and antagonist screens use the same visual vocabulary. */
 .stage { padding: 20px 22px 18px; scrollbar-color: #736393 #e7e3ff; }
 .stage h2 { font: 600 clamp(26px,2.3vw,36px)/1.15 var(--pixel); color: var(--ink); text-shadow: none; margin-bottom: 10px; }

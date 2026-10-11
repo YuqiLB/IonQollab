@@ -1,5 +1,14 @@
 # Qrush verification
 
+## Compact puzzles and shared heart — 2026-10-11
+
+- Puzzle chrome now contains one heading, a brief explanation and persistent actions. Dense diagrams switch to readable formulas with the same computed values when the available width/height is small. On short phones, the companion chat shrinks vertically. Optional Details retains the extended explanation, original error and complete returned measurements.
+- Zeno has no close button. Native cancel events are prevented and `closedby="none"` disables light dismissal. Escape and backdrop clicks cannot end his sequence, including during a pending job or on the decrypted-message reveal. The final recovery action plays the existing exit animation and returns to Alice.
+- The favicon's `assets/heart.svg` is reused in logos, controls, rendered chat, pending text and its animation. Heart spans preserve `textContent`, so invitation bytes and actual toy-RSA decryption are unchanged. Original fonts and character pixels are preserved.
+- Full desktop/mobile story checks pass, including both chosen-location endings, disconnected live failure, explicit demo selection, duplicate submission protection and restart ignoring stale live results. Date viewport assertions now wait for the existing visual-viewport resize handler before measuring.
+- `tests/message-windows.cjs` measures stage/diagram/form/result bounds at each step, including validation errors. It also checks minimized forms/steps, exact N=15/N=33 recovery, reduced motion, non-dismissible Zeno and heart asset usage. Its final result is recorded in [windows/results.json](windows/results.json).
+- Cryptographic modules and backend contracts are unchanged. No live quantum job ran; the existing math-validation failure below remains outside this UI change. Optional reference reading in Details may scroll; puzzle gameplay does not require it.
+
 ## Frontend merge — 2026-10-11
 
 - Combined `201f303` (Alice task attachments and desktop motion) with `e792e70` (pending invitations and red Zeno popup). Conflicts in `index.html` and `main.js` were resolved by sharing one window lifecycle rather than introducing duplicate dialogs or restore bars.

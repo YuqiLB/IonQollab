@@ -11,10 +11,10 @@ let browser;
   await new Promise((resolve, reject) => { server.stdout.once('data', resolve); server.once('error', reject); server.once('exit', n => reject(Error('Server exit ' + n))); setTimeout(() => reject(Error('Server timeout')), 10000).unref(); });
   browser = await chromium.launch({ headless: true, executablePath: process.argv[3] || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
   await mkdir(out, { recursive: true });
-  const errors = [], checks = [];
+  const errors = [], checks = [], layoutErrors = [];
   const p = await browser.newPage(); p.on('pageerror', e => errors.push(e.message));
   const ready = () => p.waitForFunction(() => !document.getElementById('message').disabled);
-  const next = async () => { await p.waitForTimeout(280); await p.locator('#stage-nav button').last().click(); };
+  const next = async () => { await fit(); await p.waitForTimeout(280); await p.locator('#stage-nav button').last().click(); };
   const begin = async index => {
     await p.goto('http://127.0.0.1:4177'); await p.locator('#start-game').click(); await p.locator('#skip-balcony').click(); await ready();
     await p.locator('#suggestions button').first().click(); await p.locator('#send').click(); await ready();
@@ -23,10 +23,10 @@ let browser;
   };
   const fit = async () => {
     await p.evaluate(() => Promise.all(document.getAnimations().filter(a => Number.isFinite(a.effect.getTiming().iterations)).map(a => a.finished.catch(() => {}))));
-    assert.deepEqual(await p.evaluate(() => {
+    const issues = await p.evaluate(() => {
     const issues = [];
     const popup = document.getElementById('zeno-popup');
-    for (const selector of popup.open ? ['#zeno-popup', '#close-zeno'] : ['#conversation-window', '#puzzle-window', '#window-dock', '#close-chat', '#close-puzzle']) {
+    for (const selector of popup.open ? ['#zeno-popup', '#stage-nav'] : ['#conversation-window', '#puzzle-window', '#window-dock', '#close-chat', '#close-puzzle']) {
       const e = document.querySelector(selector);
       if (!e.getClientRects().length) continue;
       const b = e.getBoundingClientRect();
@@ -35,8 +35,21 @@ let browser;
     if (document.documentElement.scrollWidth > innerWidth) issues.push('outer overflow');
     const dock = document.getElementById('window-dock');
     if (!dock.hidden && dock.scrollWidth > dock.clientWidth + 1) issues.push('restore controls overflow');
+    const stage = document.getElementById('stage'), bounds = stage.getBoundingClientRect();
+    if (stage.getClientRects().length) {
+      for (const e of [stage, ...stage.querySelectorAll('.stage-body, .visual, .compact-visual, .prime-form, .rival-interruption, .measurements, .job-status, .packet-preview')]) {
+        if (!e.getClientRects().length) continue;
+        if (e.scrollHeight > e.clientHeight + 2 || e.scrollWidth > e.clientWidth + 2) issues.push(stage.dataset.step + ': ' + (e.id || e.className) + ' requires scrolling ' + e.clientWidth + 'x' + e.clientHeight + ' / ' + e.scrollWidth + 'x' + e.scrollHeight);
+      }
+      for (const e of [...stage.children].filter(e => e.getClientRects().length)) {
+        const b = e.getBoundingClientRect();
+        if (b.top < bounds.top - 1 || b.bottom > bounds.bottom + 1) issues.push(stage.dataset.step + ': ' + e.id + ' outside stage');
+      }
+    }
     return issues;
-    }), [], JSON.stringify(p.viewportSize()));
+    });
+    if (issues.length) await p.screenshot({ path: path.join(out, 'fit-failure.png'), animations: 'disabled' });
+    if (issues.length) { const detail = { size: p.viewportSize(), issues }; layoutErrors.push(detail); console.error(JSON.stringify(detail)); }
   };
   const sizes = [{ name: 'desktop', width: 1440, height: 900 }, { name: 'phone', width: 390, height: 844 }, { name: 'compact', width: 320, height: 480 }, { name: 'landscape', width: 844, height: 390 }];
   for (const [index, size] of sizes.entries()) {
@@ -56,6 +69,9 @@ let browser;
     assert.equal(await p.locator('[data-task="rsa"]').count(), 1);
     assert.equal(await p.locator('[data-task="rsa"]').getAttribute('aria-expanded'), 'true');
     assert.equal(await p.locator('#pending-message').textContent(), invitation);
+    if (invitation.includes('♥')) assert.match(await p.locator('#pending-message .game-heart').evaluate(e => getComputedStyle(e).backgroundImage), /heart\.svg/);
+    await next(); // Invalid blank inputs must fit too.
+    await fit();
     await p.locator('#prime-p').fill('3'); await p.locator('#prime-q').fill(index === 1 ? '11' : '5');
     await p.locator('#close-puzzle').click();
     assert(await p.locator('#puzzle-window').isHidden());
@@ -82,22 +98,22 @@ let browser;
     assert.equal(await p.locator('[data-task="attack"]').getAttribute('aria-controls'), 'zeno-popup');
     assert(!await p.locator('[data-draft]').evaluate(e => e.classList.contains('pending')));
     await p.screenshot({ path: path.join(out, size.name + '-zeno-popup.png'), animations: 'disabled' });
-    await p.locator('#close-zeno').click(); await p.waitForFunction(() => !document.getElementById('zeno-popup').open);
+    assert.equal(await p.locator('#close-zeno').count(), 0);
     assert.equal(await p.locator('body').getAttribute('data-phase'), 'INTERCEPT');
-    await p.locator('#close-chat').click(); await p.locator('#close-puzzle').click();
-    assert(await p.locator('#restore-chat').isVisible()); assert(await p.locator('#restore-puzzle').isVisible()); await fit();
-    await p.locator('#restore-chat').click(); await p.locator('#restore-puzzle').click();
-    await p.locator('[data-task="attack"]').click();
-    await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('zeno-popup').open);
-    await p.locator('#inspect-interception').click();
+    await p.keyboard.press('Escape'); await p.mouse.click(2, 2);
+    assert(await p.locator('#zeno-popup').evaluate(e => e.matches(':modal')), 'Escape and backdrop cannot dismiss Zeno');
+    await p.locator('#about-button').click(); await p.keyboard.press('Escape');
+    assert(await p.locator('#zeno-popup').evaluate(e => e.matches(':modal')), 'closing Details retains Zeno');
     await next(); await p.getByRole('button', { name: 'Run quantum attack →', exact: true }).click();
-    await p.locator('#close-zeno').click(); await p.waitForFunction(() => !document.getElementById('zeno-popup').open);
+    await p.keyboard.press('Escape');
     await p.waitForFunction(() => document.getElementById('job-status')?.classList.contains('success'));
-    await p.locator('#restore-zeno').click();
-    assert(await p.locator('.job-status.success').isVisible(), 'a job result survives closing the popup');
+    assert(await p.locator('#zeno-popup').evaluate(e => e.matches(':modal')));
+    await fit();
     await next(); for (let i = 0; i < 4; i++) await next();
     assert.equal(await p.locator('.leak-quote').textContent(), invitation);
-    await p.locator('#close-zeno').click();
+    await p.keyboard.press('Escape');
+    assert(await p.locator('#zeno-popup').evaluate(e => e.matches(':modal')), 'even the reveal requires the story action');
+    await next();
     await p.getByRole('button', { name: 'Upgrade the protection →', exact: true }).waitFor();
     assert.equal(await p.locator('body').getAttribute('data-phase'), 'CHOICE');
     assert(await p.locator('#zeno-popup').isHidden());
@@ -116,7 +132,8 @@ let browser;
     await ready();
     assert(await p.locator('[data-task="pq"]').isDisabled());
     assert.equal(await p.locator('[data-task="pq"]').getAttribute('data-state'), 'complete');
-    checks.push(size.name + ': pending actual text, attachment/minimize/resume, modal blur, job completion while closed, exact decryption, popup exit and PQ attachment');
+    checks.push(size.name + ': every RSA/attack/recovery/PQ step fits without scrolling, form errors fit, Zeno resists dismissal, exact decryption and attachment resume');
+    console.log('PASS: ' + checks.at(-1));
   }
   await p.emulateMedia({ reducedMotion: 'no-preference' });
   await begin(1);
@@ -128,6 +145,7 @@ let browser;
   assert(await p.locator('#window-dock').isHidden());
   assert.equal(await p.locator('[data-task]').count(), 0, 'restart clears old attachments');
   assert.deepEqual(errors, []);
+  assert.deepEqual(layoutErrors, [], 'all puzzle content and controls fit without scrolling');
   checks.push('restart cancels pending open animation; no page errors');
   await writeFile(path.join(out, 'results.json'), JSON.stringify({ checks, errors }, null, 2));
   console.log(checks.map(c => 'PASS: ' + c).join('\n'));

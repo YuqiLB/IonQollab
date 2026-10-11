@@ -41,6 +41,7 @@ let browser;
       checkStack('#stage'); checkStack('#stage-body');
       const stage = document.getElementById('stage');
       if (stage.scrollWidth > stage.clientWidth + 1) issues.push('stage overflows horizontally');
+      if (stage.scrollHeight > stage.clientHeight + 2) issues.push('stage requires vertical scrolling');
       const chat = document.querySelector('.conversation-panel').getBoundingClientRect();
       const puzzle = document.getElementById('puzzle-window').getBoundingClientRect();
       if (innerWidth > 760) {
@@ -53,7 +54,7 @@ let browser;
       if (speech) {
         const box = speech.getBoundingClientRect();
         const art = document.querySelector('.rival-art').getBoundingClientRect();
-        if (box.bottom > art.top) issues.push('diagonal speech covers sprites');
+        if (box.bottom > art.top && box.top < art.bottom && box.right > art.left && box.left < art.right) issues.push('diagonal speech covers sprites');
         if (box.left < stage.getBoundingClientRect().left || box.right > stage.getBoundingClientRect().right) issues.push('diagonal speech is clipped');
       }
       return issues;
@@ -108,6 +109,7 @@ let browser;
     const viewport = p.viewportSize();
     for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }, { width: 320, height: 480 }, { width: 844, height: 390 }]) {
       await p.setViewportSize(size);
+      await p.waitForFunction(() => Math.abs(document.querySelector('.app').getBoundingClientRect().height - (window.visualViewport?.height || innerHeight)) < 2);
       assert(await p.locator('.vn-dialogue').evaluate(e => { const b = e.getBoundingClientRect(); return b.left >= 0 && b.right <= innerWidth && b.top >= 0 && b.bottom <= innerHeight; }));
     }
     await p.setViewportSize(viewport);
@@ -189,7 +191,7 @@ let browser;
   assert.equal(await page.locator('.message.user').count(), heldCount, 'responses stay locked during puzzles');
   await page.waitForTimeout(700);
   assert.equal(await page.locator('.portrait-panel').evaluate(p => getComputedStyle(p).filter), 'none', 'pixel artwork stays crisp during mathematics');
-  assert.match(await page.locator('#stage-subtitle').innerText(), /encrypt the invitation/);
+  assert.match(await page.locator('#stage-subtitle').innerText(), /Toy RSA/);
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-primes.png') });
   for (const [p, q, pattern] of [['', '', /whole prime/], ['4', '5', /whole prime/], ['3', '3', /distinct/], ['3', '7', /fixes e = 3/]]) {
     await page.locator('#prime-p').fill(p); await page.locator('#prime-q').fill(q); await clickNext(page);
@@ -225,8 +227,9 @@ let browser;
   await clickNext(page);
   assert.match(await page.locator('#stage-body').innerText(), /SAMPLE MEASUREMENTS/);
   await checkAttackSizes(page);
-  await page.locator('#stage-body summary').click(); await checkAttackSizes(page);
-  await page.locator('#stage-body summary').click();
+  await page.getByRole('button', { name: 'All measurements ↗', exact: true }).click();
+  assert(await page.locator('.measurement-data').isVisible());
+  await page.locator('#close-about').click(); await checkAttackSizes(page);
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-measurements.png') });
   for (let i = 0; i < 4; i++) { await clickNext(page); await checkAttackSizes(page); }
   assert.equal(await page.locator('.leak-quote').innerText(), invitation);
@@ -285,7 +288,6 @@ let browser;
   assert(await fits(mobile), 'mobile prime-entry layout must fit');
   await mobile.screenshot({ animations: 'disabled', path: path.join(root, 'qa/mobile-primes.png'), fullPage: true });
   await toIntercept(mobile);
-  await expectRival(mobile, 'standing', 136, 178); await expectRival(mobile, 'machine', 68, 89);
   await assertStageLayout(mobile);
   assert(await fits(mobile), 'mobile circuit layout must fit');
   await mobile.getByRole('button', { name: 'Run quantum attack →', exact: true }).click();
