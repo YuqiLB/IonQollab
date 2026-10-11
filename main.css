@@ -145,3 +145,29 @@ textarea::placeholder{color:#a9b4c8}textarea:focus-visible{outline:none}
 @media(max-width:700px) and (max-height:560px){.game{grid-template-rows:79.2px minmax(0,1fr)}.portrait-wrap{inset:0 30% -5px}.conversation-panel{padding-top:0}.suggestions{max-height:90px;overflow:auto}.romance-heart{font-size:18px;right:10%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .still *,.still *::before,.still *::after{animation:none!important;transition:none!important}
+
+
+/* ML-KEM coefficient walkthrough: same palette and pixel typography as the RSA lesson. */
+.mlkem-copy{margin:4px auto;max-width:760px}
+.mlkem-details{margin:8px auto;width:100%;max-width:760px;padding:12px 15px;border:1px solid #34435b;background:#0d1424;color:#c1cbd9;font-size:12px;line-height:1.6}
+.mlkem-details summary{cursor:pointer;color:var(--cyan);font:12px var(--pixel)}
+.mlkem-details p{margin:10px 0 0}
+.mlkem-form{width:100%;max-width:820px;margin:0 auto;padding:15px;background:#0d1424;border:1px solid #34435b}
+.mlkem-input-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.mlkem-input-group{min-width:0;margin:0;padding:9px;border:1px solid #34435b}
+.mlkem-input-group legend{padding:0 5px;color:var(--cyan);font:10px var(--pixel)}
+.mlkem-group-note{margin:0 0 8px;text-align:center;color:#a8b4c9;font-size:11px}
+.mlkem-coefficients{display:flex;justify-content:center;gap:8px}
+.mlkem-coefficient{display:grid;justify-items:center;gap:5px;color:var(--ivory);font:12px var(--pixel)}
+.mlkem-coefficient input{box-sizing:border-box;width:76px;max-width:100%;padding:8px 4px;border:1px solid #506782;border-radius:0;background:#18263a;color:var(--ivory);font:18px var(--pixel);text-align:center}
+.mlkem-input-help{margin:9px 0 0;color:#a8b4c9;font-size:11px;line-height:1.5;text-align:center}
+.mlkem-result{overflow-wrap:anywhere}
+.mlkem-observer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:760px;margin:4px auto}
+.mlkem-observer-card{min-width:0;padding:12px;border:1px solid #34435b;background:#0d1424}
+.mlkem-observer-card h3{margin:0 0 7px;color:var(--cyan);font:12px var(--pixel)}
+.mlkem-observer-card.private h3{color:var(--rose)}
+.mlkem-observer-card ul{margin:0;padding-left:19px;color:#c1cbd9;font-size:11px;line-height:1.7}
+.mlkem-security-points{width:100%;max-width:780px;margin:0 auto;padding-left:24px;color:#c1cbd9;font-size:12px;line-height:1.65}
+.mlkem-security-points li{padding:0 0 9px 4px}
+.mlkem-security-points strong{color:var(--cyan)}
+@media(max-width:600px){.mlkem-input-groups{grid-template-columns:1fr}.mlkem-input-group{padding:8px}.mlkem-observer-grid{grid-template-columns:1fr}.mlkem-form{padding:10px}.mlkem-coefficient input{width:84px}}
