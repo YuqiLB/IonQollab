@@ -1,6 +1,6 @@
 # Qrush
 
-A playable, deterministic quantum love story for the IonQ × Qollab hackathon. Start in a late-night observatory chat with Mira, choose an invitation, watch a rival recover its toy RSA ciphertext, and arrange a protected retry through an **illustrative** post-quantum exchange.
+A playable, deterministic quantum love story for the IonQ × Qollab hackathon. Play as Bob on a late shift at the Quantum Laboratory. Text your coworker Alice, choose an invitation, watch Zeno recover its toy RSA ciphertext, and arrange a protected retry through an **illustrative** post-quantum exchange.
 
 ## Download and run
 
@@ -21,7 +21,7 @@ You need **Node.js 22 or newer** and a web browser. No Python setup, API keys, o
    node tools/serve.mjs
    ```
 
-5. Open **[http://127.0.0.1:4173](http://127.0.0.1:4173)** in your browser. Keep the terminal open while playing. The game starts in **Illustrative demo** mode, which supports the complete story without executing a quantum job.
+5. Open **[http://127.0.0.1:4173](http://127.0.0.1:4173)** in your browser. Keep the terminal open while playing. Click anywhere on the intro (or press Enter/Space) to start. The game uses **Illustrative demo** mode, which supports the complete story without executing a quantum job.
 
 To stop the server, press **Ctrl+C** in the terminal. There is no `npm install` or build step. If `node` is not recognized, reopen your terminal after installing Node.js. If `tools/serve.mjs` cannot be found, check that your terminal is in the project root.
 
@@ -57,8 +57,11 @@ The adapter in `js/quantum-adapter.js` converts `.toJs()` proxies and nested Map
 
 ## Controls and accessibility
 
-The observatory fills the visible viewport, including on mobile. Mira and the transparent dialogue share a single panoramic background. There is no outer header, footer, reset button or page scrolling; conversation history and long mathematics remain scrollable inside the scene. Execution settings appear within the attack sequence, and replay remains available at the ending.
+The observatory fills the visible viewport, including on mobile. Alice and the transparent dialogue share a single panoramic background. There is no outer header, footer, reset button or page scrolling; conversation history and long mathematics remain scrollable inside the scene. Execution settings appear within the attack sequence, and replay remains available at the ending.
 
+- The opening shows only the blurred skyline. Click anywhere or press Enter/Space to start; Alice enters with a bounce, then gently moves in place. Her supplied sprite also appears in the chat contact header.
+- During the mathematics, the scenery and Alice blur and her whole portrait moves slightly back. All expressions share the same proportions; reduced-motion mode disables entrance, idle motion, and animated transitions.
+- Prime entry explains how the two primes build the RSA key for the waiting invitation. “Toy RSA” is explicitly defined as an insecure small-number teaching example.
 - Reply choices appear above the unchanged composer. Choose one to preview it, then use the send arrow; direct typing is disabled. Choices and send remain keyboard-accessible.
 - Direct task headings, larger Back/Next controls, Replay animation, and Skip animation. The story returns to the preserved conversation after each sequence.
 - Reduced-motion support reveals the same mathematical states without movement.

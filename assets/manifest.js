@@ -1,7 +1,8 @@
 // Current game portraits: native renders of the user's editable Aseprite files.
 // All five share a 68 × 89 transparent canvas and identical display sizing.
+// Original Mira filenames are retained for artwork provenance; the story name is Alice.
 export const character = Object.freeze({
-  name: 'Mira',
+  name: 'Alice',
   idle: './assets/characters/mira-idle-68x89.png',
   blushing: './assets/characters/mira-blushing-68x89.png',
   happy: './assets/characters/mira-happy-68x89.png',
@@ -11,11 +12,11 @@ export const character = Object.freeze({
   height: 89,
   expressionsAvailable: Object.freeze(['idle', 'blushing', 'happy', 'serious', 'surprised']),
   descriptions: Object.freeze({
-    idle: 'Mira, a blue-haired researcher with glasses and a plum jacket, smiling softly',
-    blushing: 'Mira blushing, looking bashful',
-    happy: 'Mira laughing with her eyes closed',
-    serious: 'Mira looking serious and determined',
-    surprised: 'Mira looking surprised, with wide eyes',
+    idle: 'Alice, a blue-haired researcher with glasses and a plum jacket, smiling softly',
+    blushing: 'Alice blushing, looking bashful',
+    happy: 'Alice laughing with her eyes closed',
+    serious: 'Alice looking serious and determined',
+    surprised: 'Alice looking surprised, with wide eyes',
   }),
   sources: Object.freeze({
     idle: 'art/character/native_68x89_v001/portrait_68x89_v003.aseprite',
@@ -35,5 +36,5 @@ export const storyExpressions = Object.freeze({
   CHOICE: 'serious',
   PQ: 'serious',
   RETRY: 'blushing',
-  END: 'blushing', // Changes to happy after Mira's final reply.
+  END: 'blushing', // Changes to happy after Alice's final reply.
 });

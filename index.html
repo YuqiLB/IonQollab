@@ -8,9 +8,9 @@
   <link rel="icon" href="./assets/heart.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./main.css">
 </head>
-<body>
+<body data-phase="MENU">
   <div class="app">
-    <main class="game" id="game">
+    <main class="game" id="game" data-view="menu">
       <h1 class="sr-only">Qrush — a quantum love story</h1>
 
       <svg class="observatory" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -23,11 +23,29 @@
         <path stroke="#394961" stroke-width="9" d="M54 0v717M792 0v717M1546 0v717M0 350h1600M0 708h1600"/>
         <path fill="#111b2c" d="M0 719h1600v181H0z"/><path fill="#293951" d="M0 719h1600v9H0z"/>
       </svg>
-      <aside class="portrait-panel" aria-label="Mira, quantum researcher">
-        <div class="portrait-wrap"><img id="portrait" src="./assets/characters/mira-idle-68x89.png" alt="Mira, a blue-haired researcher with glasses and a plum jacket, smiling softly" width="68" height="89"><span class="romance-heart" aria-hidden="true">♥</span></div>
+      <section id="start-screen" class="start-screen" aria-labelledby="intro-title">
+        <div class="intro-content">
+          <div class="intro-logo" aria-hidden="true">Qrush<span>♥</span></div>
+          <h2 id="intro-title">Hi there, Bob!</h2>
+          <div id="intro-story" class="intro-story">
+            <p>It’s 2042. Your late shift at the <strong>Quantum Laboratory</strong> is almost over. After hours researching trapped-ion quantum information, you step out for a short walk.</p>
+            <p>Then you remember <strong>Alice</strong>. Your coworker. Your crush. Still in the lab.</p>
+            <p>Unfortunately, <strong>Zeno</strong> is still on shift too—and he has the same crush. In this fictional future, his quantum computer could crack vulnerable public-key encryption.</p>
+            <p>Time to send Alice an invitation. <strong>Let’s keep Zeno out of it.</strong></p>
+          </div>
+          <p class="start-prompt" aria-hidden="true">Click anywhere to start <span>↗</span></p>
+        </div>
+        <button id="start-game" class="start-hitarea" type="button" aria-label="Start Qrush" aria-describedby="intro-title intro-story"></button>
+      </section>
+      <aside class="portrait-panel" aria-label="Alice, quantum researcher">
+        <div class="portrait-wrap"><img id="portrait" src="./assets/characters/mira-idle-68x89.png" alt="Alice, a blue-haired researcher with glasses and a plum jacket, smiling softly" width="68" height="89"><span class="romance-heart" aria-hidden="true">♥</span></div>
       </aside>
-      <section class="conversation-panel" aria-label="Conversation and interactive mathematics">
+      <section class="conversation-panel" aria-label="Conversation and interactive mathematics" inert>
         <section id="chat-view" class="chat-view">
+          <header class="chat-contact" aria-label="Texting Alice">
+            <span class="contact-avatar"><img id="contact-avatar" src="./assets/characters/mira-idle-68x89.png" width="68" height="89" alt="Alice’s profile picture"></span>
+            <div><strong>Alice</strong><span>Quantum Laboratory · late shift</span></div>
+          </header>
           <div id="messages" class="messages" role="log" aria-label="Message history" aria-live="polite" tabindex="0"></div>
           <button id="new-messages" class="new-messages" hidden>New messages ↓</button>
           <div class="typing" id="typing" aria-live="polite"><span></span></div>

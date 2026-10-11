@@ -5,6 +5,7 @@ import { primesVisual, phiVisual, keyVisual, encodingVisual, ringVisual, sequenc
 
 const $ = id => document.getElementById(id);
 const allowed = {
+  MENU: ['INTRO'],
   INTRO: ['INVITE'], INVITE: ['RSA'], RSA: ['INTERCEPT'], INTERCEPT: ['RECOVER'],
   RECOVER: ['CHOICE'], CHOICE: ['PQ'], PQ: ['RETRY'], RETRY: ['END'], END: [],
 };
@@ -33,7 +34,7 @@ function transition(next) {
   updateChapter();
 }
 function updateChapter() {
-  const chapter = ['INTRO', 'INVITE', 'RSA'].includes(state.phase) ? 1 : ['INTERCEPT', 'RECOVER'].includes(state.phase) ? 2 : 3;
+  const chapter = ['MENU', 'INTRO', 'INVITE', 'RSA'].includes(state.phase) ? 1 : ['INTERCEPT', 'RECOVER'].includes(state.phase) ? 2 : 3;
   $('game').dataset.chapter = String(chapter);
 }
 // Warm the small native exports so expression changes do not flash or resize.
@@ -49,12 +50,13 @@ function portrait(expression) {
   image.width = character.width;
   image.height = character.height;
   image.dataset.expression = resolved;
+  $('contact-avatar').src = character[resolved];
   document.querySelector('.portrait-panel').classList.toggle('romantic', ['blushing', 'happy'].includes(resolved));
 }
 
 function appendMessage(role, content, note = '') {
   const item = el('article', 'message ' + role);
-  if (role !== 'system') item.append(el('div', 'message-label', role === 'user' ? 'YOU' : role === 'rival' ? 'CAS · UNINVITED' : 'MIRA'));
+  if (role !== 'system') item.append(el('div', 'message-label', role === 'user' ? 'YOU' : role === 'rival' ? 'ZENO · UNINVITED' : 'ALICE'));
   item.append(el('div', 'message-text', content));
   if (note) item.append(el('div', 'message-note', note));
   $('messages').append(item);
@@ -66,14 +68,14 @@ function appendMessage(role, content, note = '') {
 function busy(value) {
   state.busy = value; updateComposer();
   $('typing').classList.toggle('busy', value);
-  $('typing').firstElementChild.textContent = value ? 'Mira is typing' : '';
+  $('typing').firstElementChild.textContent = value ? 'Alice is typing' : '';
 }
 async function speak(lines, epoch = generation) {
   busy(true);
   for (const line of lines) {
     await sleep(650);
     if (epoch !== generation) return false;
-    appendMessage('mira', line);
+    appendMessage('alice', line);
   }
   busy(false);
   return true;
@@ -83,7 +85,7 @@ function updateComposer() {
   $('message').disabled = !active; $('send').disabled = !active || !state.selectedReply;
   $('composer').classList.toggle('inactive', !active);
   $('composer-label').textContent = state.phase === 'INVITE' ? 'MAKE IT PERSONAL · CHOOSE YOUR INVITATION' : state.phase === 'RETRY' ? 'A FRESH INVITATION · ILLUSTRATIVE PROTECTED CHANNEL' : state.phase === 'END' ? 'CONNECTION CONTINUES' : 'CHOOSE YOUR REPLY';
-  $('message').placeholder = active ? 'Choose a reply above…' : state.busy ? 'Mira is typing…' : 'Continue the story using the button above.';
+  $('message').placeholder = active ? 'Choose a reply above…' : state.busy ? 'Alice is typing…' : 'Continue the story using the button above.';
   $('composer-hint').textContent = active ? 'Choose a reply above, then send ↗' : state.busy ? 'A moment. She’s still here.' : 'Your conversation stays here.';
   const suggestions = replyChoices[state.phase] || [];
   $('suggestions').replaceChildren(...suggestions.map(value => {
@@ -131,12 +133,12 @@ async function sendMessage(event) {
     state.invitation = raw;
     const draft = appendMessage('user', raw, 'Draft · held before delivery'); draft.dataset.draft = 'true';
     busy(true);
-    if (!(await speak(['One tiny detour before you send that. Let me show you what’s protecting the envelope.'], epoch))) return;
+    if (!(await speak(['Before we send your invitation, let’s encrypt it. RSA starts with two prime numbers that we use to build the encryption key.'], epoch))) return;
     transition('RSA'); updateComposer(); showStage();
   } else {
     state.retry = raw; transition('END'); updateComposer();
     appendMessage('user', raw, 'Delivered in the story · post-quantum exchange illustrated');
-    appendMessage('system', 'CAS TRIES THE OLD ATTACK\nThis attack relies on RSA’s structure. The upgraded scheme uses different mathematics. No quantum job was submitted for this retry.');
+    appendMessage('system', 'ZENO TRIES THE OLD ATTACK\nThis attack relies on RSA’s structure. The upgraded scheme uses different mathematics. No quantum job was submitted for this retry.');
    
     if (!(await speak(['Okay. You’ve officially made the quantum researcher lose her train of thought.', 'It’s a date. I’ll bring the coffee. You bring that very distracting smile. ♥'], epoch))) return;
     portrait('happy');
@@ -177,7 +179,7 @@ function renderStage() {
 }
 function renderRSA() {
   const titles = ['Enter two prime numbers', 'Calculate the public modulus', 'Calculate φ(n)', 'Set the RSA exponents', 'Encode your message', 'Encrypt a message block', 'Send the encrypted packet'];
-  stageBase(titles[state.step], 'Toy RSA: tiny numbers so we can see the mathematics.', (state.step + 1) + ' / 7');
+  stageBase(titles[state.step], state.step === 0 ? 'Build an RSA key to encrypt the invitation you’re about to send to Alice.' : 'RSA encryption · turning your invitation into ciphertext.', (state.step + 1) + ' / 7');
   const next = () => setStep(state.step + 1), back = state.step ? () => setStep(state.step - 1) : null;
   if (state.step === 0) {
     const form = el('form', 'prime-form'); form.noValidate = true;
@@ -188,7 +190,7 @@ function renderRSA() {
       input.value = state.primeDraft[name]; input.addEventListener('input', () => { state.primeDraft[name] = input.value; });
       label.append(input); fields.append(label);
     });
-    const help = el('p', 'prime-help', 'This executable demonstration supports only p = 3 and q = 5, in either order. Choose two distinct primes.'); help.id = 'prime-help';
+    const help = el('p', 'prime-help', 'Multiplying these primes creates n, part of the public key used to encrypt your message. This demo supports only 3 and 5, in either order.'); help.id = 'prime-help';
     const error = el('p', 'field-error'); error.id = 'prime-error'; error.setAttribute('role', 'alert');
     form.append(fields, help, button('Use demo values', () => { $('prime-p').value = '3'; $('prime-q').value = '5'; state.primeDraft = { p: '3', q: '5' }; error.textContent = ''; }), error);
     const validate = () => {
@@ -203,7 +205,7 @@ function renderRSA() {
       } catch (e) { error.textContent = e.message; }
     };
     form.addEventListener('submit', e => { e.preventDefault(); validate(); }); $('stage-body').append(form);
-    caption('Deliberately insecure textbook RSA: tiny parameters, no production padding. This is a teaching envelope, not secure chat.');
+    caption('Toy RSA means a small teaching example: tiny numbers so we can see the mathematics. These unpadded keys are deliberately insecure; they do not provide secure chat.');
     stageNavigation('Calculate n →', validate); return;
   }
   const keys = state.keys;
@@ -236,7 +238,7 @@ function intercept() {
   renderStage();
 }
 function renderIntercept() {
-  stageBase(state.step === 0 ? 'Find the repeating pattern' : 'Run the quantum attack', 'Cas copied the ciphertext. Copying it is easy. Reading it takes the next step.', '');
+  stageBase(state.step === 0 ? 'Find the repeating pattern' : 'Run the quantum attack', 'Zeno copied the ciphertext. Copying it is easy. Reading it takes the next step.', '');
   const rival = el('div', 'rival-avatar'); rival.append(el('div', 'rival-face', '>_'), el('p', '', '“If I find the factors of 15, I can recover the toy key. And maybe get to your date first.”')); $('stage-body').append(rival);
   if (state.step === 0 && state.job === 'idle') {
     visual(sequenceVisual());
@@ -313,7 +315,7 @@ function renderRecovery() {
   if (state.step === 4) {
     if (state.job !== 'success' || typeof state.recoveredText !== 'string') throw new Error('Recovery required before reveal.');
     $('stage-body').append(el('div', 'result-label', 'ACTUAL INTERCEPTED MESSAGE · DECRYPTED'), el('blockquote', 'leak-quote', state.recoveredText));
-    caption('Cas recovered your actual words from the ciphertext. The quantum sample/live distinction changes where the measurements came from; the toy decryption is real.');
+    caption('Zeno recovered your actual words from the ciphertext. The quantum sample/live distinction changes where the measurements came from; the toy decryption is real.');
   }
   stageNavigation(state.step === 4 ? 'Return to the conversation →' : 'Next →', state.step === 4 ? consequence : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : null);
 }
@@ -323,10 +325,10 @@ async function consequence() {
   setActions([]); showChat();
   const excerpt = [...state.recoveredText].slice(0, 110).join('') + ([...state.recoveredText].length > 110 ? '…' : '');
   appendMessage('rival', '“' + excerpt + '”\nOops. Did I just read your invitation out loud on the observatory intercom?');
-  markDraft('Leaked by Cas · this cannot be undone');
+  markDraft('Leaked by Zeno · this cannot be undone');
   $('messages').querySelector('[data-draft]')?.classList.add('leaked');
   appendMessage('system', 'The intercom crackles. Everyone turns. Your private invitation is now the entire observatory’s business.');
-  if (!(await speak(['Cas. Off the intercom. Now.', 'I still want that date. But we need a better envelope. The weakness was in the key mathematics, not your message.'], epoch))) return;
+  if (!(await speak(['Zeno. Off the intercom. Now.', 'I still want that date. But we need a better envelope. The weakness was in the key mathematics, not your message.'], epoch))) return;
   choiceActions();
 }
 function choiceActions() {
@@ -334,18 +336,18 @@ function choiceActions() {
     if (state.phase !== 'CHOICE' || state.busy) return;
     setActions([]); const epoch = generation;
     appendMessage('user', 'What if I just change the wording?');
-    if (await speak(['New words, same vulnerable key. Cas could factor the same RSA modulus again. Let’s change how we establish the key.'], epoch)) choiceActions();
+    if (await speak(['New words, same vulnerable key. Zeno could factor the same RSA modulus again. Let’s change how we establish the key.'], epoch)) choiceActions();
   } }, { label: 'Upgrade the protection →', run: () => {
     if (state.phase !== 'CHOICE' || state.busy) return;
     appendMessage('user', 'Let’s upgrade the protection.'); transition('PQ'); showStage();
   } }]);
 }
 function renderPQ() {
-  const titles = ['Receive Mira’s ML-KEM public key', 'Encapsulate a shared secret', 'Recover the same shared secret', 'Protect the message with a symmetric key'];
+  const titles = ['Receive Alice’s ML-KEM public key', 'Encapsulate a shared secret', 'Recover the same shared secret', 'Protect the message with a symmetric key'];
   const captions = [
-    'Mira provides an ML-KEM public key, authenticated as hers. Her decapsulation key stays private. This scheme uses different mathematics from RSA factoring.',
+    'Alice provides an ML-KEM public key, authenticated as hers. Her decapsulation key stays private. This scheme uses different mathematics from RSA factoring.',
     'You encapsulate: the public key produces a shared secret S and encapsulation data Cₖₑₘ. Only Cₖₑₘ crosses the channel. The shared secret is not sent.',
-    'Mira decapsulates Cₖₑₘ with her private key to recover the same S. Matching tokens illustrate that agreement; they are not computed cryptographic secrets.',
+    'Alice decapsulates Cₖₑₘ with her private key to recover the same S. Matching tokens illustrate that agreement; they are not computed cryptographic secrets.',
     'Both sides derive a symmetric key K from S. Authenticated encryption then protects the text and detects tampering. ML-KEM establishes a secret; it does not encrypt chat text directly.',
   ];
   stageBase(titles[state.step], 'Illustrative post-quantum exchange · no ML-KEM or authenticated encryption is executed.', (state.step + 1) + ' / 4');
@@ -376,15 +378,35 @@ function openAbout() {
 }
 export async function restart() {
   const pending = state && ['waiting', 'submitting'].includes(state.job) && state.mode === 'live';
-  generation++; submission++; const epoch = generation;
-  state = { phase: 'INTRO', step: 0, busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
+  generation++; submission++;
+  state = { phase: 'MENU', step: 0, busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
   lastStageAction = 0; followMessages = true; userScrollUntil = 0;
   $('messages').replaceChildren();
   $('message').value = ''; updateCount(); $('new-messages').hidden = true;
   $('execution-mode').value = 'demo'; $('execution-mode').disabled = false; updateModeLabel();
-  portrait('idle'); document.body.dataset.phase = 'INTRO'; updateChapter(); setActions([]); showChat();
+  $('game').classList.remove('entering');
+  portrait('idle'); document.body.dataset.phase = 'MENU'; updateChapter(); setActions([]);
+  view = 'menu'; $('game').dataset.view = 'menu';
+  $('stage').hidden = true; $('chat-view').hidden = false;
+  document.querySelector('.conversation-panel').inert = true;
+  $('start-screen').hidden = false;
+  busy(false);
   if (pending) appendMessage('system', 'Story restarted. A submitted remote job may still finish; restarting this interface does not cancel it. Its result will be ignored.');
-  await speak(['You’re still awake. Good. I was running out of excuses to stay in the lab.', 'The experiment can wait. I’d rather get to know you.', 'Want to continue this somewhere a little more private?'], epoch);
+  $('start-game').focus({ preventScroll: true });
+}
+async function startGame() {
+  if (state.phase !== 'MENU') return;
+  const epoch = generation;
+  transition('INTRO');
+  $('start-screen').hidden = true;
+  document.querySelector('.conversation-panel').inert = false;
+  showChat();
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    $('game').classList.add('entering');
+    // Generation guard also covers replay while the entrance is still running.
+    setTimeout(() => { if (generation === epoch) $('game').classList.remove('entering'); }, 1000);
+  }
+  if (await speak(['Hey, Bob. Still awake? I was running out of excuses to stay in the lab.', 'The trapped ions can wait. I’d rather get to know you.', 'Want to continue this somewhere a little more private?'], epoch)) focusChoices();
 }
 
 // Fit the visible viewport, including a phone's on-screen keyboard.
@@ -395,6 +417,7 @@ window.addEventListener('resize', fitScene);
 window.visualViewport?.addEventListener('resize', fitScene);
 fitScene();
 
+$('start-game').addEventListener('click', startGame);
 $('composer').addEventListener('submit', sendMessage);
 for (const event of ['wheel', 'touchstart', 'touchmove', 'pointerdown', 'keydown']) {
   $('messages').addEventListener(event, () => { userScrollUntil = performance.now() + 1000; }, { passive: true });

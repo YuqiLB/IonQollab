@@ -28,6 +28,7 @@ let browser;
   };
   const clickNext = async p => { await p.waitForTimeout(280); await p.locator('#stage-nav button').last().click(); };
   const ready = p => p.waitForFunction(() => !document.getElementById('message').disabled);
+  const start = async p => { await p.getByRole('button', { name: 'Start Qrush', exact: true }).click(); await ready(p); };
   const chooseReply = async (p, index = 0) => {
     const choice = p.locator('#suggestions button').nth(index);
     const reply = await choice.innerText();
@@ -38,7 +39,7 @@ let browser;
     return reply;
   };
   const begin = async (p, invitationIndex = 0) => {
-    await p.goto(url); await ready(p);
+    await p.goto(url); await start(p);
     await chooseReply(p); await ready(p);
     const invitation = await chooseReply(p, invitationIndex);
     await p.locator('#prime-p').waitFor();
@@ -49,7 +50,21 @@ let browser;
     for (let i = 0; i < 7; i++) await clickNext(p);
     await clickNext(p); // public sequence → circuit
   };
-  await page.goto(url); await ready(page);
+  await page.goto(url);
+  assert.equal(await page.locator('body').getAttribute('data-phase'), 'MENU');
+  assert(await page.locator('#portrait').isHidden(), 'Alice must not appear behind the introduction');
+  assert(await page.locator('.conversation-panel').evaluate(p => p.inert));
+  assert.match(await page.locator('#intro-story').innerText(), /Alice/);
+  assert.match(await page.locator('#intro-story').innerText(), /Zeno/);
+  await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-intro.png') });
+  assert.equal(await page.locator('.message').count(), 0, 'the conversation waits for the player');
+  await page.mouse.click(20, 20); // The skyline is part of the start target, too.
+  await page.locator('#start-game').evaluate(b => b.click()); // A repeated start must be ignored.
+  assert.equal(await page.locator('.portrait-wrap').evaluate(p => getComputedStyle(p).animationName), 'portrait-enter');
+  await ready(page);
+  assert.equal(await page.locator('.message.alice').count(), 3, 'the intro starts exactly one conversation');
+  assert(await page.locator('.chat-contact').isVisible());
+  assert.equal(await page.locator('#contact-avatar').getAttribute('src'), await page.locator('#portrait').getAttribute('src'));
   await expectPortrait(page, 'idle');
   const portraitSize = await page.locator('#portrait').evaluate(image => [image.clientWidth, image.clientHeight]);
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-conversation.png') });
@@ -78,6 +93,9 @@ let browser;
   assert(await page.locator('#send').isDisabled());
   const invitation = await chooseReply(page);
   await page.locator('#prime-p').waitFor();
+  await page.waitForTimeout(700);
+  assert.equal(await page.locator('.portrait-panel').evaluate(p => getComputedStyle(p).filter), 'blur(8px)');
+  assert.match(await page.locator('#stage-subtitle').innerText(), /encrypt the invitation/);
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-primes.png') });
   for (const [p, q, pattern] of [['', '', /whole prime/], ['4', '5', /must be prime/], ['3', '3', /distinct/], ['3', '7', /only 3 and 5/]]) {
     await page.locator('#prime-p').fill(p); await page.locator('#prime-q').fill(q); await clickNext(page);
@@ -126,14 +144,24 @@ let browser;
   assert.match(await page.locator('[data-draft] .message-note').innerText(), /Leaked/);
   assert.equal(await page.locator('.ending-stamp').count(), 1);
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-ending.png') });
-  await page.getByRole('button', { name: 'Play again ↺', exact: true }).click(); await ready(page);
+  await page.getByRole('button', { name: 'Play again ↺', exact: true }).click();
+  assert.equal(await page.locator('body').getAttribute('data-phase'), 'MENU');
+  assert(await page.locator('#portrait').isHidden());
+  await start(page);
   assert.equal(await page.locator('.message.user').count(), 0);
-  assert.equal(await page.locator('.message.mira').count(), 3);
-  console.log('PASS: complete desktop loop, choice-only preview, duplicate send, validation, scroll preservation, portraits, recovery, replay.');
+  assert.equal(await page.locator('.message.alice').count(), 3);
+  console.log('PASS: complete desktop loop, click-anywhere intro, guarded entrance, Alice avatar, blurred math scene, choices, recovery, replay.');
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, reducedMotion: 'reduce' });
   mobile.on('pageerror', e => errors.push(e.message));
-  await mobile.goto(url); await ready(mobile);
+  await mobile.goto(url);
+  await mobile.screenshot({ animations: 'disabled', path: path.join(root, 'qa/mobile-intro.png') });
+  await mobile.setViewportSize({ width: 320, height: 480 });
+  await mobile.screenshot({ animations: 'disabled', path: path.join(root, 'qa/mobile-intro-compact.png') });
+  assert(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight));
+  await mobile.setViewportSize({ width: 390, height: 844 });
+  await mobile.locator('#start-game').press('Enter'); await ready(mobile);
+  assert.equal(await mobile.locator('.portrait-wrap').evaluate(p => getComputedStyle(p).animationName), 'none', 'reduced motion disables sprite entrance and idle movement');
   await mobile.screenshot({ animations: 'disabled', path: path.join(root, 'qa/mobile-conversation.png') });
   for (const viewport of [{ width: 320, height: 480 }, { width: 844, height: 390 }]) {
     await mobile.setViewportSize(viewport);
@@ -163,7 +191,7 @@ let browser;
   await mobile.waitForTimeout(200);
   assert(await mobile.locator('#new-messages').isHidden(), 'default play must follow the ending');
   await mobile.screenshot({ animations: 'disabled', path: path.join(root, 'qa/mobile-ending.png'), fullPage: true });
-  console.log('PASS: complete mobile loop, both invitation choices, reduced motion, compact portrait/landscape layouts, no outer overflow.');
+  console.log('PASS: complete mobile loop, keyboard start, reduced motion, compact intro, both invitations, no outer overflow.');
 
   // Test-only live bridge: verifies asynchronous UI behavior, NOT quantum execution.
   await begin(page); await toIntercept(page);
@@ -175,9 +203,11 @@ let browser;
   await page.getByRole('button', { name: 'Run quantum attack →', exact: true }).evaluate(b => { b.click(); b.click(); });
   assert.equal(await page.evaluate(() => window.calls), 1);
   await page.evaluate(async () => { const game = await import('./main.js'); await game.restart(); });
-  assert.match(await page.locator('#messages').innerText(), /does not cancel it/);
+  assert.equal(await page.locator('body').getAttribute('data-phase'), 'MENU');
+  assert.match(await page.locator('#messages').textContent(), /does not cancel it/);
   await page.evaluate(() => window.resolveTestJob({ status: 'success', distribution: { '00': 25, '01': 25, '10': 25, '11': 25 }, distribution_kind: 'counts' }));
-  await ready(page);
+  assert.equal(await page.locator('body').getAttribute('data-phase'), 'MENU');
+  await start(page);
   assert.equal(await page.locator('body').getAttribute('data-phase'), 'INTRO');
   assert.equal(await page.locator('.leak-quote').count(), 0);
   assert.equal(await page.locator('.message.rival').count(), 0);

@@ -15,6 +15,10 @@
 - Portrait update: all five runtime PNGs are fresh 68 × 89 renders of the current editable Aseprite files. The adjacent historical PNGs are older artwork.
 - Source/export SHA-256 values are recorded in portrait-exports.json; the current set is shown in current-portraits.png.
 - Superseded runtime portraits and screenshot crops were removed; the editable art archive is retained.
+- Opening revision: desktop click-anywhere and mobile keyboard start, duplicate-start guard, replay back to the menu, and delayed live-job isolation all pass.
+- The intro shows only blurred scenery. Alice’s supplied portrait enters with a bounce, appears in the contact header, and recedes with blur during mathematics. Reduced motion disables entrance/idle animation.
+- Intro screenshots include desktop, 390px mobile, and 320×480 compact layouts; all remain within the viewport.
+- Story and diagram labels consistently use Bob, Alice, and Zeno. Original artwork filenames remain unchanged for provenance.
 - Existing Python files remain empty and unchanged.
 
 Screenshots in this directory document the tested scene, RSA stages, measurements, post-quantum exchange, and endings. Finite animations were completed for screenshots.
