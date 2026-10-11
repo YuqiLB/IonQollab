@@ -484,10 +484,8 @@ function renderIntercept() {
 function attackRevealed() {
   if (!['INTERCEPT', 'RECOVER'].includes(state.phase) || state.job !== 'success' || typeof state.recoveredText !== 'string') return;
   if (state.phase === 'INTERCEPT') transition('RECOVER');
-  state.step = 4;
-  $('stage-title').textContent = 'He has your invitation.';
-  $('step-count').textContent = 'Verified recovery';
-  stageNavigation('Back to Alice →', consequence);
+  state.shorWalkthroughStep = 0;
+  renderStage();
 }
 function updateAttackStatus() {
   let status = $('job-status');
@@ -501,6 +499,228 @@ function updateAttackStatus() {
     if (state.mode === 'live') status.append(button('Use illustrative demo instead', () => { changeMode('demo'); }, 'quiet'));
     stageNavigation('Retry attack →', () => { state.job='idle'; renderStage(); launchAttack(); });
   }
+}
+const shorWalkthroughSteps = [
+  {
+    title: 'Start from the public number', source: 'quantum/attack.py · _validate_modulus()',
+    code: [
+      'work_bits = (modulus - 1).bit_length()',
+      'phase_bits = 2 * work_bits',
+      'total_qubits = work_bits + phase_bits',
+      'if (modulus > MAX_MODULUS or phase_bits > MAX_PHASE_BITS',
+      '    or total_qubits > MAX_TOTAL_QUBITS):',
+      '    raise ValueError("simulator limit exceeded")',
+    ], focus: [0, 1, 2, 4],
+    explanation: 'Zeno sends the public modulus N and a coprime base a to the circuit. Your chosen p and q stay in the game. The bit counts are checked before Qiskit allocates the circuit.',
+    note: 'This lesson caps the circuit at 18 qubits; for N = 15 it needs 12.',
+  },
+  {
+    title: 'Prepare the quantum registers', source: 'quantum/attack.py · build_order_finding_circuit()',
+    code: [
+      'phase = QuantumRegister(phase_bits, "phase")',
+      'work = QuantumRegister(work_bits, "work")',
+      'measured_phase = ClassicalRegister(phase_bits, "measured_phase")',
+      'circuit = QuantumCircuit(phase, work, measured_phase)',
+      'circuit.h(phase)',
+      'circuit.x(work[0])',
+    ], focus: [4, 5],
+    explanation: 'The Hadamard gates put the phase register into a superposition of exponent values. The work register starts at |1⟩ so its later values become powers of a modulo N.',
+    note: 'Each register has a separate job: exponents, modular values, and classical measurement bits.',
+  },
+  {
+    title: 'Build a reversible modular multiplier', source: 'quantum/attack.py · _modular_multiplication_matrix()',
+    code: [
+      'dimension = 1 << work_bits',
+      'matrix = np.zeros((dimension, dimension), dtype=complex)',
+      'for value in range(dimension):',
+      '    target = (multiplier * value) % modulus if value < modulus else value',
+      '    matrix[target, value] = 1.0',
+    ], focus: [2, 3, 4],
+    explanation: 'For each valid register value, the helper maps |x⟩ to |multiplier × x mod N⟩. Values outside the valid range are left fixed so the whole basis mapping is a reversible permutation.',
+    note: 'Reversibility matters: quantum gates must preserve information.',
+  },
+  {
+    title: 'Encode the repeating powers', source: 'quantum/attack.py · controlled modular multipliers',
+    code: [
+      'for bit in range(phase_bits):',
+      '    multiplier = pow(base, 1 << bit, modulus)',
+      '    matrix = _modular_multiplication_matrix(',
+      '        multiplier, modulus, work_bits)',
+      '    gate = UnitaryGate(matrix, label=f"×{multiplier} mod {modulus}").control(1)',
+      '    circuit.append(gate, [phase[bit], *work])',
+    ], focus: [1, 4, 5],
+    explanation: 'Each phase qubit controls multiplication by a different power of a. Together, these gates encode f(x) = aˣ mod N. For N = 15 and a = 2, the values repeat 1, 2, 4, 8, 1, …, so the period is 4.',
+    note: 'The quantum circuit reveals a period; it does not directly output the prime factors.',
+  },
+  {
+    title: 'Apply the inverse QFT and measure', source: 'quantum/attack.py · build_order_finding_circuit() / run_attack()',
+    code: [
+      '_append_inverse_qft(circuit, phase)',
+      'circuit.measure(phase, measured_phase)',
+      'compiled = transpile(circuit, backend=backend)',
+      'job = backend.run(compiled, shots=shots)',
+      'result = job.result()',
+      'distribution = _phase_counts(result, compiled, phase_bits)',
+    ], focus: [0, 1, 3, 5],
+    explanation: 'The inverse QFT converts the periodic structure into phase outcomes. In live mode, Qiskit runs the circuit on the selected backend and returns measurements. Demo mode shows labeled sample counts without running a quantum job.',
+    note: 'These bitstrings are phase samples, not factors. The wave animation is conceptual, not a circuit trace.',
+  },
+  {
+    title: 'Turn the period into the recovered key', source: 'js/quantum-adapter.js + main.js · classical recovery',
+    code: [
+      'const period = periodFromDistribution(dist, bits, modulus, base);',
+      'const factors = period ? factorsFromPeriod(period, modulus, base) : null;',
+      'const [p, q] = result.factors, phi = (p - 1) * (q - 1);',
+      'const d = inverse(state.intercepted.e, phi);',
+      'state.recoveredText = decrypt(state.intercepted, d);',
+    ], focus: [0, 1, 2, 3, 4],
+    explanation: 'Continued fractions propose a period; classical checks verify it and use gcd to recover p and q. Ordinary RSA arithmetic then rebuilds the private exponent and decrypts the copied packet.',
+    note: 'This final factor-and-decrypt work is classical; the quantum circuit supplies the period information.',
+  },
+];
+function appendShorCodePanel(host, step, stepIndex) {
+  const panel = el('section', 'shor-code-panel');
+  panel.setAttribute('aria-label', 'Code excerpt for ' + step.title);
+  const header = el('div', 'shor-code-header');
+  header.append(el('strong', '', stepIndex === 5 ? 'CLASSICAL POST-PROCESSING' : 'QISKIT · PYTHON'), el('span', '', step.source));
+  const pre = el('pre', 'shor-code');
+  const code = el('code');
+  step.code.forEach((sourceLine, index) => {
+    const row = el('span', 'shor-code-line' + (step.focus.includes(index) ? ' active' : ''));
+    row.append(el('span', 'shor-line-number', String(index + 1).padStart(2, '0')));
+    row.append(el('span', 'shor-line-text', sourceLine));
+    code.append(row);
+  });
+  pre.append(code); panel.append(header, pre);
+  if (stepIndex === 4) {
+    const details = el('details', 'shor-code-detail');
+    details.append(el('summary', '', 'See the inverse-QFT gate helper'));
+    const helper = el('pre', 'shor-code shor-helper-code');
+    const helperCode = el('code');
+    [
+      'for index in range(count // 2):',
+      '    circuit.swap(register[index],',
+      '                 register[count-index-1])',
+      'for target in reversed(range(count)):',
+      '    for control in reversed(range(target+1, count)):',
+      '        circuit.cp(-pi / (2 ** (control - target)), register[control], register[target])',
+      '    circuit.h(register[target])',
+    ].forEach((line, index) => {
+      const row = el('span', 'shor-code-line');
+      row.append(el('span', 'shor-line-number', String(index + 1).padStart(2, '0')));
+      row.append(el('span', 'shor-line-text', line)); helperCode.append(row);
+    });
+    helper.append(helperCode); details.append(helper); panel.append(details);
+  }
+  host.append(panel);
+}
+function shorMetric(parent, label, value) {
+  const item = el('div', 'shor-metric');
+  item.append(el('span', '', label), el('strong', '', String(value)));
+  parent.append(item);
+}
+function shorRegister(parent, label, count, initial, transformed) {
+  const row = el('div', 'shor-register-row');
+  const title = el('span', 'shor-register-label', label + ' · ' + count + ' qubits');
+  const bits = el('div', 'shor-register-bits');
+  const visible = Math.min(count, 8);
+  for (let index = 0; index < visible; index++) bits.append(el('span', 'shor-bit', initial(index)));
+  if (count > visible) bits.append(el('span', 'shor-bit shor-ellipsis', '…'));
+  row.append(title, bits);
+  if (transformed) row.append(el('span', 'shor-register-result', transformed));
+  parent.append(row);
+}
+function appendShorWalkthroughVisual(host, index, modulus, base) {
+  const panel = el('div', 'shor-example');
+  const workBits = (modulus - 1).toString(2).length;
+  const phaseBits = state.result.phase_bits;
+  if (index === 0) {
+    panel.append(el('p', 'shor-example-label', 'PUBLIC INPUT · CIRCUIT BUDGET'));
+    const metrics = el('div', 'shor-metrics');
+    shorMetric(metrics, 'N', modulus); shorMetric(metrics, 'base a', base);
+    shorMetric(metrics, 'qubits', (workBits + phaseBits) + ' / 18');
+    panel.append(metrics, el('p', 'shor-example-note', 'The backend receives N and a. The prime choices stay in the browser.'));
+  } else if (index === 1) {
+    panel.append(el('p', 'shor-example-label', 'TWO REGISTERS · DIFFERENT JOBS'));
+    shorRegister(panel, 'phase', phaseBits, () => '0', 'H → superposition');
+    shorRegister(panel, 'work', workBits, bit => bit === 0 ? '1' : '0', 'starts at |1⟩');
+  } else if (index === 2) {
+    const value = Math.min(3, modulus - 1), multiplier = base % modulus;
+    panel.append(el('p', 'shor-example-label', 'ONE REVERSIBLE BASIS-STATE MAPPING'));
+    panel.append(el('div', 'shor-math-example', '|' + value + '⟩ → |(' + multiplier + ' × ' + value + ') mod ' + modulus + '⟩ = |' + ((multiplier * value) % modulus) + '⟩'));
+    panel.append(el('p', 'shor-example-note', 'The matrix stores one 1 in each row and column, so the mapping is a reversible permutation.'));
+  } else if (index === 3) {
+    const period = state.result.period;
+    const length = Math.min(8, Math.max(6, period + 2));
+    const xs = el('div', 'shor-sequence-row'); const values = el('div', 'shor-sequence-row');
+    xs.append(el('span', 'shor-sequence-label', 'x'));
+    values.append(el('span', 'shor-sequence-label', 'aˣ mod N'));
+    for (let x = 0; x < length; x++) {
+      xs.append(el('code', 'shor-sequence-value', String(x)));
+      const value = el('code', 'shor-sequence-value' + (x >= period ? ' repeated' : ''), String(modPow(base, x, modulus)));
+      values.append(value);
+    }
+    panel.append(el('p', 'shor-example-label', 'THE PATTERN REPEATS AFTER r = ' + period), xs, values);
+  } else if (index === 4) {
+    const distribution = state.result.distribution;
+    const entries = Object.entries(distribution).sort((left, right) => right[1] - left[1]).slice(0, 4);
+    const max = Math.max(...entries.map(([, weight]) => weight), 1);
+    panel.append(el('p', 'shor-example-label', state.result.source === 'sample' ? 'ILLUSTRATIVE SAMPLE COUNTS · NO QUANTUM JOB' : 'RETURNED QISKIT SIMULATOR COUNTS'));
+    entries.forEach(([bits, weight]) => {
+      const row = el('div', 'shor-measurement-row');
+      const countLabel = state.result.distribution_kind === 'counts' ? String(weight) + ' shots' : (weight * 100).toFixed(1) + '%';
+      const meter = el('span', 'shor-measurement-meter');
+      const fill = el('span', ''); fill.style.width = (weight / max * 100) + '%'; meter.append(fill);
+      row.append(el('code', 'shor-measurement-bits', bits), meter, el('span', 'shor-measurement-count', countLabel));
+      panel.append(row);
+    });
+    panel.append(el('p', 'shor-example-note', 'These are phase samples—not factors. The wave animation is conceptual, not a circuit trace.'));
+  } else {
+    const { p, q, phi, e, d } = state.recoveredKey;
+    panel.append(el('p', 'shor-example-label', 'VERIFIED CLASSICAL RECOVERY'));
+    const metrics = el('div', 'shor-metrics');
+    shorMetric(metrics, 'period r', state.result.period);
+    shorMetric(metrics, 'factors', p + ' × ' + q);
+    shorMetric(metrics, 'φ(N)', phi);
+    shorMetric(metrics, 'private d', d);
+    panel.append(metrics, el('p', 'shor-example-note', 'With e = ' + e + ', the browser derives d and decrypts the copied ciphertext. The message appears on the next screen.'));
+  }
+  host.append(panel);
+}
+function renderShorWalkthrough() {
+  const index = state.shorWalkthroughStep;
+  const step = shorWalkthroughSteps[index];
+  if (!step) { state.shorWalkthroughStep = null; return renderRecoveredAttack(); }
+  const modulus = state.intercepted.n, base = state.result.base || lessonBase(modulus);
+  state.step = index;
+  stageBase('Zeno’s code, step by step.', 'Step ' + (index + 1) + ' of ' + shorWalkthroughSteps.length + ' · ' + step.title, (index + 1) + ' / ' + shorWalkthroughSteps.length);
+  $('pause-animation').hidden = true; $('replay-animation').hidden = true; $('skip-animation').hidden = true;
+  const walkthrough = el('div', 'shor-walkthrough');
+  appendShorCodePanel(walkthrough, step, index);
+  const lesson = el('section', 'shor-lesson');
+  lesson.append(el('p', 'shor-lesson-copy', step.explanation));
+  appendShorWalkthroughVisual(lesson, index, modulus, base);
+  walkthrough.append(lesson); $('stage-body').append(walkthrough);
+  caption(step.note);
+  stageNavigation(index === shorWalkthroughSteps.length - 1 ? 'Reveal Zeno’s message →' : 'Next code step →', () => {
+    if (index === shorWalkthroughSteps.length - 1) {
+      state.shorWalkthroughStep = null; state.step = shorWalkthroughSteps.length;
+    } else state.shorWalkthroughStep = index + 1;
+    renderStage(); $('stage').scrollTop = 0; $('stage-title').focus({ preventScroll: true });
+  }, index ? () => {
+    state.shorWalkthroughStep = index - 1; renderStage(); $('stage').scrollTop = 0; $('stage-title').focus({ preventScroll: true });
+  } : null);
+}
+function renderRecoveredAttack() {
+  const key = state.recoveredKey;
+  stageBase('He has your invitation.', 'Zeno used the recovered RSA key to open the intercepted packet.', 'Verified recovery');
+  $('pause-animation').hidden = true; $('replay-animation').hidden = true; $('skip-animation').hidden = true;
+  const reveal = el('section', 'shor-recovered-message');
+  reveal.append(el('p', 'result-label', 'FACTORS → PRIVATE KEY → YOUR WORDS'));
+  reveal.append(el('blockquote', 'leak-quote', state.recoveredText));
+  $('stage-body').append(reveal);
+  caption('For this tiny textbook RSA lesson, r = ' + state.result.period + ' gives p = ' + key.p + ' and q = ' + key.q + '. Zeno rebuilds d = ' + key.d + ' and decrypts the real intercepted packet.');
+  stageNavigation('Back to Alice →', consequence);
 }
 async function launchAttack() {
   if (state.phase !== 'INTERCEPT' || ['submitting', 'waiting', 'success'].includes(state.job)) return;
@@ -524,7 +744,10 @@ async function launchAttack() {
     if (epoch === generation && ticket === submission) { state.stageDirty = true; $('execution-mode').disabled = state.job === 'success'; updateModeLabel(); if (view === 'stage') updateAttackStatus(); }
   }
 }
-function renderRecovery() { renderIntercept(); }
+function renderRecovery() {
+  if (Number.isInteger(state.shorWalkthroughStep)) return renderShorWalkthrough();
+  return renderRecoveredAttack();
+}
 async function consequence() {
   if (state.phase !== 'RECOVER' || state.recoveredText == null || state.zenoClosing) return;
   const epoch = generation;
@@ -790,7 +1013,7 @@ export async function restart() {
   if ($('zeno-popup').open) $('zeno-popup').close();
   $('zeno-popup').classList.remove('closing'); $('stage').inert = false;
   $('puzzle-window').append($('stage')); $('encryption-summary').hidden = true;
-  state = { phase: 'MENU', step: 0, balconyStep: 0, balconyChoice: 0, dateStep: 0, dateLocation: null, chatClosed: false, puzzleClosed: false, zenoDismissed: false, zenoClosing: false, chatterTyping: false, puzzleNotes: new Set(), busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, mlkemDraft: { a0: '6', a1: '1', s0: '1', s1: '-1', e0: '0', e1: '1' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
+  state = { phase: 'MENU', step: 0, shorWalkthroughStep: null, balconyStep: 0, balconyChoice: 0, dateStep: 0, dateLocation: null, chatClosed: false, puzzleClosed: false, zenoDismissed: false, zenoClosing: false, chatterTyping: false, puzzleNotes: new Set(), busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, mlkemDraft: { a0: '6', a1: '1', s0: '1', s1: '-1', e0: '0', e1: '1' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
   lastStageAction = 0; followMessages = true; userScrollUntil = 0;
   $('messages').replaceChildren();
   $('message').value = ''; updateCount(); $('new-messages').hidden = true;
