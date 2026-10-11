@@ -1,0 +1,96 @@
+/* Pixel windows frame smooth vector scenes. The invitation remains the subject. */
+.stage.cinematic-stage { overflow: auto !important; }
+.stage.cinematic-stage>.stage-body { container-type: normal; flex: 1 1 auto; min-height: 170px; display: flex; flex-direction: column; }
+.cinematic-stage .motion-scene { width: 100%; min-height: 170px; flex: 1; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(ellipse at 50% 35%,#202943,#101426 78%); border: 1px solid #55607b; border-radius: 9px; color: #f5effa; box-shadow: inset 0 0 60px #050a1744; }
+.motion-scene svg { display: block; width: 100%; flex: 1 1 auto; height: 100%; max-height: 400px; min-height: 145px; overflow: hidden; font: 21px/1.3 system-ui,sans-serif; text-anchor: middle; }
+.motion-scene svg text { fill: #eee9f6; }
+.motion-scene svg path { fill: none; stroke: #a7abc4; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.motion-scene svg .guide path { stroke: #46506c; stroke-width: 1; }
+.motion-scene svg .guide text,.motion-scene svg .small { font: 15px system-ui,sans-serif; letter-spacing: 1px; fill: #c9c6dc; }
+.motion-scene svg .tiny { font: 13px system-ui,sans-serif; fill: #a8afc5; }
+.motion-scene svg .number { font: 600 35px system-ui,sans-serif; }
+.motion-scene svg .big { font: 600 53px system-ui,sans-serif; }
+.motion-scene svg .mint { color: #85e2d0; }
+.motion-scene svg .pink { color: #f6a2cb; }
+.motion-scene svg .gold { color: #f6d287; }
+.motion-scene svg .mint>rect,.motion-scene svg .mint>circle { fill: #173b3f; stroke: currentColor; stroke-width: 2; }
+.motion-scene svg .pink>rect,.motion-scene svg .pink>circle { fill: #42283d; stroke: currentColor; stroke-width: 2; }
+.motion-scene svg .gold>rect { fill: #433821; stroke: currentColor; stroke-width: 2; }
+.motion-scene svg .key-shape circle,.motion-scene svg .key-shape path { fill: none; stroke: currentColor; stroke-width: 6; }
+.motion-scene svg .wave { stroke: currentColor; stroke-width: 3; filter: drop-shadow(0 0 4px currentColor); }
+.motion-scene svg .packet path { stroke: currentColor; stroke-width: 2; }
+.motion-scene svg .letter-paper { fill: #f5effb; stroke: #c4afd9; }
+.motion-scene svg .letter-text { fill: #35223f; font: 23px system-ui,sans-serif; }
+.motion-scene svg .cipher-text { fill: #58417b; font: 22px ui-monospace,monospace; }
+.motion-scene svg .leak-paper { fill: #fae0eb; stroke: #f79bc7; stroke-width: 3; }
+.motion-scene [data-object='sequence'] circle { fill: #85e2d0; }
+.motion-scene [data-object='bars'] rect { fill: #85e2d0; }
+.scene-indicator { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 13px 16px 0; color: #aaaec8; font: 10px system-ui,sans-serif; letter-spacing: 1.2px; flex-shrink: 0; }
+.scene-time { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.scene-progress { background: #343c54; height: 3px; flex-shrink: 0; }
+.scene-progress>span { display: block; height: 100%; background: #8fdfd6; }
+.cinematic-stage .stage-caption { font: 21px/1.3 var(--sans); min-height: 2.6em; display: flex; align-items: center; margin: 10px 0; }
+.cinematic-stage .motion-controls { flex-wrap: wrap; gap: 14px; }
+.cinematic-stage .motion-controls .quiet { font-size: 17px; }
+.cinematic-stage #step-count { margin-left: auto; font: 12px var(--sans); }
+.cinematic-stage .stage-nav:empty { display: none; }
+.cinematic-stage .stage-nav button { min-height: 42px; }
+.game .puzzle-window:has(.cinematic-stage) .message-context { display: none; }
+#zeno-popup:has(.cinematic-stage) { background: #201e32; border-color: #72354d; box-shadow: 0 0 0 2px #bc6b8e, 9px 10px 0 #080b22a6; }
+#zeno-popup .cinematic-stage h2 { color: #ffe0ee; }
+#zeno-popup .cinematic-stage .stage-subtitle,#zeno-popup .cinematic-stage .stage-caption,#zeno-popup .cinematic-stage .mode-indicator { color: #ddd5e9; }
+#zeno-popup .cinematic-stage .motion-controls .quiet { color: #e6bad4; }
+#zeno-popup .cinematic-stage .motion-controls .quiet:hover,#zeno-popup .cinematic-stage .motion-controls .quiet:focus-visible { background:#4a314a; color:#fff2fa; }
+#zeno-popup .cinematic-stage .motion-controls>span:last-child { color: #bcaec8; }
+#zeno-popup .cinematic-stage .job-status { color: #efd7e4; background: #332637; border-color: #705064; font-size: 16px; margin-top: 6px; }
+#zeno-popup .cinematic-stage .job-status .quiet { color: #9be8dc; }
+.cinematic-stage .prime-form { padding: 20px; border: 0; box-shadow: none; background: #181d31; color: #e9e5f4; border-radius: 9px; }
+.cinematic-stage .prime-inputs { margin-bottom: 18px; }
+.cinematic-stage .prime-inputs label { color: #85e2d0; }
+.cinematic-stage .prime-inputs label:last-child { color: #f6a2cb; }
+.cinematic-stage .prime-inputs input { width: 90px; background: #252b43; border: 1px solid #777c9d; box-shadow: none; color: #f8f1ff; border-radius: 8px; font: 42px system-ui,sans-serif; }
+.cinematic-stage .prime-help { color: #c4bdd8; margin: 12px 0; }
+.cinematic-stage .prime-form .field-error { color: #ffb2c6; }
+.prime-invitation { padding: 16px 20px; margin: 0 0 20px; border-left: 2px solid #eea0c8; background: #29253f; font: 23px/1.35 var(--sans); color: #f7e0ef; }
+.prime-invitation small { display: block; font: 10px system-ui,sans-serif; color: #a99fbd; letter-spacing: 1px; margin-bottom: 8px; }
+.outgoing-packet { position: absolute; z-index: 20; top: 42%; left: 43%; width: 190px; padding: 18px; border: 2px solid #9fe2d5; background: #142e36; color: #d9fff4; box-shadow: 0 0 70px #81eddd66; text-align: center; pointer-events: none; }
+.outgoing-packet span { display: block; font: 50px var(--pixel); }
+.outgoing-packet strong,.outgoing-packet small { display: block; font-family: system-ui,sans-serif; margin-top: 7px; }
+.outgoing-packet small { font-size: 12px; }
+.sending-packet .conversation-panel { filter: brightness(.85); }
+#zeno-popup .rival-banner { animation: cinematic-banner 600ms cubic-bezier(.16,1,.3,1) both; }
+#zeno-popup .rival-standing { animation: cinematic-rival 750ms 100ms cubic-bezier(.16,1,.3,1) both; }
+#zeno-popup .rival-machine { animation: cinematic-machine 850ms 200ms cubic-bezier(.16,1,.3,1) both; filter: drop-shadow(0 0 12px #edc26a77); }
+.message.user:last-of-type[data-protected] { animation: safe-arrive 600ms ease-out both; }
+@keyframes cinematic-banner { from { opacity:0; translate:-80px 0; } to { opacity:1; translate:0 0; } }
+@keyframes cinematic-rival { from { opacity:0; transform:translateX(-60px) scale(.85); } to { opacity:1; transform:none; } }
+@keyframes cinematic-machine { from { opacity:0; transform:translateY(50px); } to { opacity:1; transform:none; } }
+@keyframes safe-arrive { from { opacity:.3; transform:translateY(15px); filter:drop-shadow(0 0 20px #85e2d0); } to { opacity:1; transform:none; filter:none; } }
+@media (max-width:760px) {
+  .cinematic-stage .stage-caption { font-size:19px; }
+  .cinematic-stage .prime-form { padding:12px; }
+  .cinematic-stage .prime-inputs input { font-size:32px; width:63px; }
+  .prime-invitation { font-size:19px; margin-bottom:14px; padding:12px; }
+  .scene-indicator { font-size:8px; padding:10px 10px 0; letter-spacing:.3px; }
+  .motion-scene svg .small { font-size:19px; letter-spacing:0; }
+  .motion-scene svg .tiny { display:none; }
+  .motion-scene svg .letter-text { font-size:26px; }
+  .cinematic-stage .motion-controls { gap:12px; }
+  .cinematic-stage .motion-controls .quiet { font-size:16px; }
+  .outgoing-packet { left:27%; }
+}
+@media (max-height:650px) {
+  .stage.cinematic-stage>.stage-body { min-height:110px; }
+  .cinematic-stage .motion-scene { min-height:110px; }
+  .motion-scene svg { min-height:90px; }
+  .cinematic-stage .stage-caption { font-size:17px; margin:6px 0; }
+  .cinematic-stage .motion-controls { margin-top:3px; }
+  .cinematic-stage .motion-controls .quiet { font-size:15px; }
+  .cinematic-stage .prime-form { padding:10px; }
+  .cinematic-stage .prime-inputs { margin-bottom:8px; }
+  .cinematic-stage .prime-inputs input { font-size:29px; padding:3px; }
+  .prime-invitation { font-size:18px; margin-bottom:12px; padding:8px 12px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  #zeno-popup .rival-banner,#zeno-popup .rival-standing,#zeno-popup .rival-machine,.message.user:last-of-type[data-protected] { animation:none; }
+}

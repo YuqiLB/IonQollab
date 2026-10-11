@@ -2,12 +2,16 @@ import { character, rivalSprites, storyExpressions } from './assets/manifest.js'
 import { balconyReplies, balconyBeat } from './js/opening.js';
 import { dateLocations, puzzleMessages } from './js/story-scenes.js';
 import { openFromMessage, closePopup, cancelWindowMotion } from './js/window-motion.js';
-import { makeKeys, encode, encrypt, decrypt, modPow, inverse } from './js/rsa.js';
+import { makeKeys, encode, encrypt, decrypt, inverse } from './js/rsa.js';
 import { runAttack, liveAvailable, lessonBase } from './js/quantum-adapter.js';
-import { primesVisual, phiVisual, keyVisual, encodingVisual, ringVisual, sequenceVisual, circuitVisual, factorVisual, pqVisual } from './js/visuals.js';
 
 import { moveWindows, resetMotion } from './js/desktop-motion.js';
 import { uiText } from './js/ui-text.js';
+import { pqVisual } from './js/visuals.js';
+import { revealWords, typingDelay, readingGap } from './js/story-pacing.js';
+import { mountStoryMotion, flyPacket } from './js/story-motion.js';
+let activeMotion = null, introReveal = null, dialogueReveal = null, sceneHandoff = null;
+let handoffTimers = [];
 
 const $ = id => document.getElementById(id);
 const allowed = {
@@ -26,10 +30,6 @@ let followMessages = true, lastStageAction = 0, userScrollUntil = 0;
 let puzzleChatTimer = null, puzzleChatQueue = [];
 const taskCards = new Map();
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-function orderOfBase(n, a) {
-  for (let r = 1; r <= n; r++) if (modPow(a, r, n) === 1) return r;
-  throw new Error('No modular order found within the bounded lesson input.');
-}
 const el = (tag, cls, content) => {
   const node = document.createElement(tag);
   if (cls) node.className = cls;
@@ -108,11 +108,11 @@ function appendMessage(role, content, note = '') {
   return item;
 }
 function busy(value) {
-  state.busy = value; updateComposer(); syncTask();
+  state.busy = value; if (!value) state.replyTyping = false; updateComposer(); syncTask();
   renderTyping();
 }
 function renderTyping() {
-  const value = state.busy || state.chatterTyping;
+  const value = state.replyTyping || state.chatterTyping;
   $('typing').classList.toggle('busy', value);
   $('typing').firstElementChild.textContent = value ? 'Alice is typing' : '';
 }
@@ -135,13 +135,18 @@ function queuePuzzleMessage() {
     message.dataset.puzzleNote = next;
     state.chatterTyping = false; renderTyping();
     if (puzzleChatQueue.length) queuePuzzleMessage();
-  }, 1800);
+  }, typingDelay(puzzleMessages[puzzleChatQueue[0]]) + 500);
 }
 async function speak(lines, epoch = generation) {
   busy(true);
-  for (const line of lines) {
-    await sleep(650);
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+    if (index) await sleep(readingGap(lines[index-1]));
     if (epoch !== generation) return false;
+    state.replyTyping = true; renderTyping();
+    await sleep(typingDelay(line));
+    if (epoch !== generation) return false;
+    state.replyTyping = false; renderTyping();
     appendMessage('alice', line);
   }
   busy(false);
@@ -201,7 +206,7 @@ function finishTask(id, text, compromised = false) {
 function syncTask() {
   const id = currentTask(), entry = taskCards.get(id);
   if (!entry || entry.card.disabled) return;
-  const total = { RSA: 7, RECOVER: 5, PQ: 4 }[state.phase];
+  const total = null;
   const progress = total ? ` · ${state.step + 1}/${total}` : '';
   const open = id === 'attack' ? $('zeno-popup').open && !state.zenoDismissed : view === 'stage' && !state.puzzleClosed;
   const status = state.phase === 'CHOICE' ? 'Open Alice’s attachment ↗' : open ? 'Open on your desktop' + progress : (entry.opened ? 'Resume task' : 'Open task') + progress + ' ↗';
@@ -230,6 +235,7 @@ function restoreChat() {
   $('messages').focus({ preventScroll: true });
 }
 function restorePuzzle() {
+  activeMotion?.suspend('window', false);
   if (!['RSA', 'PQ', 'INTERCEPT', 'RECOVER'].includes(state.phase)) return;
   if (state.puzzleClosed) {
     cancelWindowMotion();
@@ -240,11 +246,13 @@ function restorePuzzle() {
 }
 function minimizeTask() {
   if (view !== 'stage' || $('zeno-popup').open) return;
+  activeMotion?.suspend('window', true);
   cancelWindowMotion(); cancelPuzzleChatter();
   moveWindows(() => { state.puzzleClosed = true; updateWindowDock(); });
   $('restore-puzzle').focus({ preventScroll: true });
 }
 function showChat() {
+  stopStoryMotion();
   cancelPuzzleChatter(); cancelWindowMotion();
   moveWindows(() => {
     $('game').dataset.view = 'chat';
@@ -297,17 +305,17 @@ async function sendMessage(event) {
     const note = draft.querySelector('.message-note'); note.setAttribute('role', 'status');
     const resume = button('Continue encryption ↗', restorePuzzle, 'pending-resume'); resume.hidden = true; note.append(resume);
     transition('RSA'); updateComposer();
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) await sleep(200);
+    if (!(await speak(['Let’s keep this between us. I sent you a little key builder—choose two primes to lock your invitation.'], epoch))) return;
+    offerTask('rsa', 'Lock our invitation', 'Choose two primes → build a key → send the encrypted message.', () => restorePuzzle());
+    await sleep(650);
     if (epoch !== generation || state.phase !== 'RSA') return;
     showStage(draft);
-    appendMessage('alice', 'Let’s keep this between us. I sent you a little key builder—choose two primes to lock your invitation.');
-    offerTask('rsa', 'Lock our invitation', 'Choose two primes → build a key → send the encrypted message.', () => restorePuzzle());
     taskCards.get('rsa').opened = true;
   } else {
     state.retry = raw;
     state.dateLocation = dateLocations.find(location => location.invitation === raw).id;
     transition('DELIVERED'); updateComposer();
-    appendMessage('user', raw, 'Delivered in the story · post-quantum exchange illustrated');
+    appendMessage('user', raw, 'Delivered in the story · post-quantum exchange illustrated').dataset.protected = 'true';
     appendMessage('system', 'ZENO TRIES THE OLD ATTACK\nThis attack relies on RSA’s structure. The upgraded scheme uses different mathematics. No quantum job was submitted for this retry.');
    
     if (!(await speak(['Okay. You’ve officially made the quantum researcher lose her train of thought.', selectedDate().confirmation], epoch))) return;
@@ -330,6 +338,10 @@ function stageAction(action) {
 }
 function setStep(step) { state.step = step; renderStage(); $('stage').scrollTop = 0; $('stage-title').focus({ preventScroll: true }); }
 function stageBase(title, subtitle, count) {
+  stopStoryMotion();
+  $('stage').classList.remove('cinematic-stage');
+  $('pause-animation').hidden = true; $('replay-animation').hidden = false; $('skip-animation').hidden = false;
+  $('replay-animation').disabled = false; $('skip-animation').disabled = false;
   $('stage-title').textContent = title; $('stage-subtitle').textContent = subtitle;
   $('step-count').textContent = count;
   $('execution-controls').hidden = state.phase !== 'INTERCEPT' || state.step === 0;
@@ -340,9 +352,9 @@ function stageBase(title, subtitle, count) {
   $('skip-animation').textContent = 'Skip';
 }
 function visual(markup, compact = []) {
-  const holder = el('div', 'visual'); holder.innerHTML = markup;
-  const small = el('div', 'compact-visual');
-  compact.forEach(line => small.append(el('div', '', line)));
+  const holder = el('div','visual'); holder.innerHTML = markup;
+  const small = el('div','compact-visual');
+  compact.forEach(line => small.append(el('div','',line)));
   holder.append(small); $('stage-body').append(holder);
 }
 function caption(content, brief = content) { state.explanation = content; $('stage-caption').textContent = brief; }
@@ -357,12 +369,36 @@ function renderStage() {
   state.renderedPhase = state.phase; state.stageDirty = false;
   syncTask(); queuePuzzleMessage();
 }
+function stopStoryMotion() { activeMotion?.destroy(); activeMotion = null; }
+function beginStoryMotion(kind, data, complete) {
+  const epoch = generation;
+  $('stage').classList.add('cinematic-stage');
+  $('pause-animation').hidden = false;
+  $('stage-nav').replaceChildren();
+  activeMotion = mountStoryMotion($('stage-body'), {
+    kind, data, getResult: () => ({result:state.result,text:state.recoveredText}),
+    onCaption: text => caption(text),
+    onProgress: (paused, done) => {
+      const label = paused ? 'Resume' : 'Pause';
+      if ($('pause-animation').textContent !== label) $('pause-animation').textContent = label;
+      $('pause-animation').disabled = done || ['error','inconclusive'].includes(state.job);
+    },
+    onComplete: () => { if (epoch === generation) { $('pause-animation').disabled = true; complete(); } },
+  });
+}
+function encryptionReady() {
+  if (state.phase !== 'RSA') return;
+  state.motionReady = true;
+  stageNavigation('Send to Alice ↗', intercept, () => setStep(0));
+  $('step-count').textContent = 'Ready to send';
+}
 function renderRSA() {
-  const titles = ['Choose two primes', 'Find the public modulus', 'Calculate φ(n)', 'Build the key pair', 'Encode your message', 'Encrypt one block', 'Ready to send'];
-  stageBase(titles[state.step], 'Toy RSA · deliberately insecure', (state.step + 1) + ' / 7');
-  const next = () => setStep(state.step + 1), back = state.step ? () => setStep(state.step - 1) : null;
+  stageBase(state.step === 0 ? 'Keep this between us.' : 'An invitation, under lock.', 'Toy RSA · deliberately tiny keys', '');
+  $('stage').classList.add('cinematic-stage');
+  if (state.step === 0) { $('pause-animation').hidden = true; $('replay-animation').hidden = true; $('skip-animation').hidden = true; }
   if (state.step === 0) {
     const form = el('form', 'prime-form'); form.noValidate = true;
+    const invitation = el('blockquote', 'prime-invitation'); invitation.append(el('small', '', 'YOUR PENDING INVITATION'), el('span', '', state.invitation)); form.append(invitation);
     const fields = el('div', 'prime-inputs');
     ['p', 'q'].forEach(name => {
       const label = el('label', '', name + ' ='); const input = el('input');
@@ -370,7 +406,7 @@ function renderRSA() {
       input.value = state.primeDraft[name]; input.addEventListener('input', () => { state.primeDraft[name] = input.value; $('prime-error').textContent = ''; });
       label.append(input); fields.append(label);
     });
-    const help = el('p', 'prime-help', 'Distinct odd primes · p × q ≤ 63 · e is selected to fit your primes'); help.id = 'prime-help';
+    const help = el('p', 'prime-help', 'Distinct odd primes · p × q ≤ 63 · e is chosen to fit your primes'); help.id = 'prime-help';
     const error = el('p', 'field-error'); error.id = 'prime-error'; error.setAttribute('role', 'alert');
     form.append(fields, help, button('Use demo values', () => { $('prime-p').value = '3'; $('prime-q').value = '5'; state.primeDraft = { p: '3', q: '5' }; error.textContent = ''; }), error);
     const validate = () => {
@@ -381,38 +417,28 @@ function renderRSA() {
         state.packet = encrypt(state.invitation, state.keys);
         state.selectedBlock = state.encoded.digits.findIndex((m, i) => state.packet.ciphertext[i] !== m);
         if (state.selectedBlock < 0) state.selectedBlock = Math.min(2, state.encoded.digits.length - 1);
-        next();
+        setStep(1);
       } catch (e) {
         state.explanation = e.message;
         error.textContent = e.message.includes('odd primes') ? 'Choose odd primes. Try 3 and 5.' : e.message.includes('63 or below') ? 'Keep p × q ≤ 63. Try 3 and 5.' : e.message;
       }
     };
     form.addEventListener('submit', e => { e.preventDefault(); validate(); }); $('stage-body').append(form);
-    caption('Choose distinct odd primes with p × q ≤ 63. The lesson will choose the smallest odd e that is coprime to φ(n), so every permitted prime pair gets a usable exponent. This is deliberately insecure textbook RSA with no padding. Only the public product N goes to the attack.', 'Your primes stay private; the lesson chooses a compatible e.');
-    stageNavigation('Calculate n →', validate); return;
+    caption('Choose distinct odd primes with p × q ≤ 63. The lesson chooses the smallest odd e coprime to φ(n) = (p − 1)(q − 1), so it fits your selected pair. This is deliberately insecure textbook RSA with no padding. The attack uses the packet’s public modulus N.', 'Your primes stay private; a compatible e is chosen for your pair.');
+    stageNavigation('Encrypt my invitation →', validate); return;
   }
-  const keys = state.keys;
-  if (state.step === 1) { visual(primesVisual(keys.p, keys.q, true), [keys.p + ' × ' + keys.q, 'n = ' + keys.n]); caption('Multiply the two primes. The product n = ' + keys.n + ' becomes public; the two factors are meant to stay private.', 'Multiply your primes to get the public modulus.'); }
-  if (state.step === 2) { visual(phiVisual(keys), ['(' + keys.p + ' − 1) × (' + keys.q + ' − 1)', 'φ(n) = ' + keys.phi]); caption('φ(n) counts numbers below n that share no factor with it. For two distinct primes, φ(n) = (p − 1)(q − 1) = ' + keys.phi + '.', 'Count the residues that share no factor with n.'); }
-  if (state.step === 3) { visual(keyVisual(keys), ['PUBLIC: n = ' + keys.n + ' · e = ' + keys.e, 'PRIVATE: d = ' + keys.d]); caption('The lesson selected the smallest odd e greater than 1 that is coprime to φ(n) = ' + keys.phi + '. The private exponent d is its modular inverse: e × d ≡ 1 (mod φ(n)). These tiny textbook values are deliberately insecure; the disclaimer explains the limits.', keys.e + ' × ' + keys.d + ' ≡ 1 (mod ' + keys.phi + '). Keep d private.'); }
-  if (state.step === 4) {
-    const byte = new TextEncoder().encode(state.invitation)[0], digits = state.encoded.digits.slice(0, state.encoded.width);
-    visual(encodingVisual(byte, digits, keys.n), ['UTF-8 byte: ' + byte, 'Base ' + keys.n + ': ' + digits.join(' · ')]);
-    caption('Your actual first UTF-8 byte is ' + byte + '. Each byte uses ' + state.encoded.width + ' fixed-width base-' + keys.n + ' digits, including leading zeroes. Unicode round-trips too.', 'Each byte becomes ' + state.encoded.width + ' base-' + keys.n + ' digits. Keep leading zeroes.');
-  }
-  if (state.step === 5) {
-    const m = state.encoded.digits[state.selectedBlock], c = state.packet.ciphertext[state.selectedBlock]; visual(ringVisual(m, keys.n, keys.e), [m + '^' + keys.e + ' mod ' + keys.n, 'c = ' + c]);
-    caption('Selected block #' + (state.selectedBlock + 1) + ': m = ' + m + '. Raise m to the public exponent and keep the remainder: c = m^' + keys.e + ' mod ' + keys.n + ' = ' + c + '. The path connects those residues.', 'Raise the block to e, then keep the remainder.');
-  }
-  if (state.step === 6) {
-    $('stage-body').append(el('p', 'math-small', state.packet.byteLength + ' UTF-8 bytes · ' + state.packet.ciphertext.length + ' encrypted blocks'));
-    const packet = el('div', 'packet-preview', state.packet.ciphertext.slice(0, 8).join(' · ') + ' …'); $('stage-body').append(packet);
-    caption('The full packet contains every encrypted block and its decoding metadata. Someone on the channel can copy the envelope without knowing what it says.', 'First 8 encrypted blocks. The full packet is ready.');
-  }
-  stageNavigation(state.step === 6 ? 'Send encrypted packet ↗' : ['','','Calculate φ(n) →','Build the key pair →','Encode my message →','Encrypt a block →','Prepare the packet →'][state.step + 1] || 'Next →', state.step === 6 ? intercept : next, back);
+  state.motionReady = false;
+  beginStoryMotion('rsa', {keys:state.keys,packet:state.packet,message:state.invitation}, encryptionReady);
 }
-function intercept() {
-  if (state.phase !== 'RSA' || !state.packet) return;
+async function intercept() {
+  if (state.phase !== 'RSA' || !state.packet || !state.motionReady || state.sending) return;
+  state.sending = true; const epoch = generation;
+  for (const button of $('stage-nav').querySelectorAll('button')) button.disabled = true;
+  $('game').classList.add('sending-packet');
+  await flyPacket($('game'));
+  $('game').classList.remove('sending-packet');
+  if (epoch !== generation) return;
+  state.sending = false;
   cancelWindowMotion();
   markDraft('Encrypted packet sent · intercepted by Zeno');
   state.intercepted = structuredClone(state.packet);
@@ -441,30 +467,39 @@ function openZeno() {
   $('stage-title').focus({ preventScroll: true });
 }
 function renderIntercept() {
-  stageBase(state.step === 0 ? 'Your invitation. My window.' : 'Run the quantum attack', state.step === 0 ? '' : 'Toy order finding · not modern encryption', '');
-  if (state.step === 0 && state.job === 'idle') {
+  stageBase('Your invitation. My window.', 'Fictional future machine · toy RSA demonstration', '');
+  if (state.step === 0) {
+    $('execution-controls').hidden = false;
+    $('pause-animation').hidden = true; $('replay-animation').hidden = true; $('skip-animation').hidden = true;
     $('stage-body').append(rivalInterruption());
-    caption('Zeno copied the public modulus and ciphertext. The next step uses order finding to try to recover the toy key.', 'He copied your encrypted packet. Now he wants the key.');
-    stageNavigation('See the quantum circuit →', () => setStep(1));
+    caption('A sufficiently powerful quantum computer could break RSA. This tiny example demonstrates how.');
+    stageNavigation('Watch Zeno’s attack →', () => { state.step = 1; renderStage(); launchAttack(); });
     return;
   }
-  const base = lessonBase(state.intercepted.n);
-  visual(circuitVisual(state.intercepted.n, base), ['H → controlled powers', 'QFT⁻¹ → measure', 'Schematic · N = ' + state.intercepted.n + ', a = ' + base]);
-  const status = el('div', 'job-status ' + state.job);
-  status.id = 'job-status'; status.setAttribute('role', 'status');
-  status.textContent = state.job === 'idle' ? (state.mode === 'demo' ? 'Ready to use sample measurements.' : liveAvailable() ? 'Ready. Select a simulator with Select QPU.' : 'Live adapter not connected.') :
-    state.job === 'submitting' ? 'Submitting the quantum job…' : state.job === 'waiting' ? (state.mode === 'demo' ? 'Preparing sample measurements…' : 'Waiting for Qollab’s result…') :
-    state.job === 'success' ? (state.result.source === 'sample' ? 'Sample' : 'Live') + ' result · period verified.' : state.job === 'inconclusive' ? 'No useful period found. Nothing decrypted.' : !liveAvailable() && state.mode === 'live' ? 'Live adapter not connected. Nothing decrypted.' : 'Attack failed. See Details. Nothing decrypted.';
-  if (state.job === 'error' || state.job === 'inconclusive') {
-    if (state.mode === 'live') status.append(button('Explicitly switch to illustrative demo', () => { if (!['error', 'inconclusive'].includes(state.job)) return; changeMode('demo'); renderStage(); }, 'quiet'));
-  }
-  if (state.job === 'inconclusive' && state.result) status.append(button('Inspect returned measurements', openAbout, 'quiet'));
-  $('stage-body').append(status);
-  caption('Fictional future machine; tiny simulator demonstration. The attack receives public N = ' + state.intercepted.n + ' and a = ' + base + ', not your selected prime factors. It does not break production RSA, AES, or every end-to-end scheme.', 'Only public N = ' + state.intercepted.n + ' and a = ' + base + ' go to the attack.');
-  if (state.job === 'success') stageNavigation('Inspect the measurements →', () => { transition('RECOVER'); renderStage(); });
-  else {
-    const b = button(['waiting', 'submitting'].includes(state.job) ? 'Job in progress…' : state.job === 'idle' ? 'Run quantum attack →' : 'Retry quantum attack →', launchAttack, 'primary rose');
-    b.disabled = ['waiting', 'submitting'].includes(state.job); $('stage-nav').replaceChildren(b);
+  $('stage-title').textContent = 'Inside Zeno’s machine.';
+  $('execution-controls').hidden = true;
+  beginStoryMotion('attack', {packet:state.intercepted,base:lessonBase(state.intercepted.n)}, attackRevealed);
+  updateAttackStatus();
+}
+function attackRevealed() {
+  if (!['INTERCEPT', 'RECOVER'].includes(state.phase) || state.job !== 'success' || typeof state.recoveredText !== 'string') return;
+  if (state.phase === 'INTERCEPT') transition('RECOVER');
+  state.step = 4;
+  $('stage-title').textContent = 'He has your invitation.';
+  $('step-count').textContent = 'Verified recovery';
+  stageNavigation('Back to Alice →', consequence);
+}
+function updateAttackStatus() {
+  let status = $('job-status');
+  if (!status) { status = el('div', 'job-status'); status.id = 'job-status'; status.setAttribute('role','status'); $('stage-body').append(status); }
+  status.className = 'job-status ' + state.job;
+  status.textContent = state.job === 'success' ? (state.result.source === 'sample' ? 'Sample measurements · no quantum job.' : 'Live measurements · result verified.') : state.job === 'error' ? 'Attack failed. Nothing decrypted.' : state.job === 'inconclusive' ? 'No useful period. Nothing decrypted.' : state.mode === 'demo' ? 'Illustrative attack · no quantum job.' : 'Waiting for the live result…';
+  if (['error','inconclusive'].includes(state.job)) {
+    activeMotion?.suspend('failure',true);
+    $('pause-animation').disabled = true;
+    $('replay-animation').disabled = true; $('skip-animation').disabled = true;
+    if (state.mode === 'live') status.append(button('Use illustrative demo instead', () => { changeMode('demo'); }, 'quiet'));
+    stageNavigation('Retry attack →', () => { state.job='idle'; renderStage(); launchAttack(); });
   }
 }
 async function launchAttack() {
@@ -472,7 +507,7 @@ async function launchAttack() {
   const epoch = generation, ticket = ++submission; const mode = state.mode;
   state.error = ''; state.result = null; state.recoveredText = null;
   try {
-    const result = await runAttack({ mode, modulus: state.intercepted.n, base: lessonBase(state.intercepted.n), onStatus: value => { if (epoch !== generation || ticket !== submission) return; state.job = value; state.stageDirty = true; $('execution-mode').disabled = true; if (view === 'stage') renderStage(); } });
+    const result = await runAttack({ mode, modulus: state.intercepted.n, base: lessonBase(state.intercepted.n), onStatus: value => { if (epoch !== generation || ticket !== submission) return; state.job = value; state.stageDirty = true; $('execution-mode').disabled = true; if (view === 'stage') updateAttackStatus(); } });
     if (epoch !== generation || ticket !== submission) return;
     state.result = result; state.job = result.status;
     if (result.status === 'success') {
@@ -486,42 +521,10 @@ async function launchAttack() {
     if (epoch !== generation || ticket !== submission) return;
     state.job = 'error'; state.error = error.message || String(error); state.recoveredText = null;
   } finally {
-    if (epoch === generation && ticket === submission) { state.stageDirty = true; $('execution-mode').disabled = state.job === 'success'; updateModeLabel(); if (view === 'stage') renderStage(); }
+    if (epoch === generation && ticket === submission) { state.stageDirty = true; $('execution-mode').disabled = state.job === 'success'; updateModeLabel(); if (view === 'stage') updateAttackStatus(); }
   }
 }
-function measurements() {
-  const { distribution, distribution_kind: kind, source, total } = state.result;
-  $('stage-body').append(el('div', 'result-label', source === 'sample' ? 'SAMPLE MEASUREMENTS · NO QUANTUM JOB' : 'ACTUAL RETURNED MEASUREMENTS'));
-  const chart = el('div', 'measurements');
-  const entries = Object.entries(distribution).sort((a, b) => b[1] - a[1]);
-  const max = Math.max(...entries.map(x => x[1]));
-  for (const [key, value] of entries.slice(0, 4)) {
-    const col = el('div', 'measurement'); const bar = el('div', 'bar');
-    bar.style.setProperty('--bar-size', (value / max * 100) + '%');
-    col.append(el('span', '', kind === 'counts' ? value : (value * 100).toFixed(1) + '%'), bar, el('span', '', 'y=' + parseInt(key, 2)));
-    col.setAttribute('aria-label', key + ': ' + value + ' ' + kind); chart.append(col);
-  }
-  $('stage-body').append(chart, el('p', 'math-small', 'Largest ' + Math.min(4, entries.length) + ' outcomes · ' + (kind === 'counts' ? total + ' shots' : 'probabilities')));
-  $('stage-body').append(button('All measurements ↗', openAbout, 'quiet results-details'));
-}
-function renderRecovery() {
-  const titles = ['Read the measurements', 'Verify the period', 'Recover the factors', 'Recover the private key', 'Your message, decrypted'];
-  stageBase(titles[state.step], state.result.source === 'sample' ? 'Sample measurements · no quantum job' : 'Live Qollab measurements', (state.step + 1) + ' / 5');
-  if (state.step === 0) { measurements(); caption('Read each bitstring as y / 2ᵗ. Continued fractions propose a period; modular arithmetic must verify it. A returned job alone is not a successful attack.', 'Measured phases suggest a period. Verify it next.'); }
-  if (state.step === 1) { visual(sequenceVisual(state.intercepted.n, state.result.base, state.result.period), [state.result.base + '^' + state.result.period + ' mod ' + state.intercepted.n + ' = 1', 'Period r = ' + state.result.period]); caption('The returned phases yield the verified candidate r = ' + state.result.period + '. Checking ' + state.result.base + '^r mod ' + state.intercepted.n + ' and every smaller positive exponent confirms the order.', 'r = ' + state.result.period + ' is the first exponent that returns to 1.'); }
-  if (state.step === 2) { visual(factorVisual(state.result.period, state.result.factors, state.intercepted.n, state.result.base), ['Factors: ' + state.result.factors.join(' and '), state.result.factors.join(' × ') + ' = ' + state.intercepted.n]); caption('The even period gives gcd(a^(r/2) − 1, N) and gcd(a^(r/2) + 1, N). These recover ' + state.result.factors.join(' and ') + ', whose product is the intercepted modulus.', 'gcd(a^(r/2) ± 1, N) reveals the two factors.'); }
-  if (state.step === 3) {
-    visual(keyVisual(state.recoveredKey), ['φ(n) = ' + state.recoveredKey.phi, 'Recovered d = ' + state.recoveredKey.d]);
-    const c = state.intercepted.ciphertext[state.selectedBlock], m = modPow(c, state.recoveredKey.d, state.intercepted.n);
-    caption('From the recovered factors: φ = ' + state.recoveredKey.phi + ', d = ' + state.recoveredKey.d + '. Selected block: ' + c + '^' + state.recoveredKey.d + ' mod ' + state.intercepted.n + ' = ' + m + '. Decrypt every block, restore the fixed-width bytes, then decode UTF-8.', 'Decrypt a block: ' + c + '^' + state.recoveredKey.d + ' mod ' + state.intercepted.n + ' = ' + m + '.');
-  }
-  if (state.step === 4) {
-    if (state.job !== 'success' || typeof state.recoveredText !== 'string') throw new Error('Recovery required before reveal.');
-    $('stage-body').append(el('blockquote', 'leak-quote', state.recoveredText));
-    caption('Zeno recovered your actual words from the ciphertext. The quantum sample/live distinction changes where the measurements came from; the toy decryption is real.', 'Your actual words, recovered from the toy ciphertext.');
-  }
-  stageNavigation(state.step === 4 ? 'Return to the conversation →' : 'Next →', state.step === 4 ? consequence : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : null);
-}
+function renderRecovery() { renderIntercept(); }
 async function consequence() {
   if (state.phase !== 'RECOVER' || state.recoveredText == null || state.zenoClosing) return;
   const epoch = generation;
@@ -555,6 +558,17 @@ function choiceActions() {
     if (state.phase === 'PQ') showStage(card);
   });
   syncTask();
+}
+function protectionReady() {
+  if (state.phase !== 'PQ') return;
+  stageNavigation('Choose a new invitation ♥', retryConversation, () => { state.pqDetails = true; state.step = 0; renderStage(); });
+  $('stage-nav').firstElementChild.textContent = 'Explore the toy math';
+  $('step-count').textContent = 'Ready for a new plan';
+}
+function renderPQ() {
+  if (state.pqDetails) return renderPQDetails();
+  stageBase('A new key. A new plan.', 'Illustrative ML-KEM exchange · no post-quantum computation', '');
+  beginStoryMotion('pq', {}, protectionReady);
 }
 const MLKEM_Q = 3329;
 const MLKEM_FIELDS = [
@@ -597,7 +611,7 @@ function polynomialText(coefficients) {
   });
   return terms.join('') || '0';
 }
-function renderPQ() {
+function renderPQDetails() {
   const titles = [
     'ML-KEM, in context',
     'Alice sends her public key',
@@ -615,6 +629,7 @@ function renderPQ() {
     'The secret depends on two different protections.',
   ];
   stageBase(titles[state.step], subtitles[state.step], (state.step + 1) + ' / 6');
+  $('replay-animation').hidden = true; $('skip-animation').hidden = true;
   if (state.step === 0) {
     $('stage-body').append(el('div', 'math-equation', 'ML-KEM → shared secret → AES-256-GCM'));
     $('stage-body').append(el('p', 'math-small mlkem-copy', 'ML-KEM helps you and Alice establish the same secret. AES-GCM uses a key derived from it to encrypt the actual text and detect tampering.'));
@@ -718,7 +733,8 @@ function renderPQ() {
     $('stage-body').append(caveat);
     caption('Interception is possible. Feasible decryption is what these algorithms are designed to prevent.', 'Zeno can copy it; no known practical quantum attack decrypts it.');
   }
-  stageNavigation(state.step === 5 ? 'Choose a new invitation ♥' : 'Next →', state.step === 5 ? retryConversation : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : null);
+  stageNavigation(state.step === 5 ? 'Choose a new invitation ♥' : 'Next →', state.step === 5 ? retryConversation : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : () => { state.pqDetails=false; state.step=0; renderStage(); });
+  if (!state.step) $('stage-nav').firstElementChild.textContent = '← Animation';
 }
 async function retryConversation() {
   if (state.phase !== 'PQ') return;
@@ -733,17 +749,29 @@ function changeMode(mode) {
   if (['submitting', 'waiting', 'success'].includes(state.job)) return;
   state.mode = mode; state.job = 'idle'; state.error = ''; state.result = null;
   $('execution-mode').value = mode; updateModeLabel();
-  if (view === 'stage' && state.phase === 'INTERCEPT') renderStage();
+  if (view === 'stage' && state.phase === 'INTERCEPT') {
+    state.step = 0; renderStage();
+  }
 }
 function updateModeLabel() {
   $('mode-label').textContent = state.mode === 'demo' ? 'No quantum job.' : liveAvailable() ? 'Adapter connected.' : 'Connection required.';
 }
 function openAbout() {
+  activeMotion?.suspend('details',true);
   const report = el('div', 'run-report');
   const description = state.result ? 'This playthrough: ' + (state.result.source === 'sample' ? 'sample measurements (no quantum job)' : 'live Qollab measurements') + '; job status: ' + state.job + '.' : 'This playthrough: ' + (state.job === 'error' ? 'the attack failed. No successful quantum result.' : ['waiting', 'submitting'].includes(state.job) ? 'the attack is still pending.' : 'no attack completed yet.');
   report.append(el('p', '', description), el('p', '', 'Dialogue uses scripted reply choices. No messages are sent to a server or stored persistently.'));
   if (view === 'stage' && state.explanation) report.append(el('p', '', state.explanation));
   if (state.error) report.append(el('p', '', state.error));
+  if (state.keys) {
+    const k=state.keys;
+    report.append(el('h3','','Your RSA arithmetic'), el('p','',`p=${k.p}, q=${k.q}; N=${k.n}; φ(N)=(${k.p}−1)(${k.q}−1)=${k.phi}; e=${k.e}; d=${k.d}. e×d ≡ 1 (mod φ).`));
+    report.append(el('p','',`The invitation is encoded as UTF-8 bytes, then ${state.packet.width} fixed-width base-${k.n} digits per byte. Each digit is encrypted with c=m^${k.e} mod ${k.n}.`));
+  }
+  if (state.result?.status === 'success') {
+    const r=state.result;
+    report.append(el('h3','','Verified recovery'),el('p','',`Measurement phases y/2ᵗ suggest the period through continued fractions. Verified r=${r.period}, a=${r.base}. gcd(a^(r/2)±1,N) yields ${r.factors.join(' and ')}. The recovered private exponent is d=${state.recoveredKey.d}.`));
+  }
   if (state.result?.distribution) {
     report.append(el('h3', '', 'All returned measurements (' + state.result.distribution_kind + ')'), el('pre', 'measurement-data', JSON.stringify(state.result.distribution, null, 2)));
   }
@@ -752,6 +780,10 @@ function openAbout() {
 export async function restart() {
   const pending = state && ['waiting', 'submitting'].includes(state.job) && state.mode === 'live';
   generation++; submission++;
+  introReveal?.cancel(); dialogueReveal?.cancel(); cancelSceneHandoff();
+  stopStoryMotion();
+  $('game').classList.remove('sending-packet');
+  $('game').querySelectorAll('.outgoing-packet').forEach(packet => packet.remove());
   resetMotion(); taskCards.clear();
   cancelPuzzleChatter(); cancelWindowMotion();
   if ($('zeno-popup').open) $('zeno-popup').close();
@@ -784,9 +816,13 @@ export async function restart() {
   busy(false);
   if (pending) appendMessage('system', 'Story restarted. A submitted remote job may still finish; restarting this interface does not cancel it. Its result will be ignored.');
   $('start-game').focus({ preventScroll: true });
+  $('start-prompt-copy').textContent = 'Click anywhere to reveal';
+  introReveal = revealWords([...$('intro-story').children], { pace:150, onComplete:() => { $('start-prompt-copy').textContent = 'Click anywhere to start'; } });
 }
-function startGame() {
-  if (state.phase !== 'MENU') return;
+function startGame(event) {
+  if (state.phase !== 'MENU' || event?.detail > 1) return;
+  if (introReveal?.running) { introReveal.finish(); return; }
+  introReveal?.cancel();
   const epoch = generation;
   transition('BALCONY');
   $('start-screen').hidden = true;
@@ -795,10 +831,11 @@ function startGame() {
   renderBalcony();
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     $('game').classList.add('entering');
-    setTimeout(() => { if (generation === epoch) $('game').classList.remove('entering'); }, 500);
+    setTimeout(() => { if (generation === epoch) $('game').classList.remove('entering'); }, 850);
   }
 }
 function renderBalcony() {
+  dialogueReveal?.cancel();
   const meeting = state.phase === 'MEET';
   const beat = meeting ? { ...selectedDate().lines[state.dateStep], last: state.dateStep === selectedDate().lines.length - 1 } : balconyBeat(state.balconyStep, state.balconyChoice);
   portrait(beat.expression);
@@ -815,17 +852,26 @@ function renderBalcony() {
       }));
     });
   }
-  $('balcony-next').hidden = choosing;
-  uiText($('balcony-next'), beat.last ? (meeting ? 'Finish ♥' : 'Back to my desk ↗') : 'Continue ▼');
-  $('balcony-hint').textContent = choosing ? 'Choose your reply' : 'Click anywhere in this box';
-  $('dialogue-advance').disabled = choosing;
-  $('dialogue-advance').setAttribute('aria-label', beat.last ? (meeting ? 'Finish the date' : 'Back to my desk') : 'Continue dialogue');
-  // Keep the next action focused; the live region announces the new dialogue.
-  if (choosing) $('balcony-choices').firstElementChild.focus({ preventScroll: true });
-  else $('dialogue-advance').focus({ preventScroll: true });
+  const ready = () => {
+    $('balcony-next').hidden = choosing;
+    uiText($('balcony-next'), beat.last ? (meeting ? 'Finish ♥' : 'Back to my desk ↗') : 'Continue ▼');
+    $('balcony-hint').textContent = choosing ? 'Choose your reply' : 'Click anywhere in this box';
+    $('dialogue-advance').disabled = choosing;
+    $('dialogue-advance').setAttribute('aria-label', beat.last ? (meeting ? 'Finish the date' : 'Back to my desk') : 'Continue dialogue');
+    for (const choice of $('balcony-choices').children) choice.disabled = false;
+    if (choosing) $('balcony-choices').firstElementChild.focus({preventScroll:true});
+  };
+  for (const choice of $('balcony-choices').children) choice.disabled = true;
+  $('balcony-next').hidden = true;
+  $('balcony-hint').textContent = 'Click to reveal the full line';
+  $('dialogue-advance').disabled = false;
+  $('dialogue-advance').setAttribute('aria-label','Show full dialogue');
+  dialogueReveal = revealWords([$('balcony-line')], {pace:100, onComplete:ready});
+  $('dialogue-advance').focus({preventScroll:true});
 }
 function advanceBalcony(event) {
-  if (event.detail > 1) return;
+  if (event.detail > 1 || !['BALCONY','MEET'].includes(state.phase)) return;
+  if (dialogueReveal?.running) { dialogueReveal.finish(); return; }
   if (state.phase === 'MEET') {
     if (state.dateStep === selectedDate().lines.length - 1) return finishStory();
     state.dateStep++; renderBalcony(); return;
@@ -834,37 +880,74 @@ function advanceBalcony(event) {
   if (balconyBeat(state.balconyStep, state.balconyChoice).last) return returnToDesk();
   state.balconyStep++; renderBalcony();
 }
-async function returnToDesk() {
+function cancelSceneHandoff() {
+  handoffTimers.forEach(clearTimeout); handoffTimers=[]; sceneHandoff=null;
+  $('scene-transition').hidden=true; $('scene-transition').classList.remove('leaving');
+}
+function showSceneHandoff({kicker,title,copy,prompt,prepare,after,auto=false}) {
+  cancelSceneHandoff();
+  const handoff={epoch:generation,prepare,after,advancing:false}; sceneHandoff=handoff;
+  $('transition-kicker').textContent=kicker; $('transition-title').textContent=title;
+  $('transition-copy').textContent=copy; $('transition-prompt').textContent=prompt;
+  $('scene-transition').hidden=false; $('transition-continue').disabled=true;
+  handoffTimers.push(setTimeout(() => {
+    if (sceneHandoff!==handoff || handoff.epoch!==generation) return;
+    $('transition-continue').disabled=false; $('transition-continue').focus({preventScroll:true});
+  },matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600));
+  if (auto) handoffTimers.push(setTimeout(advanceSceneHandoff,3200));
+}
+async function advanceSceneHandoff(event) {
+  const handoff=sceneHandoff;
+  if (!handoff || handoff.advancing || $('transition-continue').disabled || event?.detail>1) return;
+  handoff.advancing=true; $('transition-continue').disabled=true;
+  handoffTimers.forEach(clearTimeout); handoffTimers=[];
+  handoff.prepare(); $('scene-transition').classList.add('leaving');
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) await sleep(700);
+  if (generation!==handoff.epoch || sceneHandoff!==handoff) return;
+  $('scene-transition').hidden=true; $('scene-transition').classList.remove('leaving'); sceneHandoff=null;
+  handoff.after();
+}
+function returnToDesk() {
   if (state.phase !== 'BALCONY') return;
-  const epoch = generation;
-  transition('RETURN');
-  $('balcony-scene').inert = true;
-  $('scene-transition').hidden = false;
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduced) await sleep(500);
-  if (generation !== epoch) return;
-  $('balcony-scene').hidden = true;
-  $('game').classList.remove('entering');
-  $('game').dataset.scene = 'desk';
-  transition('INTRO');
-  document.querySelector('.conversation-panel').inert = false;
-  showChat();
-  $('scene-transition').hidden = true;
-  if (await speak(['Back at your desk? I’m glad we took that walk.', 'The trapped ions can wait. I’d rather get to know you.', 'Want to continue this somewhere a little more private?'], epoch)) focusChoices();
+  dialogueReveal?.cancel(); const epoch=generation;
+  transition('RETURN'); $('balcony-scene').inert=true;
+  showSceneHandoff({
+    kicker:'A FEW STEPS DOWN THE HALL', title:'Back at your desk.',
+    copy:'You sit down. A message from Alice lights up your screen.',
+    prompt:'Click anywhere to continue ↗',
+    prepare:() => {
+      $('balcony-scene').hidden=true; $('game').classList.remove('entering');
+      $('game').dataset.scene='desk'; transition('INTRO');
+      showChat();
+    },
+    after:async () => {
+      document.querySelector('.conversation-panel').inert=false;
+      $('messages').focus({preventScroll:true});
+      if (await speak(['Back at your desk? I’m glad we took that walk.', 'The trapped ions can wait. I’d rather get to know you.', 'Want to continue this somewhere a little more private?'],epoch)) focusChoices();
+    },
+  });
 }
 function selectedDate() { return dateLocations.find(location => location.id === state.dateLocation); }
 function startMeeting() {
-  if (state.phase !== 'DELIVERED' || state.busy) return;
-  const location = selectedDate();
-  transition('MEET'); state.dateStep = 0;
-  view = 'balcony'; $('game').dataset.view = 'balcony'; $('game').dataset.scene = location.id;
-  document.querySelector('.conversation-panel').inert = true;
-  $('date-art').src = location.background; $('date-art').hidden = false;
-  $('scene-place').textContent = location.name.toUpperCase(); $('scene-time').textContent = location.time + ' · just us';
-  $('balcony-scene').setAttribute('aria-label', 'A date with Alice at the ' + location.name.toLowerCase());
-  $('balcony-scene').hidden = false; $('balcony-scene').inert = false;
-  $('skip-balcony').hidden = true;
-  renderBalcony();
+  if (state.phase !== 'DELIVERED' || state.busy || sceneHandoff) return;
+  const location=selectedDate(); setActions([]);
+  document.querySelector('.conversation-panel').inert=true;
+  showSceneHandoff({
+    kicker:location.time.toUpperCase(), title:location.name,
+    copy:location.id==='garden' ? 'You pocket your phone. Alice is waiting with two coffees.' : 'You pocket your phone and head for the glow of the east dome.',
+    prompt:'Your shift can wait. ↗', auto:true,
+    prepare:() => {
+      transition('MEET'); state.dateStep=0;
+      view='balcony'; $('game').dataset.view='balcony'; $('game').dataset.scene=location.id;
+      $('date-art').src=location.background; $('date-art').hidden=false;
+      $('scene-place').textContent=location.name.toUpperCase(); $('scene-time').textContent=location.time+' · just us';
+      $('balcony-scene').setAttribute('aria-label','A date with Alice at the '+location.name.toLowerCase());
+      $('balcony-line').textContent=''; $('balcony-choices').replaceChildren();
+      $('balcony-scene').hidden=false; $('balcony-scene').inert=true; $('skip-balcony').hidden=true;
+      $('dialogue-advance').disabled=true;
+    },
+    after:() => { $('balcony-scene').inert=false; renderBalcony(); },
+  });
 }
 function finishStory() {
   if (state.phase !== 'MEET') return;
@@ -890,6 +973,7 @@ document.addEventListener('keydown', event => {
 });
 $('start-game').addEventListener('click', startGame);
 $('dialogue-advance').addEventListener('click', advanceBalcony);
+$('transition-continue').addEventListener('click', advanceSceneHandoff);
 $('skip-balcony').addEventListener('click', returnToDesk);
 $('end-replay').addEventListener('click', restart);
 $('end-about').addEventListener('click', openAbout);
@@ -913,9 +997,15 @@ new ResizeObserver(() => {
   if (followMessages && ['chat', 'stage'].includes(view)) { $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; }
 }).observe($('messages'));
 $('new-messages').addEventListener('click', () => { followMessages = true; $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; });
-$('replay-animation').addEventListener('click', () => { $('stage-body').classList.remove('animate', 'still'); void $('stage-body').offsetWidth; $('stage-body').classList.add('animate'); $('skip-animation').textContent = 'Skip'; });
-$('skip-animation').addEventListener('click', () => { $('stage-body').classList.add('still'); $('skip-animation').textContent = 'Motion skipped ✓'; });
+$('pause-animation').addEventListener('click', () => activeMotion?.toggle());
+$('replay-animation').addEventListener('click', () => {
+  if (!activeMotion || state.sending) return;
+  state.motionReady = false; $('stage-nav').replaceChildren(); $('step-count').textContent = '';
+  activeMotion.replay();
+});
+$('skip-animation').addEventListener('click', () => activeMotion?.skip());
 $('about-button').addEventListener('click', openAbout);
 $('close-about').addEventListener('click', () => $('about-dialog').close());
+$('about-dialog').addEventListener('close', () => activeMotion?.suspend('details',false));
 $('execution-mode').addEventListener('change', e => changeMode(e.target.value));
 restart();
