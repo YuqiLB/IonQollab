@@ -7,8 +7,11 @@ import { runAttack, liveAvailable, lessonBase } from './js/quantum-adapter.js';
 
 import { moveWindows, resetMotion } from './js/desktop-motion.js';
 import { uiText } from './js/ui-text.js';
+import { pqVisual } from './js/visuals.js';
+import { revealWords, typingDelay, readingGap } from './js/story-pacing.js';
 import { mountStoryMotion, flyPacket } from './js/story-motion.js';
-let activeMotion = null;
+let activeMotion = null, introReveal = null, dialogueReveal = null, sceneHandoff = null;
+let handoffTimers = [];
 
 const $ = id => document.getElementById(id);
 const allowed = {
@@ -105,11 +108,11 @@ function appendMessage(role, content, note = '') {
   return item;
 }
 function busy(value) {
-  state.busy = value; updateComposer(); syncTask();
+  state.busy = value; if (!value) state.replyTyping = false; updateComposer(); syncTask();
   renderTyping();
 }
 function renderTyping() {
-  const value = state.busy || state.chatterTyping;
+  const value = state.replyTyping || state.chatterTyping;
   $('typing').classList.toggle('busy', value);
   $('typing').firstElementChild.textContent = value ? 'Alice is typing' : '';
 }
@@ -132,13 +135,18 @@ function queuePuzzleMessage() {
     message.dataset.puzzleNote = next;
     state.chatterTyping = false; renderTyping();
     if (puzzleChatQueue.length) queuePuzzleMessage();
-  }, 1800);
+  }, typingDelay(puzzleMessages[puzzleChatQueue[0]]) + 500);
 }
 async function speak(lines, epoch = generation) {
   busy(true);
-  for (const line of lines) {
-    await sleep(650);
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+    if (index) await sleep(readingGap(lines[index-1]));
     if (epoch !== generation) return false;
+    state.replyTyping = true; renderTyping();
+    await sleep(typingDelay(line));
+    if (epoch !== generation) return false;
+    state.replyTyping = false; renderTyping();
     appendMessage('alice', line);
   }
   busy(false);
@@ -297,11 +305,11 @@ async function sendMessage(event) {
     const note = draft.querySelector('.message-note'); note.setAttribute('role', 'status');
     const resume = button('Continue encryption ↗', restorePuzzle, 'pending-resume'); resume.hidden = true; note.append(resume);
     transition('RSA'); updateComposer();
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) await sleep(200);
+    if (!(await speak(['Let’s keep this between us. I sent you a little key builder—choose two primes to lock your invitation.'], epoch))) return;
+    offerTask('rsa', 'Lock our invitation', 'Choose two primes → build a key → send the encrypted message.', () => restorePuzzle());
+    await sleep(650);
     if (epoch !== generation || state.phase !== 'RSA') return;
     showStage(draft);
-    appendMessage('alice', 'Let’s keep this between us. I sent you a little key builder—choose two primes to lock your invitation.');
-    offerTask('rsa', 'Lock our invitation', 'Choose two primes → build a key → send the encrypted message.', () => restorePuzzle());
     taskCards.get('rsa').opened = true;
   } else {
     state.retry = raw;
@@ -342,6 +350,12 @@ function stageBase(title, subtitle, count) {
   $('stage-body').className = 'stage-body animate';
   $('stage').classList.toggle('rival-stage', ['INTERCEPT', 'RECOVER'].includes(state.phase));
   $('skip-animation').textContent = 'Skip';
+}
+function visual(markup, compact = []) {
+  const holder = el('div','visual'); holder.innerHTML = markup;
+  const small = el('div','compact-visual');
+  compact.forEach(line => small.append(el('div','',line)));
+  holder.append(small); $('stage-body').append(holder);
 }
 function caption(content, brief = content) { state.explanation = content; $('stage-caption').textContent = brief; }
 function renderStage() {
@@ -545,16 +559,17 @@ function choiceActions() {
   });
   syncTask();
 }
-<<<<<<< HEAD
 function protectionReady() {
   if (state.phase !== 'PQ') return;
-  stageNavigation('Choose a new invitation ♥', retryConversation);
+  stageNavigation('Choose a new invitation ♥', retryConversation, () => { state.pqDetails = true; state.step = 0; renderStage(); });
+  $('stage-nav').firstElementChild.textContent = 'Explore the toy math';
   $('step-count').textContent = 'Ready for a new plan';
 }
 function renderPQ() {
+  if (state.pqDetails) return renderPQDetails();
   stageBase('A new key. A new plan.', 'Illustrative ML-KEM exchange · no post-quantum computation', '');
   beginStoryMotion('pq', {}, protectionReady);
-=======
+}
 const MLKEM_Q = 3329;
 const MLKEM_FIELDS = [
   { key: 'a0', label: 'a₀', purpose: 'public matrix', min: 0, max: MLKEM_Q - 1 },
@@ -596,7 +611,7 @@ function polynomialText(coefficients) {
   });
   return terms.join('') || '0';
 }
-function renderPQ() {
+function renderPQDetails() {
   const titles = [
     'ML-KEM, in context',
     'Alice sends her public key',
@@ -614,6 +629,7 @@ function renderPQ() {
     'The secret depends on two different protections.',
   ];
   stageBase(titles[state.step], subtitles[state.step], (state.step + 1) + ' / 6');
+  $('replay-animation').hidden = true; $('skip-animation').hidden = true;
   if (state.step === 0) {
     $('stage-body').append(el('div', 'math-equation', 'ML-KEM → shared secret → AES-256-GCM'));
     $('stage-body').append(el('p', 'math-small mlkem-copy', 'ML-KEM helps you and Alice establish the same secret. AES-GCM uses a key derived from it to encrypt the actual text and detect tampering.'));
@@ -717,8 +733,8 @@ function renderPQ() {
     $('stage-body').append(caveat);
     caption('Interception is possible. Feasible decryption is what these algorithms are designed to prevent.', 'Zeno can copy it; no known practical quantum attack decrypts it.');
   }
-  stageNavigation(state.step === 5 ? 'Choose a new invitation ♥' : 'Next →', state.step === 5 ? retryConversation : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : null);
->>>>>>> e8a401a020b5f3f46c6f977ce599297ec98b6e3b
+  stageNavigation(state.step === 5 ? 'Choose a new invitation ♥' : 'Next →', state.step === 5 ? retryConversation : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : () => { state.pqDetails=false; state.step=0; renderStage(); });
+  if (!state.step) $('stage-nav').firstElementChild.textContent = '← Animation';
 }
 async function retryConversation() {
   if (state.phase !== 'PQ') return;
@@ -764,6 +780,7 @@ function openAbout() {
 export async function restart() {
   const pending = state && ['waiting', 'submitting'].includes(state.job) && state.mode === 'live';
   generation++; submission++;
+  introReveal?.cancel(); dialogueReveal?.cancel(); cancelSceneHandoff();
   stopStoryMotion();
   $('game').classList.remove('sending-packet');
   $('game').querySelectorAll('.outgoing-packet').forEach(packet => packet.remove());
@@ -799,9 +816,13 @@ export async function restart() {
   busy(false);
   if (pending) appendMessage('system', 'Story restarted. A submitted remote job may still finish; restarting this interface does not cancel it. Its result will be ignored.');
   $('start-game').focus({ preventScroll: true });
+  $('start-prompt-copy').textContent = 'Click anywhere to reveal';
+  introReveal = revealWords([...$('intro-story').children], { pace:150, onComplete:() => { $('start-prompt-copy').textContent = 'Click anywhere to start'; } });
 }
-function startGame() {
-  if (state.phase !== 'MENU') return;
+function startGame(event) {
+  if (state.phase !== 'MENU' || event?.detail > 1) return;
+  if (introReveal?.running) { introReveal.finish(); return; }
+  introReveal?.cancel();
   const epoch = generation;
   transition('BALCONY');
   $('start-screen').hidden = true;
@@ -810,10 +831,11 @@ function startGame() {
   renderBalcony();
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     $('game').classList.add('entering');
-    setTimeout(() => { if (generation === epoch) $('game').classList.remove('entering'); }, 500);
+    setTimeout(() => { if (generation === epoch) $('game').classList.remove('entering'); }, 850);
   }
 }
 function renderBalcony() {
+  dialogueReveal?.cancel();
   const meeting = state.phase === 'MEET';
   const beat = meeting ? { ...selectedDate().lines[state.dateStep], last: state.dateStep === selectedDate().lines.length - 1 } : balconyBeat(state.balconyStep, state.balconyChoice);
   portrait(beat.expression);
@@ -830,17 +852,26 @@ function renderBalcony() {
       }));
     });
   }
-  $('balcony-next').hidden = choosing;
-  uiText($('balcony-next'), beat.last ? (meeting ? 'Finish ♥' : 'Back to my desk ↗') : 'Continue ▼');
-  $('balcony-hint').textContent = choosing ? 'Choose your reply' : 'Click anywhere in this box';
-  $('dialogue-advance').disabled = choosing;
-  $('dialogue-advance').setAttribute('aria-label', beat.last ? (meeting ? 'Finish the date' : 'Back to my desk') : 'Continue dialogue');
-  // Keep the next action focused; the live region announces the new dialogue.
-  if (choosing) $('balcony-choices').firstElementChild.focus({ preventScroll: true });
-  else $('dialogue-advance').focus({ preventScroll: true });
+  const ready = () => {
+    $('balcony-next').hidden = choosing;
+    uiText($('balcony-next'), beat.last ? (meeting ? 'Finish ♥' : 'Back to my desk ↗') : 'Continue ▼');
+    $('balcony-hint').textContent = choosing ? 'Choose your reply' : 'Click anywhere in this box';
+    $('dialogue-advance').disabled = choosing;
+    $('dialogue-advance').setAttribute('aria-label', beat.last ? (meeting ? 'Finish the date' : 'Back to my desk') : 'Continue dialogue');
+    for (const choice of $('balcony-choices').children) choice.disabled = false;
+    if (choosing) $('balcony-choices').firstElementChild.focus({preventScroll:true});
+  };
+  for (const choice of $('balcony-choices').children) choice.disabled = true;
+  $('balcony-next').hidden = true;
+  $('balcony-hint').textContent = 'Click to reveal the full line';
+  $('dialogue-advance').disabled = false;
+  $('dialogue-advance').setAttribute('aria-label','Show full dialogue');
+  dialogueReveal = revealWords([$('balcony-line')], {pace:100, onComplete:ready});
+  $('dialogue-advance').focus({preventScroll:true});
 }
 function advanceBalcony(event) {
-  if (event.detail > 1) return;
+  if (event.detail > 1 || !['BALCONY','MEET'].includes(state.phase)) return;
+  if (dialogueReveal?.running) { dialogueReveal.finish(); return; }
   if (state.phase === 'MEET') {
     if (state.dateStep === selectedDate().lines.length - 1) return finishStory();
     state.dateStep++; renderBalcony(); return;
@@ -849,37 +880,74 @@ function advanceBalcony(event) {
   if (balconyBeat(state.balconyStep, state.balconyChoice).last) return returnToDesk();
   state.balconyStep++; renderBalcony();
 }
-async function returnToDesk() {
+function cancelSceneHandoff() {
+  handoffTimers.forEach(clearTimeout); handoffTimers=[]; sceneHandoff=null;
+  $('scene-transition').hidden=true; $('scene-transition').classList.remove('leaving');
+}
+function showSceneHandoff({kicker,title,copy,prompt,prepare,after,auto=false}) {
+  cancelSceneHandoff();
+  const handoff={epoch:generation,prepare,after,advancing:false}; sceneHandoff=handoff;
+  $('transition-kicker').textContent=kicker; $('transition-title').textContent=title;
+  $('transition-copy').textContent=copy; $('transition-prompt').textContent=prompt;
+  $('scene-transition').hidden=false; $('transition-continue').disabled=true;
+  handoffTimers.push(setTimeout(() => {
+    if (sceneHandoff!==handoff || handoff.epoch!==generation) return;
+    $('transition-continue').disabled=false; $('transition-continue').focus({preventScroll:true});
+  },matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600));
+  if (auto) handoffTimers.push(setTimeout(advanceSceneHandoff,3200));
+}
+async function advanceSceneHandoff(event) {
+  const handoff=sceneHandoff;
+  if (!handoff || handoff.advancing || $('transition-continue').disabled || event?.detail>1) return;
+  handoff.advancing=true; $('transition-continue').disabled=true;
+  handoffTimers.forEach(clearTimeout); handoffTimers=[];
+  handoff.prepare(); $('scene-transition').classList.add('leaving');
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) await sleep(700);
+  if (generation!==handoff.epoch || sceneHandoff!==handoff) return;
+  $('scene-transition').hidden=true; $('scene-transition').classList.remove('leaving'); sceneHandoff=null;
+  handoff.after();
+}
+function returnToDesk() {
   if (state.phase !== 'BALCONY') return;
-  const epoch = generation;
-  transition('RETURN');
-  $('balcony-scene').inert = true;
-  $('scene-transition').hidden = false;
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduced) await sleep(500);
-  if (generation !== epoch) return;
-  $('balcony-scene').hidden = true;
-  $('game').classList.remove('entering');
-  $('game').dataset.scene = 'desk';
-  transition('INTRO');
-  document.querySelector('.conversation-panel').inert = false;
-  showChat();
-  $('scene-transition').hidden = true;
-  if (await speak(['Back at your desk? I’m glad we took that walk.', 'The trapped ions can wait. I’d rather get to know you.', 'Want to continue this somewhere a little more private?'], epoch)) focusChoices();
+  dialogueReveal?.cancel(); const epoch=generation;
+  transition('RETURN'); $('balcony-scene').inert=true;
+  showSceneHandoff({
+    kicker:'A FEW STEPS DOWN THE HALL', title:'Back at your desk.',
+    copy:'You sit down. A message from Alice lights up your screen.',
+    prompt:'Click anywhere to continue ↗',
+    prepare:() => {
+      $('balcony-scene').hidden=true; $('game').classList.remove('entering');
+      $('game').dataset.scene='desk'; transition('INTRO');
+      showChat();
+    },
+    after:async () => {
+      document.querySelector('.conversation-panel').inert=false;
+      $('messages').focus({preventScroll:true});
+      if (await speak(['Back at your desk? I’m glad we took that walk.', 'The trapped ions can wait. I’d rather get to know you.', 'Want to continue this somewhere a little more private?'],epoch)) focusChoices();
+    },
+  });
 }
 function selectedDate() { return dateLocations.find(location => location.id === state.dateLocation); }
 function startMeeting() {
-  if (state.phase !== 'DELIVERED' || state.busy) return;
-  const location = selectedDate();
-  transition('MEET'); state.dateStep = 0;
-  view = 'balcony'; $('game').dataset.view = 'balcony'; $('game').dataset.scene = location.id;
-  document.querySelector('.conversation-panel').inert = true;
-  $('date-art').src = location.background; $('date-art').hidden = false;
-  $('scene-place').textContent = location.name.toUpperCase(); $('scene-time').textContent = location.time + ' · just us';
-  $('balcony-scene').setAttribute('aria-label', 'A date with Alice at the ' + location.name.toLowerCase());
-  $('balcony-scene').hidden = false; $('balcony-scene').inert = false;
-  $('skip-balcony').hidden = true;
-  renderBalcony();
+  if (state.phase !== 'DELIVERED' || state.busy || sceneHandoff) return;
+  const location=selectedDate(); setActions([]);
+  document.querySelector('.conversation-panel').inert=true;
+  showSceneHandoff({
+    kicker:location.time.toUpperCase(), title:location.name,
+    copy:location.id==='garden' ? 'You pocket your phone. Alice is waiting with two coffees.' : 'You pocket your phone and head for the glow of the east dome.',
+    prompt:'Your shift can wait. ↗', auto:true,
+    prepare:() => {
+      transition('MEET'); state.dateStep=0;
+      view='balcony'; $('game').dataset.view='balcony'; $('game').dataset.scene=location.id;
+      $('date-art').src=location.background; $('date-art').hidden=false;
+      $('scene-place').textContent=location.name.toUpperCase(); $('scene-time').textContent=location.time+' · just us';
+      $('balcony-scene').setAttribute('aria-label','A date with Alice at the '+location.name.toLowerCase());
+      $('balcony-line').textContent=''; $('balcony-choices').replaceChildren();
+      $('balcony-scene').hidden=false; $('balcony-scene').inert=true; $('skip-balcony').hidden=true;
+      $('dialogue-advance').disabled=true;
+    },
+    after:() => { $('balcony-scene').inert=false; renderBalcony(); },
+  });
 }
 function finishStory() {
   if (state.phase !== 'MEET') return;
@@ -905,6 +973,7 @@ document.addEventListener('keydown', event => {
 });
 $('start-game').addEventListener('click', startGame);
 $('dialogue-advance').addEventListener('click', advanceBalcony);
+$('transition-continue').addEventListener('click', advanceSceneHandoff);
 $('skip-balcony').addEventListener('click', returnToDesk);
 $('end-replay').addEventListener('click', restart);
 $('end-about').addEventListener('click', openAbout);

@@ -57,8 +57,9 @@ function pqMarkup() {
 }
 
 export function mountStoryMotion(host, {kind, data, getResult = () => null, onCaption, onComplete, onProgress = () => {}}) {
-  const duration = kind === 'rsa' ? 13000 : kind === 'attack' ? 22000 : 11000;
-  const clock = new SceneClock(duration, kind === 'attack' ? 12500 : duration);
+  const originalDuration = kind === 'rsa' ? 13000 : kind === 'attack' ? 22000 : 11000;
+  const duration = kind === 'rsa' ? 15000 : kind === 'attack' ? 26000 : 13000;
+  const clock = new SceneClock(duration, kind === 'attack' ? duration * 12.5 / 22 : duration);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const wrapper = document.createElement('div'); wrapper.className = 'motion-scene motion-' + kind;
   wrapper.innerHTML = `<div class="scene-indicator"><span>${kind === 'rsa' ? 'BUILD / ENCRYPT / SEND' : kind === 'attack' ? 'PATTERN / INTERFERENCE / RECOVERY' : 'EXCHANGE / AGREE / PROTECT'}</span><span class="scene-time"></span></div><svg viewBox="0 0 720 370" role="img" aria-label="${kind === 'rsa' ? 'Your primes combine and your invitation becomes an encrypted packet' : kind === 'attack' ? 'Order finding, measurement, and verified recovery of the intercepted invitation' : 'Illustrative public-key exchange and matching shared secrets'}">${kind === 'rsa' ? rsaMarkup(data) : kind === 'attack' ? attackMarkup(data) : pqMarkup()}</svg><div class="scene-progress" role="progressbar" aria-label="Animation progress" aria-valuemin="0" aria-valuemax="100"><span></span></div>`;
@@ -71,12 +72,12 @@ export function mountStoryMotion(host, {kind, data, getResult = () => null, onCa
   const say = text => { if (text !== lastCaption) { lastCaption = text; onCaption(text); } };
   const unlocked = () => kind !== 'attack' || (getResult()?.result?.status === 'success' && typeof getResult()?.text === 'string');
   function render(ms) {
-    const raw = ms/1000;
+    const seconds = ms/1000, raw = seconds * originalDuration / duration;
     const cuts = kind === 'rsa' ? [0,3.5,6.5,10,13] : kind === 'attack' ? [0,4,8,12.5,14,17,19.5,22] : [0,3,6,8.5,11];
     const t = reduced.matches ? cuts.filter(n=>n<=raw).at(-1) : raw;
     wrapper.querySelector('.scene-progress>span').style.width = `${ms/duration*100}%`;
     wrapper.querySelector('.scene-progress').setAttribute('aria-valuenow',String(Math.round(ms/duration*100)));
-    wrapper.querySelector('.scene-time').textContent = `${Math.min(Math.floor(raw),duration/1000)} / ${duration/1000}s`;
+    wrapper.querySelector('.scene-time').textContent = `${Math.min(Math.floor(seconds),duration/1000)} / ${duration/1000}s`;
     onProgress(clock.paused, completed);
     if (kind === 'rsa') {
       const merge = ease((t-1)/2);
