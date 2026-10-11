@@ -11,7 +11,9 @@
 - Full-screen revision: complete desktop (1440×1000) and mobile (390×844) playthroughs passed.
 - Mobile assertions verify no outer horizontal or vertical overflow and a composer contained within the viewport.
 - Desktop and mobile screenshots visually confirm the shared observatory, transparent dialogue, and removal of the website header, footer and reset button.
-- Supplied idle PNG is SHA-256 identical to the original; expression RGB values match their source crops exactly.
+- Portrait update: all five runtime PNGs are fresh 68 × 89 renders of the current editable Aseprite files. The adjacent historical PNGs are older artwork.
+- Source/export SHA-256 values are recorded in portrait-exports.json; the current set is shown in current-portraits.png.
+- Superseded runtime portraits and screenshot crops were removed; the editable art archive is retained.
 - Existing Python files remain empty and unchanged.
 
 Screenshots in this directory document the tested scene, RSA stages, measurements, post-quantum exchange, and endings. Finite animations were completed for screenshots.

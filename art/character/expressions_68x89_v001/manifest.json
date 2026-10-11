@@ -1,0 +1,102 @@
+{
+  "canvas": [
+    68,
+    89
+  ],
+  "color_mode": "RGB",
+  "layer": "Character - EDIT HERE",
+  "expressions": [
+    {
+      "name": "serious",
+      "source": "sources/mira-serious.png",
+      "source_sha256": "a067bc62156acd4398871e95365f7b35e74d8c20076518d430fa3c0460ae4297",
+      "source_size": [
+        302,
+        441
+      ],
+      "crop_left": 2,
+      "fit": [
+        61,
+        89
+      ],
+      "offset": [
+        3,
+        0
+      ],
+      "sampling_phase": 0.75,
+      "aseprite": "mira-serious_68x89.aseprite",
+      "aseprite_sha256": "aa672ebc03a84725941b42ac49dc147c23bd2dc5a593f4abbd111ab9079a51c3",
+      "png": "mira-serious_68x89.png",
+      "png_sha256": "d7f6e4d8a394f5d45aef70762a356bd3e85b75acb256ce42932ccc3769d5a6e5"
+    },
+    {
+      "name": "surprised",
+      "source": "sources/mira-surprised.png",
+      "source_sha256": "340d27fef29d219903011de79cc41c9c2624ca258468c6c6520b9370c8ba65d9",
+      "source_size": [
+        305,
+        450
+      ],
+      "crop_left": 0,
+      "fit": [
+        60,
+        89
+      ],
+      "offset": [
+        4,
+        0
+      ],
+      "sampling_phase": 0.25,
+      "aseprite": "mira-surprised_68x89.aseprite",
+      "aseprite_sha256": "2fe78f7ca7d0c0c9944210b6814aee9c144c96fd34be5148d9ee98514e3587a5",
+      "png": "mira-surprised_68x89.png",
+      "png_sha256": "34fd097451ab4b699a9eba7d8dbb8aaa88c6fdb76e66d3cbd879df2e18d63c61"
+    },
+    {
+      "name": "blushing",
+      "source": "sources/mira-blushing.png",
+      "source_sha256": "6a9eab70edea9733251511567a6683a4ebc9b9a59706243d33d3f1368a07bf40",
+      "source_size": [
+        297,
+        456
+      ],
+      "crop_left": 0,
+      "fit": [
+        58,
+        89
+      ],
+      "offset": [
+        5,
+        0
+      ],
+      "sampling_phase": 0,
+      "aseprite": "mira-blushing_68x89.aseprite",
+      "aseprite_sha256": "7e9fdf47592b39109329fd0abe4d3bb6adca9e1e98bd4acba6ec5828b3c49716",
+      "png": "mira-blushing_68x89.png",
+      "png_sha256": "7d9f5747f125fda0be700253073973198c49d4347082f6af07201acf48f7dabb"
+    },
+    {
+      "name": "happy",
+      "source": "sources/mira-happy.png",
+      "source_sha256": "baefa529366676eb42c433239862cfec0bdb8b4957b15042106386029224fd4c",
+      "source_size": [
+        302,
+        447
+      ],
+      "crop_left": 0,
+      "fit": [
+        60,
+        89
+      ],
+      "offset": [
+        4,
+        0
+      ],
+      "sampling_phase": 0.25,
+      "aseprite": "mira-happy_68x89.aseprite",
+      "aseprite_sha256": "03508820a5e5ae0f663d96cac7638ab7bcad3b19eb087f727a6b7d9be2b39ef5",
+      "png": "mira-happy_68x89.png",
+      "png_sha256": "c0d73793e62289294a995de93554fb35a2bdeab1abd000f38b12d666d0587f91"
+    }
+  ]
+}

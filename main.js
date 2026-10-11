@@ -1,4 +1,4 @@
-import { character } from './assets/manifest.js';
+import { character, storyExpressions } from './assets/manifest.js';
 import { makeKeys, encode, encrypt, decrypt, modPow, inverse } from './js/rsa.js';
 import { runAttack, liveAvailable } from './js/quantum-adapter.js';
 import { primesVisual, phiVisual, keyVisual, encodingVisual, ringVisual, sequenceVisual, circuitVisual, factorVisual, pqVisual } from './js/visuals.js';
@@ -25,19 +25,29 @@ function transition(next) {
   if (!allowed[state.phase]?.includes(next)) throw new Error('Invalid game transition ' + state.phase + ' → ' + next);
   state.phase = next; state.step = 0;
   document.body.dataset.phase = next;
+  portrait(storyExpressions[next] || 'idle');
   updateChapter();
 }
 function updateChapter() {
   const chapter = ['INTRO', 'INVITE', 'RSA'].includes(state.phase) ? 1 : ['INTERCEPT', 'RECOVER'].includes(state.phase) ? 2 : 3;
   $('game').dataset.chapter = String(chapter);
 }
-function portrait(expression) {
-  $('portrait').src = character[expression] || character.idle;
-  document.querySelector('.portrait-panel').classList.toggle('flustered', ['flustered', 'happy'].includes(expression));
-  // Missing expressions intentionally use the closest supplied image, unchanged.
-  $('portrait').dataset.expression = expression;
-  $('portrait').style.width = ((character.frameWidth[expression] || 1) * 100) + '%' ;
+// Warm the small native exports so expression changes do not flash or resize.
+for (const expression of character.expressionsAvailable) {
+  const image = new Image(character.width, character.height);
+  image.src = character[expression];
 }
+function portrait(expression) {
+  const resolved = character.expressionsAvailable.includes(expression) ? expression : 'idle';
+  const image = $('portrait');
+  image.src = character[resolved];
+  image.alt = character.descriptions[resolved];
+  image.width = character.width;
+  image.height = character.height;
+  image.dataset.expression = resolved;
+  document.querySelector('.portrait-panel').classList.toggle('romantic', ['blushing', 'happy'].includes(resolved));
+}
+
 function appendMessage(role, content, note = '') {
   const item = el('article', 'message ' + role);
   if (role !== 'system') item.append(el('div', 'message-label', role === 'user' ? 'YOU' : role === 'rival' ? 'CAS · UNINVITED' : 'MIRA'));
@@ -105,18 +115,18 @@ async function sendMessage(event) {
   if (state.phase === 'INTRO') {
     appendMessage('user', raw); busy(true);
     if (!(await speak(['Message received. For the record, I’m enjoying this.', 'Let’s make a plan. Write me an invitation—where should we meet?'], epoch))) return;
-    transition('INVITE'); portrait('flustered'); updateComposer(); $('message').focus({ preventScroll: true });
+    transition('INVITE'); updateComposer(); $('message').focus({ preventScroll: true });
   } else if (state.phase === 'INVITE') {
     state.invitation = raw;
     const draft = appendMessage('user', raw, 'Draft · held before delivery'); draft.dataset.draft = 'true';
     busy(true);
     if (!(await speak(['One tiny detour before you send that. Let me show you what’s protecting the envelope.'], epoch))) return;
-    transition('RSA'); portrait('thinking'); updateComposer(); showStage();
+    transition('RSA'); updateComposer(); showStage();
   } else {
     state.retry = raw; transition('END'); updateComposer();
     appendMessage('user', raw, 'Delivered in the story · post-quantum exchange illustrated');
     appendMessage('system', 'CAS TRIES THE OLD ATTACK\nThis attack relies on RSA’s structure. The upgraded scheme uses different mathematics. No quantum job was submitted for this retry.');
-    portrait('flustered');
+   
     if (!(await speak(['Okay. You’ve officially made the quantum researcher lose her train of thought.', 'It’s a date. I’ll bring the coffee. You bring that very distracting smile. ♥'], epoch))) return;
     portrait('happy');
     appendMessage('system', 'The first invitation is still leaked. But the next chapter belongs to the two of you.');
@@ -212,7 +222,7 @@ function intercept() {
   transition('INTERCEPT');
   appendMessage('system', 'PACKET COPIED · n = 15, e = 3 and the ciphertext are visible on the channel.');
   appendMessage('rival', 'A private invitation? Cute. Let’s see how private.');
-  portrait('thinking'); renderStage();
+  renderStage();
 }
 function renderIntercept() {
   stageBase('An uninvited observer.', 'Cas copied the ciphertext. Copying it is easy. Reading it takes the next step.', '02 / THE RIVAL’S VIEW', 'INTERCEPTION');
@@ -316,7 +326,7 @@ function choiceActions() {
     if (await speak(['New words, same vulnerable key. Cas could factor the same RSA modulus again. Let’s change how we establish the key.'], epoch)) choiceActions();
   } }, { label: 'Upgrade the protection →', run: () => {
     if (state.phase !== 'CHOICE' || state.busy) return;
-    appendMessage('user', 'Let’s upgrade the protection.'); transition('PQ'); portrait('idle'); showStage();
+    appendMessage('user', 'Let’s upgrade the protection.'); transition('PQ'); showStage();
   } }]);
 }
 function renderPQ() {
@@ -336,7 +346,7 @@ async function retryConversation() {
   const epoch = generation; transition('RETRY'); setActions([]); showChat();
   appendMessage('system', 'ILLUSTRATIVE POST-QUANTUM EXCHANGE COMPLETE\nThe RSA factoring attack no longer applies to this key-establishment scheme. This is not a proof that every attack is impossible.');
   if (!(await speak(['Better mathematics. Same butterflies.', 'The first invitation is still out there. Let’s make a new plan—somewhere the intercom can’t follow us.'], epoch))) return;
-  portrait('flustered'); updateComposer(); $('message').focus({ preventScroll: true });
+  updateComposer(); $('message').focus({ preventScroll: true });
 }
 function changeMode(mode) {
   if (['submitting', 'waiting', 'success'].includes(state.job)) return;

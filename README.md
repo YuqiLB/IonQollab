@@ -12,7 +12,7 @@ node tools/serve.mjs
 
 Open **http://127.0.0.1:4173**. There is no install or build step. This is a development-only static file server, not an application backend. Any static HTTP server works. ES modules require HTTP; do not double-click `index.html` as a `file://` URL.
 
-For Qollab, use **one JS / Qiskit project**. Copy the root `index.html`, `main.js`, `main.css`, plus `js/`, `assets/`, and `quantum/`. No JSX, npm build, Vite runtime, external font request, separate provider, API key, or hosted backend is required. The pre-existing `frontend/` Vite scaffold is retained but is not the game entry point.
+For Qollab, use **one JS / Qiskit project**. Copy the root `index.html`, `main.js`, `main.css`, plus `js/`, `assets/`, and `quantum/`. No JSX, npm build, Vite runtime, separate provider, API key, or hosted backend is required. The fonts load from Google Fonts through the import in `main.css`. The pre-existing `frontend/` Vite scaffold is retained but is not the game entry point.
 
 ## What runs
 
@@ -71,9 +71,11 @@ The browser suite starts its own static test server on port 4175 and records scr
 ## Files and provenance
 
 - **New game:** root `index.html`, `main.js`, `main.css`, `js/`, `assets/manifest.js`, new character exports, `assets/fonts/`, `tools/serve.mjs`, `tests/`, `quantum/` contract and documentation.
-- **Preserved existing work:** `frontend/`, `backend/`, original `art/`, earlier `assets/character/`, package lockfiles and ignore rules. No teammate Python module was overwritten.
-- **Character art:** the user's extensionless `QRush asset` is copied byte-for-byte as `assets/characters/mira-idle.png`. The user later supplied a screenshot with flustered and happy expressions. Both original rectangular crops are retained as `*-source-crop.png`; display copies remove only the surrounding screenshot background. Character RGB colors are unchanged, with no resampling, regenerated faces or warping. A central manifest maps expressions; the missing thinking expression uses idle. Portraits use `object-fit: contain` and a fixed frame.
-- **Font:** locally hosted Pixelify Sans, Google Fonts, SIL Open Font License. See [assets/fonts/OFL.txt](assets/fonts/OFL.txt) and [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
+- **Preserved source work:** editable artwork and its history in `art/`, Python modules, lockfiles, and ignore rules. The old runtime portrait PNGs and screenshot crops were removed from `assets/`; only the five current native portraits ship with the game.
+- **Character art:** fresh 68 × 89 transparent PNG renders of the supplied `portrait_68x89_v003.aseprite` and the blushing, happy, serious, and surprised files in `art/character/expressions_68x89_v001/`. The editable files contain newer pixels than their adjacent historical PNG previews, so the game uses fresh Aseprite renders. No resizing, smoothing, recoloring, cropping or face changes are applied. `assets/manifest.js` maps all five expressions to the story. Shared canvas dimensions, `object-fit: contain`, and `image-rendering: pixelated` keep the framing consistent.
+
+To refresh the game PNGs after editing the Aseprite source files, run `powershell -ExecutionPolicy Bypass -File tools/export-portraits.ps1` (or pass `-AsepritePath` for another installation). The helper exports the native canvas and verifies the source files remain unchanged.
+- **Fonts:** Bitcount Prop Single for pixel text and Handjet for other text, imported from Google Fonts in `main.css`. The unused local Pixelify Sans font and its [license](assets/fonts/OFL.txt) are retained. See [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
 - All diagrams, observatory scenery and rival avatar are code-native SVG/CSS. No generated equation images or external runtime dependencies.
 
 Scientific references: [IBM's Shor tutorial](https://quantum.cloud.ibm.com/docs/en/tutorials/shors-algorithm) and [NIST FIPS 203, ML-KEM](https://csrc.nist.gov/pubs/fips/203/final). The latter describes key establishment: the shared secret is used with symmetric algorithms; ML-KEM does not encrypt the chat text directly. A real protocol must authenticate the public key. Homomorphic encryption is a separate concept.

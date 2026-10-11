@@ -1,0 +1,34 @@
+Independent expression editability verification
+Aseprite 1.3.18.6
+
+PASS serious: saved 68 x 89 RGB, one frame, one normal unlocked visible editable pixel layer; no group/reference/background/tilemap, empty selection, sole character layer active on reopen.
+PASS serious: native equals reopened rendering; 3804 opaque pixels, 2248 transparent pixels, 2540 actual opaque colors; binary alpha and exact 544 x 712 nearest-neighbour preview.
+PASS serious: real pencil changed opaque hair (30,18) to visible magenta and real eraser removed opaque (31,18); app.useTool had no layer argument.
+PASS serious: real pencil changed opaque face (36,37) to visible magenta and real eraser removed opaque (37,37); app.useTool had no layer argument.
+PASS serious: real pencil changed opaque torso (35,65) to visible magenta and real eraser removed opaque (36,65); app.useTool had no layer argument.
+PASS serious: exactly six interior edits persisted pixel-for-pixel after saving/reopening the separate QA probe; delivered source bytes unchanged.
+
+PASS surprised: saved 68 x 89 RGB, one frame, one normal unlocked visible editable pixel layer; no group/reference/background/tilemap, empty selection, sole character layer active on reopen.
+PASS surprised: native equals reopened rendering; 3635 opaque pixels, 2417 transparent pixels, 2419 actual opaque colors; binary alpha and exact 544 x 712 nearest-neighbour preview.
+PASS surprised: real pencil changed opaque hair (30,18) to visible magenta and real eraser removed opaque (31,18); app.useTool had no layer argument.
+PASS surprised: real pencil changed opaque face (36,37) to visible magenta and real eraser removed opaque (37,37); app.useTool had no layer argument.
+PASS surprised: real pencil changed opaque torso (35,65) to visible magenta and real eraser removed opaque (36,65); app.useTool had no layer argument.
+PASS surprised: exactly six interior edits persisted pixel-for-pixel after saving/reopening the separate QA probe; delivered source bytes unchanged.
+
+PASS blushing: saved 68 x 89 RGB, one frame, one normal unlocked visible editable pixel layer; no group/reference/background/tilemap, empty selection, sole character layer active on reopen.
+PASS blushing: native equals reopened rendering; 3560 opaque pixels, 2492 transparent pixels, 2392 actual opaque colors; binary alpha and exact 544 x 712 nearest-neighbour preview.
+PASS blushing: real pencil changed opaque hair (30,18) to visible magenta and real eraser removed opaque (31,18); app.useTool had no layer argument.
+PASS blushing: real pencil changed opaque face (36,37) to visible magenta and real eraser removed opaque (37,37); app.useTool had no layer argument.
+PASS blushing: real pencil changed opaque torso (35,65) to visible magenta and real eraser removed opaque (36,65); app.useTool had no layer argument.
+PASS blushing: exactly six interior edits persisted pixel-for-pixel after saving/reopening the separate QA probe; delivered source bytes unchanged.
+
+PASS happy: saved 68 x 89 RGB, one frame, one normal unlocked visible editable pixel layer; no group/reference/background/tilemap, empty selection, sole character layer active on reopen.
+PASS happy: native equals reopened rendering; 3643 opaque pixels, 2409 transparent pixels, 2452 actual opaque colors; binary alpha and exact 544 x 712 nearest-neighbour preview.
+PASS happy: real pencil changed opaque hair (30,18) to visible magenta and real eraser removed opaque (31,18); app.useTool had no layer argument.
+PASS happy: real pencil changed opaque face (36,37) to visible magenta and real eraser removed opaque (37,37); app.useTool had no layer argument.
+PASS happy: real pencil changed opaque torso (35,65) to visible magenta and real eraser removed opaque (36,65); app.useTool had no layer argument.
+PASS happy: exactly six interior edits persisted pixel-for-pixel after saving/reopening the separate QA probe; delivered source bytes unchanged.
+
+PASS: all four delivered .aseprite files remain byte-identical to their starting state; only QA probes contain test marks.
+Manual visual review: all four native PNGs and final light/dark 4x contact sheets were actually opened. Expressions remain distinct; no blocking matte holes, edge fringe, or facial defect observed. Fine jewelry detail is necessarily simplified at native size.
+Editability evidence uses actual Aseprite pencil/eraser tool APIs and save/reopen tests. No GUI click test is claimed.
