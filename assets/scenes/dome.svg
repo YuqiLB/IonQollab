@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" shape-rendering="crispEdges">
+  <path fill="#121d39" d="M0 0h480v270H0z"/>
+  <path fill="#223453" d="M0 74h480v114H0z"/>
+  <path fill="#b4b7d0" d="M72 50h1v1h-1zM142 19h1v1h-1zM180 60h1v1h-1zM303 24h1v1h-1zM392 61h1v1h-1zM419 91h1v1h-1zM347 91h1v1h-1zM123 103h1v1h-1zM86 127h1v1h-1zM214 35h1v1h-1zM272 77h1v1h-1z"/>
+  <path fill="#f4e3d0" d="M323 48h7v2h2v7h-2v2h-7v-2h-2v-7h2z"/>
+  <path fill="#17273e" d="M0 177h38v-22h24v8h24v-32h21v44h29v-28h25v17h25v-35h35v44h31v-25h28v17h32v-32h21v-13h26v48h29v-31h31v14h29v-8h32v65H0z"/>
+  <path fill="#39465d" d="M0 192h480v78H0z"/>
+  <path fill="#303c52" d="M0 227h480v43H0z"/>
+  <path fill="#4b566c" d="M0 193h480v2H0zM0 232h480v2H0zM0 265h480v2H0z"/>
+  <!-- The dome's stepped structural ribs frame the open night sky. -->
+  <path fill="#0e182c" d="M0 0h67v7H52v13H40v17H30v27H23v41H16v89H0zM413 0h67v194h-16v-89h-7V64h-7V37h-10V20h-12V7h-15zM230 0h8v194h-8zM0 112h480v7H0zM0 181h480v13H0z"/>
+  <path fill="#64708c" d="M55 0h7v7H50v13H38v17H28v27h-7v41h-7v87h-3v-88h7V63h7V36h10V19h12V6h8zM418 0h7v6h8v13h12v17h10v27h7v41h7v88h-3v-87h-7V64h-7V37h-10V20h-12V7h-12zM230 0h2v192h-2zM0 112h480v2H0zM0 181h480v3H0z"/>
+  <!-- Telescope on the right; the date takes place beneath the dome. -->
+  <path fill="#111b2c" d="M365 124h9v46h-9zM350 134h25v8h-25zM365 169h8l17 39h-6l-15-31-17 31h-6z"/>
+  <path fill="#526482" d="M340 99l46-29 14 22-46 29z"/>
+  <path fill="#8390ad" d="M338 98l7-4 16 26-7 4zM385 68l9-5 17 28-9 5z"/>
+  <path fill="#111c34" d="M394 64l4-3 17 28-4 3z"/>
+  <path fill="#b2acc5" d="M342 100l43-27 3 4-43 27z"/>
+  <!-- A small table and two cups, kept outside Alice's silhouette. -->
+  <path fill="#1b2335" d="M390 221h67v5h-67zM400 221h4v36h-4zM444 221h4v36h-4z"/>
+  <path fill="#7b6268" d="M386 214h72v7h-72z"/>
+  <path fill="#bda9ac" d="M397 204h10v10h-10zM435 204h10v10h-10z"/>
+  <path fill="#705364" d="M398 204h8v2h-8zM436 204h8v2h-8z"/>
+  <path fill="#bda9ac" d="M407 207h4v4h-4zM445 207h4v4h-4z"/>
+</svg>

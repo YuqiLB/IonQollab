@@ -1,0 +1,65 @@
+/* Independent workspace windows. Desktop: 30% chat / 70% puzzle. */
+.puzzle-window {
+  display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; max-height: 940px;
+  border: 2px solid #242139; box-shadow: 0 0 0 2px #b3a6cf, 6px 7px 0 #0b102780;
+  background: var(--lavender); color: var(--ink); overflow: hidden;
+  animation: puzzle-open 220ms ease-out both;
+}
+.game[data-view='stage'] {
+  display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+  grid-template-rows: minmax(0, 1fr); gap: 24px; align-items: center;
+}
+.game[data-view='stage'] .conversation-panel { width: 100%; max-width: none; height: 88%; max-height: 810px; }
+.game[data-view='stage'] .chat-view { padding: 12px 14px; }
+.game[data-view='stage'] .conversation-panel .pixel-titlebar { font-size: 13px; padding-inline: 12px; min-height: 37px; }
+.game[data-view='stage'] .chat-contact { gap: 10px; padding-bottom: 10px; }
+.game[data-view='stage'] .contact-avatar { width: 36px; height: 47px; }
+.game[data-view='stage'] .chat-contact strong { font-size: 21px; }
+.game[data-view='stage'] .chat-contact div>span { font-size: 15px; }
+.game[data-view='stage'] .messages { padding: 16px 5px 12px 0; }
+.game[data-view='stage'] .message { max-width: 96%; margin-bottom: 20px; }
+.game[data-view='stage'] .message-text { font-size: 17px; line-height: 1.4; padding: 6px 7px; }
+.game[data-view='stage'] .message-label { font-size: 10px; }
+.game[data-view='stage'] .message.system .message-text { font: 17px/1.3 var(--sans); }
+.game[data-view='stage'] .message-note { font-size: 13px; }
+.game[data-view='stage'] .typing { min-height: 21px; font-size: 15px; }
+.game[data-view='stage'] .composer, .game[data-view='stage'] .story-actions { display: none; }
+.puzzle-chat-lock { flex-shrink: 0; border-top: 1px solid #aaa1cd; padding-top: 9px; margin: 0; font: 17px/1.3 var(--sans); color: #625376; }
+.puzzle-window .pixel-titlebar { gap: 12px; }
+.game .puzzle-window .stage { padding: 22px 26px 18px; }
+@keyframes puzzle-open { from { opacity: 0; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
+@media (max-width: 1050px) and (min-width: 761px) {
+  .game[data-view='stage'] { gap: 16px; padding-inline: 18px; }
+  .game[data-view='stage'] .chat-view { padding: 10px; }
+  .game[data-view='stage'] .message-text { font-size: 15px; padding: 5px; }
+  .game[data-view='stage'] .chat-contact div>span { display: none; }
+  .game[data-view='stage'] .conversation-panel .pixel-titlebar { font-size: 10px; }
+  .game .puzzle-window .stage { padding: 18px; }
+}
+@media (max-width: 760px) {
+  .game[data-view='stage'] {
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(140px, 30%) minmax(0, 1fr);
+    padding: 12px; gap: 12px;
+  }
+  .game[data-view='stage'] .conversation-panel { height: 100%; max-height: none; }
+  .game[data-view='stage'] .chat-view { padding: 0 10px 5px; }
+  .game[data-view='stage'] .chat-contact { display: none; }
+  .game[data-view='stage'] .conversation-panel .pixel-titlebar { min-height: 28px; padding-block: 3px; font-size: 11px; }
+  .game[data-view='stage'] .messages { padding-block: 7px; }
+  .game[data-view='stage'] .message-text { font-size: 16px; line-height: 1.3; padding: 4px 6px; }
+  .game[data-view='stage'] .message-label { font-size: 9px; margin-bottom: 3px; }
+  .game[data-view='stage'] .typing { min-height: 0; font-size: 13px; }
+  .game[data-view='stage'] .typing:empty, .game[data-view='stage'] .typing:not(.busy) { display: none; }
+  .puzzle-chat-lock { padding-top: 4px; font-size: 14px; }
+  .game .puzzle-window .stage { padding: 14px 12px; }
+  .game .puzzle-window .pixel-titlebar { min-height: 31px; padding: 5px 12px; font-size: 12px; }
+  .puzzle-window { box-shadow: 0 0 0 1px #b3a6cf, 3px 4px 0 #0b102780; }
+  .game[data-view='stage'] .new-messages { min-height: 28px; padding: 4px 8px; font-size: 12px; margin-bottom: 4px; }
+}
+@media (max-height: 600px) and (min-width: 761px) {
+  .game[data-view='stage'] .conversation-panel { height: 100%; }
+  .game[data-view='stage'] .contact-avatar { width: 24px; height: 31px; }
+  .game[data-view='stage'] .chat-contact { padding-bottom: 6px; }
+  .game .puzzle-window .pixel-titlebar { min-height: 30px; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .puzzle-window { animation: none; } }

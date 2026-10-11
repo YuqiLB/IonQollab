@@ -1,21 +1,25 @@
 import { character, rivalSprites, storyExpressions } from './assets/manifest.js';
+import { balconyReplies, balconyBeat } from './js/opening.js';
+import { dateLocations, puzzleMessages } from './js/story-scenes.js';
 import { makeKeys, encode, encrypt, decrypt, modPow, inverse } from './js/rsa.js';
 import { runAttack, liveAvailable } from './js/quantum-adapter.js';
 import { primesVisual, phiVisual, keyVisual, encodingVisual, ringVisual, sequenceVisual, circuitVisual, factorVisual, pqVisual } from './js/visuals.js';
 
 const $ = id => document.getElementById(id);
 const allowed = {
-  MENU: ['INTRO'],
+  MENU: ['BALCONY'], BALCONY: ['RETURN'], RETURN: ['INTRO'],
   INTRO: ['INVITE'], INVITE: ['RSA'], RSA: ['INTERCEPT'], INTERCEPT: ['RECOVER'],
-  RECOVER: ['CHOICE'], CHOICE: ['PQ'], PQ: ['RETRY'], RETRY: ['END'], END: [],
+  RECOVER: ['CHOICE'], CHOICE: ['PQ'], PQ: ['RETRY'], RETRY: ['DELIVERED'],
+  DELIVERED: ['MEET'], MEET: ['END'], END: [],
 };
 const replyChoices = {
-  INTRO: ['I was hoping you’d still be awake.', 'So… do you always flirt in qubits?'],
+  INTRO: ['That was my favourite part of the shift.', 'So… do you always flirt in qubits?'],
   INVITE: ['Meet me on the observatory rooftop at midnight? ♥', 'Coffee at the Moon Café? Just us.'],
-  RETRY: ['The quiet garden. 00:15. This time, just us. ♥', 'New plan: hot chocolate under the east dome?'],
+  RETRY: dateLocations.map(location => location.invitation),
 };
 let generation = 0, submission = 0, state, view = 'chat';
 let followMessages = true, lastStageAction = 0, userScrollUntil = 0;
+let puzzleChatTimer = null, puzzleChatQueue = [];
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const el = (tag, cls, content) => {
   const node = document.createElement(tag);
@@ -28,13 +32,14 @@ function button(label, action, cls = '') {
 }
 function transition(next) {
   if (!allowed[state.phase]?.includes(next)) throw new Error('Invalid game transition ' + state.phase + ' → ' + next);
+  cancelPuzzleChatter();
   state.phase = next; state.step = 0;
   document.body.dataset.phase = next;
   portrait(storyExpressions[next] || 'idle');
   updateChapter();
 }
 function updateChapter() {
-  const chapter = ['MENU', 'INTRO', 'INVITE', 'RSA'].includes(state.phase) ? 1 : ['INTERCEPT', 'RECOVER'].includes(state.phase) ? 2 : 3;
+  const chapter = ['MENU', 'BALCONY', 'RETURN', 'INTRO', 'INVITE', 'RSA'].includes(state.phase) ? 1 : ['INTERCEPT', 'RECOVER'].includes(state.phase) ? 2 : 3;
   $('game').dataset.chapter = String(chapter);
 }
 // Warm the small native exports so expression changes do not flash or resize.
@@ -85,14 +90,39 @@ function appendMessage(role, content, note = '') {
   if (note) item.append(el('div', 'message-note', note));
   $('messages').append(item);
   state.history.push({ role, content, note });
-  if (followMessages && view === 'chat') $('messages').scrollTop = $('messages').scrollHeight;
+  if (followMessages && ['chat', 'stage'].includes(view)) $('messages').scrollTop = $('messages').scrollHeight;
   else $('new-messages').hidden = false;
   return item;
 }
 function busy(value) {
   state.busy = value; updateComposer();
+  renderTyping();
+}
+function renderTyping() {
+  const value = state.busy || state.chatterTyping;
   $('typing').classList.toggle('busy', value);
   $('typing').firstElementChild.textContent = value ? 'Alice is typing' : '';
+}
+function cancelPuzzleChatter() {
+  clearTimeout(puzzleChatTimer); puzzleChatTimer = null; puzzleChatQueue = [];
+  if (state) { state.chatterTyping = false; renderTyping(); }
+}
+function queuePuzzleMessage() {
+  const key = state.phase + ':' + state.step;
+  if (puzzleMessages[key] && !state.puzzleNotes.has(key) && !puzzleChatQueue.includes(key)) puzzleChatQueue.push(key);
+  if (puzzleChatTimer !== null || !puzzleChatQueue.length) return;
+  const epoch = generation, phase = state.phase;
+  state.chatterTyping = true; renderTyping();
+  puzzleChatTimer = setTimeout(() => {
+    puzzleChatTimer = null;
+    if (epoch !== generation || state.phase !== phase || view !== 'stage') return;
+    const next = puzzleChatQueue.shift();
+    state.puzzleNotes.add(next);
+    const message = appendMessage('alice', puzzleMessages[next]);
+    message.dataset.puzzleNote = next;
+    state.chatterTyping = false; renderTyping();
+    if (puzzleChatQueue.length) queuePuzzleMessage();
+  }, 1800);
 }
 async function speak(lines, epoch = generation) {
   busy(true);
@@ -108,7 +138,8 @@ function updateComposer() {
   const active = ['INTRO', 'INVITE', 'RETRY'].includes(state.phase) && !state.busy;
   $('message').disabled = !active; $('send').disabled = !active || !state.selectedReply;
   $('composer').classList.toggle('inactive', !active);
-  $('composer-label').textContent = state.phase === 'INVITE' ? 'MAKE IT PERSONAL · CHOOSE YOUR INVITATION' : state.phase === 'RETRY' ? 'A FRESH INVITATION · ILLUSTRATIVE PROTECTED CHANNEL' : state.phase === 'END' ? 'CONNECTION CONTINUES' : 'CHOOSE YOUR REPLY';
+  $('puzzle-chat-lock').hidden = view !== 'stage';
+  $('composer-label').textContent = state.phase === 'INVITE' ? 'MAKE IT PERSONAL · CHOOSE YOUR INVITATION' : state.phase === 'RETRY' ? 'A FRESH INVITATION · ILLUSTRATIVE PROTECTED CHANNEL' : state.phase === 'DELIVERED' ? 'IT’S A DATE' : 'CHOOSE YOUR REPLY';
   $('message').placeholder = active ? 'Choose a reply above…' : state.busy ? 'Alice is typing…' : 'Continue the story using the button above.';
   $('composer-hint').textContent = active ? 'Choose a reply above, then send ↗' : state.busy ? 'A moment. She’s still here.' : 'Your conversation stays here.';
   const suggestions = replyChoices[state.phase] || [];
@@ -127,14 +158,16 @@ function focusChoices() { $('suggestions').querySelector('button:not(:disabled)'
 function updateCount() { $('char-count').textContent = $('message').value.length + ' / 280'; $('compose-error').textContent = ''; }
 function setActions(actions) { $('story-actions').replaceChildren(...actions.map(a => button(a.label, a.run, a.cls || 'primary'))); }
 function showChat() {
+  cancelPuzzleChatter();
   $('game').dataset.view = 'chat';
-  view = 'chat'; $('stage').hidden = true; $('chat-view').hidden = false;
+  view = 'chat'; $('puzzle-window').hidden = true; $('stage').hidden = true; $('chat-view').hidden = false;
   if (followMessages) { $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; }
   updateComposer();
 }
 function showStage() {
   $('game').dataset.view = 'stage';
-  view = 'stage'; $('chat-view').hidden = true; $('stage').hidden = false;
+  view = 'stage'; $('chat-view').hidden = false; $('stage').hidden = false; $('puzzle-window').hidden = false;
+  setActions([]); updateComposer();
   renderStage(); $('stage-title').focus({ preventScroll: true });
 }
 function markDraft(note) {
@@ -160,16 +193,17 @@ async function sendMessage(event) {
     if (!(await speak(['Before we send your invitation, let’s encrypt it. RSA starts with two prime numbers that we use to build the encryption key.'], epoch))) return;
     transition('RSA'); updateComposer(); showStage();
   } else {
-    state.retry = raw; transition('END'); updateComposer();
+    state.retry = raw;
+    state.dateLocation = dateLocations.find(location => location.invitation === raw).id;
+    transition('DELIVERED'); updateComposer();
     appendMessage('user', raw, 'Delivered in the story · post-quantum exchange illustrated');
     appendMessage('system', 'ZENO TRIES THE OLD ATTACK\nThis attack relies on RSA’s structure. The upgraded scheme uses different mathematics. No quantum job was submitted for this retry.');
    
-    if (!(await speak(['Okay. You’ve officially made the quantum researcher lose her train of thought.', 'It’s a date. I’ll bring the coffee. You bring that very distracting smile. ♥'], epoch))) return;
+    if (!(await speak(['Okay. You’ve officially made the quantum researcher lose her train of thought.', selectedDate().confirmation], epoch))) return;
     portrait('happy');
     appendMessage('system', 'The first invitation is still leaked. But the next chapter belongs to the two of you.');
-    const stamp = el('div', 'ending-stamp', '♥  CONNECTION CONTINUES  ♥'); $('messages').append(stamp);
     if (followMessages) $('messages').scrollTop = $('messages').scrollHeight;
-    setActions([{ label: 'Play again ↺', run: restart, cls: 'rose' }, { label: 'What actually ran?', run: openAbout, cls: '' }]);
+    setActions([{ label: 'Meet Alice ↗', run: startMeeting, cls: 'rose' }]);
   }
 }
 
@@ -196,10 +230,12 @@ function stageBase(title, subtitle, count) {
 function visual(markup) { const holder = el('div', 'visual'); holder.innerHTML = markup; $('stage-body').append(holder); }
 function caption(content) { $('stage-caption').textContent = content; }
 function renderStage() {
+  $('puzzle-window-title').textContent = 'Qrush / ' + ({ RSA: 'encrypt your invitation', INTERCEPT: 'interception', RECOVER: 'recover the message', PQ: 'new protection' }[state.phase] || 'puzzle');
   if (state.phase === 'RSA') renderRSA();
   if (state.phase === 'INTERCEPT') renderIntercept();
   if (state.phase === 'RECOVER') renderRecovery();
   if (state.phase === 'PQ') renderPQ();
+  queuePuzzleMessage();
 }
 function renderRSA() {
   const titles = ['Enter two prime numbers', 'Calculate the public modulus', 'Calculate φ(n)', 'Set the RSA exponents', 'Encode your message', 'Encrypt a message block', 'Send the encrypted packet'];
@@ -408,12 +444,25 @@ function openAbout() {
 export async function restart() {
   const pending = state && ['waiting', 'submitting'].includes(state.job) && state.mode === 'live';
   generation++; submission++;
-  state = { phase: 'MENU', step: 0, busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
+  cancelPuzzleChatter();
+  state = { phase: 'MENU', step: 0, balconyStep: 0, balconyChoice: 0, dateStep: 0, dateLocation: null, chatterTyping: false, puzzleNotes: new Set(), busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
   lastStageAction = 0; followMessages = true; userScrollUntil = 0;
   $('messages').replaceChildren();
   $('message').value = ''; updateCount(); $('new-messages').hidden = true;
   $('execution-mode').value = 'demo'; $('execution-mode').disabled = false; updateModeLabel();
   $('game').classList.remove('entering');
+  $('game').dataset.scene = 'balcony';
+  $('balcony-scene').hidden = true;
+  $('balcony-scene').inert = false;
+  $('balcony-choices').replaceChildren();
+  $('balcony-scene').setAttribute('aria-label', 'A walk break with Alice');
+  $('scene-place').textContent = 'QUANTUM LABORATORY';
+  $('scene-time').textContent = 'Balcony · late shift';
+  $('date-art').hidden = true;
+  $('skip-balcony').hidden = false;
+  $('end-screen').hidden = true;
+  $('puzzle-window').hidden = true;
+  $('scene-transition').hidden = true;
   portrait('idle'); document.body.dataset.phase = 'MENU'; updateChapter(); setActions([]);
   view = 'menu'; $('game').dataset.view = 'menu';
   $('stage').hidden = true; $('chat-view').hidden = false;
@@ -423,19 +472,95 @@ export async function restart() {
   if (pending) appendMessage('system', 'Story restarted. A submitted remote job may still finish; restarting this interface does not cancel it. Its result will be ignored.');
   $('start-game').focus({ preventScroll: true });
 }
-async function startGame() {
+function startGame() {
   if (state.phase !== 'MENU') return;
   const epoch = generation;
-  transition('INTRO');
+  transition('BALCONY');
   $('start-screen').hidden = true;
-  document.querySelector('.conversation-panel').inert = false;
-  showChat();
+  view = 'balcony'; $('game').dataset.view = 'balcony';
+  $('balcony-scene').hidden = false;
+  renderBalcony();
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     $('game').classList.add('entering');
-    // Generation guard also covers replay while the entrance is still running.
-    setTimeout(() => { if (generation === epoch) $('game').classList.remove('entering'); }, 1000);
+    setTimeout(() => { if (generation === epoch) $('game').classList.remove('entering'); }, 500);
   }
-  if (await speak(['Hey, Bob. Still awake? I was running out of excuses to stay in the lab.', 'The trapped ions can wait. I’d rather get to know you.', 'Want to continue this somewhere a little more private?'], epoch)) focusChoices();
+}
+function renderBalcony() {
+  const meeting = state.phase === 'MEET';
+  const beat = meeting ? { ...selectedDate().lines[state.dateStep], last: state.dateStep === selectedDate().lines.length - 1 } : balconyBeat(state.balconyStep, state.balconyChoice);
+  portrait(beat.expression);
+  $('balcony-speaker').textContent = beat.speaker;
+  $('balcony-context').textContent = beat.speaker === 'Bob' ? 'YOU · IN PERSON' : 'IN PERSON';
+  $('balcony-line').textContent = beat.text;
+  $('balcony-choices').replaceChildren();
+  const choosing = !meeting && state.balconyStep === 0;
+  if (choosing) {
+    balconyReplies.forEach((reply, index) => {
+      $('balcony-choices').append(button(reply, () => {
+        if (state.phase !== 'BALCONY' || state.balconyStep !== 0) return;
+        state.balconyChoice = index; state.balconyStep = 1; renderBalcony();
+      }));
+    });
+  }
+  $('balcony-next').hidden = choosing;
+  $('balcony-next').textContent = beat.last ? (meeting ? 'Finish ♥' : 'Back to my desk ↗') : 'Continue ▼';
+  $('balcony-hint').textContent = choosing ? 'Choose your reply' : 'Click anywhere in this box';
+  $('dialogue-advance').disabled = choosing;
+  $('dialogue-advance').setAttribute('aria-label', beat.last ? (meeting ? 'Finish the date' : 'Back to my desk') : 'Continue dialogue');
+  // Keep the next action focused; the live region announces the new dialogue.
+  if (choosing) $('balcony-choices').firstElementChild.focus({ preventScroll: true });
+  else $('dialogue-advance').focus({ preventScroll: true });
+}
+function advanceBalcony(event) {
+  if (event.detail > 1) return;
+  if (state.phase === 'MEET') {
+    if (state.dateStep === selectedDate().lines.length - 1) return finishStory();
+    state.dateStep++; renderBalcony(); return;
+  }
+  if (state.phase !== 'BALCONY' || state.balconyStep === 0) return;
+  if (balconyBeat(state.balconyStep, state.balconyChoice).last) return returnToDesk();
+  state.balconyStep++; renderBalcony();
+}
+async function returnToDesk() {
+  if (state.phase !== 'BALCONY') return;
+  const epoch = generation;
+  transition('RETURN');
+  $('balcony-scene').inert = true;
+  $('scene-transition').hidden = false;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduced) await sleep(500);
+  if (generation !== epoch) return;
+  $('balcony-scene').hidden = true;
+  $('game').classList.remove('entering');
+  $('game').dataset.scene = 'desk';
+  transition('INTRO');
+  document.querySelector('.conversation-panel').inert = false;
+  showChat();
+  $('scene-transition').hidden = true;
+  if (await speak(['Back at your desk? I’m glad we took that walk.', 'The trapped ions can wait. I’d rather get to know you.', 'Want to continue this somewhere a little more private?'], epoch)) focusChoices();
+}
+function selectedDate() { return dateLocations.find(location => location.id === state.dateLocation); }
+function startMeeting() {
+  if (state.phase !== 'DELIVERED' || state.busy) return;
+  const location = selectedDate();
+  transition('MEET'); state.dateStep = 0;
+  view = 'balcony'; $('game').dataset.view = 'balcony'; $('game').dataset.scene = location.id;
+  document.querySelector('.conversation-panel').inert = true;
+  $('date-art').src = location.background; $('date-art').hidden = false;
+  $('scene-place').textContent = location.name.toUpperCase(); $('scene-time').textContent = location.time + ' · just us';
+  $('balcony-scene').setAttribute('aria-label', 'A date with Alice at the ' + location.name.toLowerCase());
+  $('balcony-scene').hidden = false; $('balcony-scene').inert = false;
+  $('skip-balcony').hidden = true;
+  renderBalcony();
+}
+function finishStory() {
+  if (state.phase !== 'MEET') return;
+  transition('END');
+  view = 'end'; $('game').dataset.view = 'end';
+  $('balcony-scene').hidden = true;
+  $('end-location').textContent = selectedDate().ending;
+  $('end-screen').hidden = false;
+  $('end-title').focus({ preventScroll: true });
 }
 
 // Fit the visible viewport, including a phone's on-screen keyboard.
@@ -447,17 +572,21 @@ window.visualViewport?.addEventListener('resize', fitScene);
 fitScene();
 
 $('start-game').addEventListener('click', startGame);
+$('dialogue-advance').addEventListener('click', advanceBalcony);
+$('skip-balcony').addEventListener('click', returnToDesk);
+$('end-replay').addEventListener('click', restart);
+$('end-about').addEventListener('click', openAbout);
 $('composer').addEventListener('submit', sendMessage);
 for (const event of ['wheel', 'touchstart', 'touchmove', 'pointerdown', 'keydown']) {
   $('messages').addEventListener(event, () => { userScrollUntil = performance.now() + 1000; }, { passive: true });
 }
 $('messages').addEventListener('scroll', () => {
-  if (view !== 'chat' || performance.now() > userScrollUntil) return;
+  if (!['chat', 'stage'].includes(view) || performance.now() > userScrollUntil) return;
   const m = $('messages'); followMessages = m.scrollHeight - m.scrollTop - m.clientHeight < 45;
   if (followMessages) $('new-messages').hidden = true;
 });
 new ResizeObserver(() => {
-  if (followMessages && view === 'chat') { $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; }
+  if (followMessages && ['chat', 'stage'].includes(view)) { $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; }
 }).observe($('messages'));
 $('new-messages').addEventListener('click', () => { followMessages = true; $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; });
 $('replay-animation').addEventListener('click', () => { $('stage-body').classList.remove('animate', 'still'); void $('stage-body').offsetWidth; $('stage-body').classList.add('animate'); $('skip-animation').textContent = 'Skip animation'; });

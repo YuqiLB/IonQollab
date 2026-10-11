@@ -2,7 +2,7 @@
 
 The game uses the reference-inspired [pixel UI skin](styles/README.md). The three rejected design studies, including their screenshots and tooling, are isolated in [design-archive/three-concepts](design-archive/three-concepts/README.md). That archive is not loaded by the game and can be removed as one folder.
 
-A playable, deterministic quantum love story for the IonQ × Qollab hackathon. Play as Bob on a late shift at the Quantum Laboratory. Text your coworker Alice, choose an invitation, watch Zeno recover its toy RSA ciphertext, and arrange a protected retry through an **illustrative** post-quantum exchange.
+A playable, deterministic quantum love story for the IonQ × Qollab hackathon. Play as Bob on a late shift at the Quantum Laboratory. Meet Alice on the balcony during a walk break, then return to your desk to text her. Choose an invitation, watch Zeno recover its toy RSA ciphertext, and arrange a protected retry through an **illustrative** post-quantum exchange.
 
 ## Download and run
 
@@ -59,9 +59,13 @@ The adapter in `js/quantum-adapter.js` converts `.toJs()` proxies and nested Map
 
 ## Controls and accessibility
 
-The observatory fills the visible viewport, including on mobile. Alice and the conversation use lilac pixel windows, cream speech balloons with stepped outlines, and green/pink controls. The mathematics and explanation dialog use the same visual language. There is no outer website navigation or page scrolling; conversation history and long mathematics remain scrollable inside the scene. Execution settings appear within the attack sequence, and replay remains available at the ending.
+The opening balcony fills the visible viewport, with Alice in the foreground and a lavender visual-novel dialogue box along the bottom. After the walk, a centered chat window sits over Bob’s desk and wall. Puzzles open in a separate window: chat takes the left 30% of the available window space and the puzzle takes the remaining 70%. On narrow screens, compact chat sits above the puzzle. Cream speech balloons, stepped outlines, and green/pink controls carry through the mathematics and explanation dialog. Both windows scroll independently.
 
-- The opening is a pixel window over the skyline. Click anywhere or press Enter/Space to start; Alice enters with a bounce and then stays still. Her supplied sprite also appears in the chat contact header.
+- Click anywhere on the introduction or press Enter/Space to start. Bob has two in-person replies; each gives Alice a different immediate response and expression. Continue at your own pace, then choose “Back to my desk.” “Skip to texting” is available throughout the balcony scene.
+- The scene change lasts half a second, or is immediate with reduced motion. No dialogue advances on a timer. Alice’s supplied sprite becomes the chat contact avatar once Bob returns to his desk.
+- Click anywhere in an in-person dialogue box, or press Enter/Space while it is focused, to continue. Required choices cannot be skipped by clicking the box. Double-clicks advance only one line.
+- During puzzles, Alice sends a few scripted texts tied to the current phase. They do not steal focus, duplicate when going Back, or imply a computed result. Replies stay disabled until the story returns to conversation. Reading old messages still preserves your position.
+- After the final replacement invitation, select “Meet Alice.” The meeting takes place in the chosen quiet garden or east dome, with its own background and dialogue. Finish the date to reach the end screen, replay, or inspect what actually ran. The original leaked location is not reused for the new plan.
 - Artwork stays crisp during the mathematics. All expressions share the same proportions; reduced-motion mode disables entrance and animated transitions.
 - Prime entry explains how the two primes build the RSA key for the waiting invitation. “Toy RSA” is explicitly defined as an insecure small-number teaching example.
 - Reply choices appear above the unchanged composer. Choose one to preview it, then use the send arrow; direct typing is disabled. Choices and send remain keyboard-accessible.
@@ -71,7 +75,7 @@ The observatory fills the visible viewport, including on mobile. Alice and the c
 - Reading old messages disables automatic following; a New messages button returns to the latest.
 - Job states are separate from story state: `idle`, `submitting`, `waiting`, `success`, `inconclusive`, `error`.
 - Restart invalidates asynchronous callbacks and ignores old results. It does **not** cancel remote jobs.
-- Keyboard focus styles, labeled inputs, live status messages, semantic message log, accessible SVG descriptions, and mobile stacking.
+- Keyboard focus styles, labeled inputs, live dialogue/status messages, semantic message log, accessible mathematical SVG descriptions, and layouts for narrow and short screens.
 
 ## Validation
 
@@ -87,7 +91,9 @@ node tests/ui-smoke.cjs
 node tests/ui-smoke.cjs /path/to/node_modules /path/to/chrome
 ```
 
-The browser suite starts its own static test server on port 4175 and records screenshots in `qa/`. It checks the full desktop and mobile loop, choice-only input, preview/send behavior, compact-screen controls, invalid/reversed primes, reading position, motion controls, live errors, duplicate job submissions, and stale results after restart. A test-only live bridge checks lifecycle behavior; no actual quantum job is executed by the test suite.
+The browser suite starts its own static test server on port 4175 and records screenshots in `qa/`. It checks the full desktop and mobile loop, separate 30/70 puzzle windows, locked replies, Alice’s puzzle texts, both final meeting locations and end screens, choice-only input, preview/send behavior, compact-screen controls, invalid/reversed primes, reading position, motion controls, live errors, duplicate job submissions, and stale results after restart. A test-only live bridge checks lifecycle behavior; no actual quantum job is executed by the test suite.
+
+`node tests/opening-smoke.cjs /path/to/node_modules /path/to/chrome` additionally exercises both balcony replies, keyboard progression, reduced motion, skip, reset during the scene change, and centered desk layouts at four viewport sizes. It uses port 4176 and writes captures to `qa/scenes/`. See [scene design notes](docs/balcony-and-desk.md).
 
 ## Files and provenance
 
@@ -98,6 +104,6 @@ The browser suite starts its own static test server on port 4175 and records scr
 To refresh the game PNGs after editing the Aseprite source files, run `powershell -ExecutionPolicy Bypass -File tools/export-portraits.ps1` (or pass `-AsepritePath` for another installation). The helper exports the native canvas and verifies the source files remain unchanged.
 - **Zeno and his machine:** native PNG exports of `art/sprites/redcoat_standing_136x178_v001/redcoat-standing_136x178.aseprite` (136 × 178), plus `machine_68x89.aseprite` and `redcoat-fallen_68x89.aseprite` in `art/sprites/redcoat_and_machine_68x89_v001/` (68 × 89). Refresh with `powershell -ExecutionPolicy Bypass -File tools/export-rival-sprites.ps1`; the helper checks PNG dimensions and verifies the editable sources remain unchanged.
 - **Fonts:** the original Bitcount Prop Single and Handjet pairing is restored, imported from Google Fonts in `main.css`. The unused local Pixelify Sans font and its [license](assets/fonts/OFL.txt) are retained. See [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
-- All diagrams and observatory scenery are code-native SVG/CSS. Character sprites use the supplied artwork. No generated equation images or external runtime dependencies.
+- The balcony, desk, garden and dome backgrounds in `assets/scenes/` are local code-native SVG pixel artwork. Opening dialogue lives in `js/opening.js`; date locations, ending dialogue and puzzle texts in `js/story-scenes.js`. Scene layout is grouped in `styles/story-scenes.css`, with the split puzzle workspace in `styles/puzzle-window.css`. Character sprites use the supplied artwork. No generated equation images, new runtime packages, or flattened UI screenshots.
 
 Scientific references: [IBM's Shor tutorial](https://quantum.cloud.ibm.com/docs/en/tutorials/shors-algorithm) and [NIST FIPS 203, ML-KEM](https://csrc.nist.gov/pubs/fips/203/final). The latter describes key establishment: the shared secret is used with symmetric algorithms; ML-KEM does not encrypt the chat text directly. A real protocol must authenticate the public key. Homomorphic encryption is a separate concept.

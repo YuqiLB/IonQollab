@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" shape-rendering="crispEdges">
+  <!-- Quiet wall, skirting, desk: the communications window supplies the light. -->
+  <path fill="#171d35" d="M0 0h480v270H0z"/>
+  <path fill="#1b233e" d="M38 0h404v211H38z"/>
+  <path fill="#202944" d="M90 0h300v211H90z"/>
+  <path fill="#141a2e" d="M0 202h480v6H0z"/>
+  <path fill="#554351" d="M0 208h480v62H0z"/>
+  <path fill="#726071" d="M0 208h480v2H0z"/>
+  <path fill="#493b4c" d="M0 211h480v7H0zM0 245h480v2H0zM0 262h480v8H0z"/>
+  <path fill="#65515b" d="M0 222h69v1H0zM401 228h79v1h-79zM15 237h91v1H15zM348 252h132v1H348zM0 256h139v1H0zM396 217h59v1h-59zM18 248h48v1H18z"/>
+  <!-- A mug at the edge of Bob's desk, drawn on the same pixel grid. -->
+  <g transform="translate(25 0)">
+  <path fill="#28253b" d="M0 222h61v6H0zM6 227h49v2H6z"/>
+  <path fill="#171d32" d="M6 180h35v42H9v-3H6zM41 184h11v3h3v20h-3v4H41v-6h7v-14h-7z"/>
+  <path fill="#434259" d="M8 180h31v39H11v-3H8zM40 185h10v3h3v17h-3v4H40v-4h7v-15h-7z"/>
+  <path fill="#666078" d="M8 178h29v2H8zM6 180h3v28H6zM39 181h2v34h-2zM48 186h2v3h-2z"/>
+  <path fill="#24263e" d="M10 182h27v3H10zM12 186h23v32H12z"/>
+  <path fill="#33354c" d="M10 185h4v29h-4z"/>
+  </g>
+  <!-- Closed notebook, kept outside the center of the screen. -->
+  <path fill="#23253c" d="M436 231h44v16h-52v-4h4v-6h4z"/>
+  <path fill="#857b8d" d="M437 229h43v13h-49v-5h3v-4h3z"/>
+  <path fill="#433e59" d="M439 226h41v13h-46v-5h3v-4h2z"/>
+  <path fill="#68607c" d="M441 227h39v2h-39z"/>
+</svg>

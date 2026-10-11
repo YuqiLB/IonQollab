@@ -1,8 +1,29 @@
 # Qrush verification
 
-Font-only follow-up: restored the original Bitcount Prop Single/Handjet pairing at the user's request. The pixel skin and gameplay are unchanged; the captures and browser run below predate this font restoration.
+## Click-through dialogue, puzzle windows and dates — 2026-10-11
 
-## Current pixel UI — 2026-10-11
+- The full in-person dialogue box is a native keyboard-accessible button surface. Namebar/body clicks, Enter and Space advance; double-clicks advance one line; a required reply choice cannot be bypassed. The opening suite passes at 1440×900, 390×844, 320×480 and 844×390.
+- Mathematics lives in an independent window beside the retained chat. Full-story layout checks verify a 30/70 width split on desktop and landscape, stacked windows on phones, no panel overlap, and disabled replies during every puzzle phase. Tested widths/heights include 1440×1000, 1366×768, 390×844, 320×480 and 844×390.
+- Alice’s occasional scripted messages arrive while puzzles are active. They preserve reading position, do not take focus, do not repeat on Back, and are canceled on phase changes/restart. They make no claims about computed results.
+- Complete desktop and mobile playthroughs now continue to the selected replacement invitation’s location. Garden and east-dome artwork/dialogue are verified, followed by the end screen. Replay resets the scene and the ending explanation dialog remains available.
+- All 11 math/adapter tests pass. Real toy-RSA decryption, live-error behavior, explicit sample selection and stale live-result rejection are retained. No actual Qollab job or post-quantum computation was run.
+- Visually inspected [desktop puzzle](desktop-primes.png), [phone puzzle](mobile-primes.png), [garden meeting](desktop-date-garden.png), [dome meeting](mobile-date-dome.png), and [end screen](desktop-ending.png).
+
+QA used headless Chrome through Playwright. Physical touch devices, other browser engines and screen-reader announcement behavior remain unverified. Earlier scene-history notes follow.
+
+## Balcony and desk — 2026-10-11
+
+The active game now starts with a player-paced balcony conversation. Both Bob replies have distinct Alice reactions; returning to the desk opens one centered chat window. Original Bitcount Prop Single / Handjet fonts and native character exports are retained. Scenery is local SVG pixel artwork; source character images and cryptographic modules are unchanged.
+
+- `tests/opening-smoke.cjs` passes in headless Chrome at 1440×900, 390×844, 320×480, and 844×390. It exercises both branches, keyboard progression, expression changes, skip, duplicate clicks, restart during the return transition, and reduced motion. No page errors. New captures and machine-readable results are in [scenes/](scenes/README.md).
+- The complete desktop/mobile `tests/ui-smoke.cjs` suite passes: invitations, actual toy-RSA recovery, disconnected live failure, explicit sample selection, duplicate submissions, replay and stale live results. Existing stage layout assertions also pass at 1366×768 and the other tested sizes.
+- All 11 mathematical / adapter tests pass. No live quantum job was executed.
+- Desktop and narrow balcony/desk captures were visually inspected, along with the existing interception scene. Choices, dialogue, and composer remain reachable. Message history and mathematics retain internal scrolling. Alice keeps her native proportions.
+- Native browser automation was unavailable because the Windows sandbox helper could not start; QA used headless Chrome through Playwright. Physical devices, other browser engines, and screen-reader announcement behavior remain unverified.
+
+The sections below record earlier iterations. Current scene captures are in `qa/scenes/`; the full-story screenshots in this directory were also refreshed with the restored fonts and desk layout.
+
+## Earlier pixel UI — 2026-10-11
 
 The active game now uses `styles/pixel-ui.css`: local Pixelify Sans throughout, lilac window frames, stepped cream/pink speech balloons, ink outlines, and green/pink controls. The same treatment covers prime inputs, diagrams, attack status, protected retry, and the explanation dialog. All sprites remain unchanged; mathematics no longer blurs the pixel art. No story, RSA, quantum-adapter, or backend code was modified.
 

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" shape-rendering="crispEdges">
+  <path fill="#131e3c" d="M0 0h480v270H0z"/>
+  <path fill="#192749" d="M0 83h480v113H0z"/>
+  <path fill="#263860" d="M55 54h12v-5h9v-7h8v-9h13v4h9v10h9v4h12v9H55zM396 58h11v-9h8v-4h9v-9h12v4h7v12h13v6h18v7h-78z"/>
+  <path fill="#223257" d="M72 70h58v3H72zM402 73h65v2h-65z"/>
+  <path fill="#8290be" d="M73 16h1v1h-1zM124 58h1v1h-1zM194 12h1v1h-1zM289 17h1v1h-1zM328 47h1v1h-1zM455 22h1v1h-1zM159 81h1v1h-1zM375 84h1v1h-1zM104 93h1v1h-1zM278 69h1v1h-1z"/>
+  <path fill="#f8ebd9" d="M434 27h7v2h2v8h-2v2h-7v-2h-2v-8h2z"/>
+  <path fill="#253354" d="M43 152v-24h14v-7h17v22h12v-30h15v16h17v-11h15v36h15v-30h18v-13h17v39h18v-20h17v-28h20v50h15v-32h18v23h19v-15h14v-17h21v30h18v-10h16v-19h19v31h20v-15h19v-16h25v39h20v-17h12v-11h20v58H43z"/>
+  <path fill="#0e1833" d="M40 173v-36h19v-28h9v7h10v45h15v-50h10v-12h15v10h9v43h22v-22h15v31h15v-24h17v-7h11v32h25v-48h22v40h14v-33h18v35h27v-16h19v25h13v-62h8v-22h9v22h9v72h18v-34h15v-26h18v-7h14v8h12v59h14v-35h18v-29h22v75H40z"/>
+  <path fill="#626585" d="M64 126h2v4h-2zM106 116h2v4h-2zM116 131h2v4h-2zM153 142h2v4h-2zM239 125h2v4h-2zM278 131h2v4h-2zM380 110h2v4h-2zM380 139h2v4h-2zM415 134h2v4h-2zM464 124h2v4h-2z"/>
+  <path fill="#a18483" d="M71 144h2v4h-2zM106 138h2v4h-2zM188 151h2v4h-2zM247 142h2v4h-2zM430 117h2v4h-2zM456 152h2v4h-2z"/>
+  <path fill="#e67577" d="M108 96h2v3h-2zM380 73h2v3h-2z"/>
+  <!-- Laboratory exterior and the open balcony. -->
+  <path fill="#313c59" d="M0 0h45v178H0z"/>
+  <path fill="#202c49" d="M24 0h3v177h-3zM43 0h4v182h-4zM0 15l44 13v3L0 18z"/>
+  <path fill="#3e4865" d="M28 0h14v177H28z"/>
+  <path fill="#111d36" d="M5 35h7v38H5z"/>
+  <path fill="#b89f99" d="M6 41h5v27H6z"/>
+  <path fill="#f7d7b3" d="M7 44h4v23H7z"/>
+  <path fill="#182540" d="M0 186l46-13 434 8v89H0z"/>
+  <path fill="#34405f" d="M0 205l46-28 434 10v62L0 238z"/>
+  <path fill="#293653" d="M0 234l480 18v18H0z"/>
+  <path fill="#3e4a69" d="M46 177l434 10v3L46 180zM0 236l480 18v2L0 238z"/>
+  <path fill="#141f39" d="M38 136h442v7H38zM40 154h440v4H40zM41 142h5v45h-5zM80 142h5v39h-5zM145 142h5v40h-5zM213 142h5v42h-5zM287 142h5v42h-5zM363 142h5v43h-5zM441 142h5v45h-5z"/>
+  <path fill="#657092" d="M38 136h442v2H38z"/>
+  <path fill="#465373" d="M38 138h442v3H38zM41 143h2v39h-2zM80 143h2v37h-2zM145 143h2v37h-2zM213 143h2v39h-2zM287 143h2v39h-2zM363 143h2v40h-2zM441 143h2v42h-2zM40 154h440v2H40z"/>
+</svg>

@@ -1,13 +1,13 @@
 # Production pixel UI
 
-`pixel-ui.css` is the active reference-inspired visual layer, loaded after the existing structural `main.css`. It does not import any rejected concept code. The only new game markup is an inert decorative channel title bar. The theme-color metadata matches the new lilac palette.
+`pixel-ui.css` is the shared reference-inspired visual skin, loaded after the structural `main.css`. `story-scenes.css` follows it and owns the in-person scenes, centered desk and end screen. `puzzle-window.css` owns the independent 30/70 chat/puzzle composition and its stacked phone layout. None imports rejected concept code.
 
 Visual thesis: a lilac pixel desktop with cream speech balloons, stepped ink outlines, green primary keys and pink send/reply accents, matching the user's supplied pixel-window reference.
 
-Content plan: preserve the current portrait and conversation → give every text message a real speech balloon → distinguish selected replies and the send button → carry the same window/balloon/control vocabulary through mathematics, interception, the protected retry, and dialogs.
+Content plan: meet Alice in person on the balcony → return to Bob’s desk → give every text message a speech balloon → distinguish selected replies and the send button → carry the same window/balloon/control vocabulary through mathematics, interception, the protected retry, and dialogs.
 
-Interaction thesis: short stepped message arrivals, a two-pixel button press, and existing story/diagram transitions. No new story states or mechanics. Reduced-motion preferences and the existing animation skip control remain effective.
+Interaction thesis: player-paced balcony dialogue with two immediate reactions, a brief return to the desk, short stepped message arrivals, and a two-pixel button press. Reduced-motion preferences and existing diagram skip controls remain effective. Scene details and boundaries are documented in [balcony-and-desk.md](../docs/balcony-and-desk.md).
 
 The stylesheet groups base palette/controls, scene windows, texting, education/attack screens, introduction/dialogs, and responsive behavior. Typography uses the original Bitcount Prop Single and Handjet fonts, imported by `main.css`. Pixelify Sans was tried and then rejected because its digit 5 was difficult to read. The tiny speech-balloon SVGs are code-native borders/tails, not rasterized character art. All supplied sprites and their proportions remain intact.
 
-`main.js`, RSA, quantum adapter, Python interfaces, educational caveats and story progression are unchanged. Browser QA uses the existing full game suite, with captures in `qa/`. The rejected concepts and their old tests/captures are under `design-archive/three-concepts/` and can be deleted independently.
+`main.js` adds BALCONY and RETURN before the texting state, then DELIVERED → MEET → END after the protected retry. Puzzle chatter is tied to phase/step and canceled on reset or phase change. RSA, quantum adapter, Python interfaces and educational caveats are unchanged. Browser QA uses the full game suite plus the opening suite, with captures in `qa/` and `qa/scenes/`. The rejected concepts and their old tests/captures are under `design-archive/three-concepts/` and can be deleted independently.

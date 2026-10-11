@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "desktop: keyboard branch, expression, scene transition, centered chat, viewport fit",
+    "mobile: keyboard branch, expression, scene transition, centered chat, viewport fit",
+    "compact: keyboard branch, expression, scene transition, centered chat, viewport fit",
+    "landscape: keyboard branch, expression, scene transition, centered chat, viewport fit",
+    "skip, duplicate click, restart during return, stale transition guard, no page errors"
+  ],
+  "errors": []
+}

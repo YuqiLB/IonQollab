@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" shape-rendering="crispEdges">
+  <path fill="#142337" d="M0 0h480v270H0z"/>
+  <path fill="#788fa2" d="M63 18h1v1h-1zM124 36h1v1h-1zM284 17h1v1h-1zM329 57h1v1h-1zM404 23h1v1h-1zM449 64h1v1h-1zM245 44h1v1h-1z"/>
+  <path fill="#f1e4c5" d="M363 30h7v2h2v7h-2v2h-7v-2h-2v-7h2z"/>
+  <path fill="#263949" d="M0 130h28v-19h20v9h23v-28h29v37h22v-16h23v23h42v-28h20v-21h18v44h31v-26h24v18h24v-19h27v28h28v-24h28v18h34v-24h17v-15h21v39h25v-15h26v57H0z"/>
+  <path fill="#28413d" d="M0 155h480v115H0z"/>
+  <path fill="#1c332f" d="M0 142h38v-5h44v9h31v-7h51v6h75v-6h56v9h46v-8h52v7h48v-6h39v29H0z"/>
+  <path fill="#465751" d="M229 162h28l99 108H128z"/>
+  <path fill="#607066" d="M229 162h3l-81 108h-7zM254 162h3l99 108h-7z"/>
+  <path fill="#354a45" d="M215 186h60v2h-60zM190 213h110v2H190zM162 245h167v2H162z"/>
+  <!-- Pixel foliage, tree trunks and a garden lamp. -->
+  <path fill="#182c2d" d="M0 23h25v-9h36v11h21v23h15v32H84v22H63v21H0zM403 66h13V44h30V31h34v127h-55v-24h-22z"/>
+  <path fill="#28423c" d="M0 31h19v-9h32v12h22v15h11v20H67V57H44v12H23v17H0zM423 67h17V52h25V41h15v35h-22v17h-35z"/>
+  <path fill="#233c35" d="M0 100h32V84h25v13h14v13H49v13H0zM414 116h18V98h30V85h18v41h-20v12h-28v-8h-18z"/>
+  <path fill="#3e3e3b" d="M36 72h8v47h7v63H39v-47h-3zM448 115h8v64h-9z"/>
+  <path fill="#172b2a" d="M27 181h36v6H27zM432 178h35v7h-35z"/>
+  <path fill="#151e2d" d="M119 118h4v62h-4zM112 96h18v23h-18zM115 91h12v5h-12zM116 180h10v4h-10z"/>
+  <path fill="#f0cea1" d="M115 100h12v14h-12z"/>
+  <path fill="#926d57" d="M120 100h2v14h-2z"/>
+  <!-- An empty bench, with room for two. -->
+  <path fill="#142627" d="M326 190h100v7H326zM337 181h5v18h-5zM410 181h5v18h-5z"/>
+  <path fill="#675b54" d="M332 153h87v6h-87zM332 163h87v6h-87zM327 178h98v6h-98z"/>
+  <path fill="#8b7564" d="M332 153h87v2h-87zM332 163h87v2h-87zM327 178h98v2h-98z"/>
+  <path fill="#253334" d="M336 150h4v29h-4zM411 150h4v29h-4zM324 170h6v15h-6zM422 170h6v15h-6z"/>
+  <path fill="#3c6250" d="M0 223h53v-9h36v12h41v44H0zM369 233h28v-11h44v-8h39v56H349v-19h20z"/>
+  <path fill="#b1809e" d="M18 225h3v3h-3zM56 238h3v3h-3zM88 229h3v3h-3zM411 237h3v3h-3zM445 228h3v3h-3zM465 252h3v3h-3z"/>
+</svg>
