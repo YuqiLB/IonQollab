@@ -2,7 +2,7 @@
 
 `attack.py` contains the bounded Qiskit order-finding circuit used for the live Shor lesson. It accepts the **public modulus** and returns actual measured phase-register counts. The browser derives the candidate period and verifies the factors from those measurements.
 
-The player's prime fields are validated in the game. The Python function receives `N = p × q`, not `p` and `q`; sending the factors to the attacker would give away the answer. The supported teaching pairs are `(3, 5)`, `(3, 11)`, `(3, 17)`, and `(5, 11)`. They keep the existing `e = 3` lesson arithmetic valid.
+The player's prime fields are validated in the game. Any distinct odd prime pair with `N = p × q ≤ 63` is supported. The game selects the smallest odd `e > 1` coprime to `φ(n) = (p−1)(q−1)`, so the exponent is compatible with the selected primes. The Python function receives the public modulus `N`, not `p` and `q`; sending the factors to the attacker would give away the answer.
 
 ## Qiskit function
 
