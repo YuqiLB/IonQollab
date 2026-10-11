@@ -646,6 +646,7 @@ function renderPQDetails() {
   }
   if (state.step === 2) {
     $('stage-body').append(el('div', 'math-equation mlkem-input-equation', 't(X) = a(X)s(X) + e(X)  (mod 3329)'));
+    $('stage-body').append(el('p', 'math-small mlkem-copy', 'a(X) = a₀ + a₁X · a₀ is the constant term; a₁ is the coefficient of X.'));
     const form = el('form', 'mlkem-form');
     form.noValidate = true;
     const groups = [
