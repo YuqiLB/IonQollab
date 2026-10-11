@@ -1,5 +1,6 @@
-// QOLLAB ONLY — add these lines to the top of main.js AFTER the Python
-// team implements quantum/attack.py::run_attack(backend, shots).
+// QOLLAB ONLY — add these lines to the top of main.js after quantum/attack.py
+// is present. run_attack keeps its original (backend, shots) call for N=15;
+// the game passes (backend, shots, public N, base) for its other presets.
 // The Qollab runtime supplies backend. Choose a simulator using Select QPU.
 // Do not add these lines to the standalone browser demo before connecting it.
 import * as quantum from 'quantum.attack';

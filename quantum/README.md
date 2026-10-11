@@ -1,53 +1,46 @@
-# Quantum team integration contract — not an implemented quantum module
+# Shor demo and Qollab integration
 
-No quantum Python implementation existed at inspection time. Existing `backend/main.py` and `backend/requirements.txt` were empty and are untouched. This directory reserves the correct location for Qollab Python modules; no stub is disguised as working quantum code.
+`attack.py` contains the bounded Qiskit order-finding circuit used for the live Shor lesson. It accepts the **public modulus** and returns actual measured phase-register counts. The browser derives the candidate period and verifies the factors from those measurements.
 
-## Required callable
+The player's prime fields are validated in the game. The Python function receives `N = p × q`, not `p` and `q`; sending the factors to the attacker would give away the answer. The supported teaching pairs are `(3, 5)`, `(3, 11)`, `(3, 17)`, and `(5, 11)`. They keep the existing `e = 3` lesson arithmetic valid.
 
-Implement `quantum/attack.py` with:
+## Qiskit function
 
 ```python
-def run_attack(backend, shots):
-    # Real implementation belongs here, supplied by the quantum team.
-    # N=15, a=2; run the order-finding circuit on the supplied simulator.
-    # Return the dictionary described below, built from actual measurements.
+def run_attack(backend, shots=1024, modulus=15, base=2):
+    ...
 ```
 
-This is a signature example, **not executable code shipped as the integration**. If the team's function has another name/signature, adapt the JavaScript call in `js/quantum-adapter.js` to match the real implementation. The current proposed call is exactly:
+The two optional inputs preserve the original Qollab call `run_attack(backend, 1024)` for the `N=15, a=2` case. The JavaScript adapter passes `modulus` and `base` for other presets. `backend` is the simulator selected in Qollab's **Select QPU** dialog; this module does not create a provider, ask for credentials, or start an HTTP service.
 
-```javascript
-const raw = await runAttack.callPromising(backend, 1024);
+### Resource bounds
+
+- `N` must be an odd composite from 15 through 63.
+- `a` must be an integer in `[2, N−1]` and coprime to `N`.
+- `shots` must be from 1 through 4,096.
+- The phase register uses `2 × ceil(log₂ N)` bits; the work register uses `ceil(log₂ N)` bits. The maximum is 12 phase bits and 18 total qubits.
+- If the selected simulator advertises fewer qubits than the circuit needs, the function returns an error before submitting a job.
+
+These limits protect the demo from unexpectedly large inputs. The actual Qollab simulator still determines whether a particular circuit can run; test the live connection in Qollab before describing it as live.
+
+The circuit uses controlled modular multipliers for `a^(2^j) mod N`, applies the inverse QFT, and measures only the phase register. Counts are returned as equal-width, most-significant-bit-first binary strings. The frontend checks the continued-fraction candidate, verifies the order, then checks both gcd factors. Inconclusive measurements remain inconclusive; there is no sample fallback in live mode.
+
+Example result:
+
+```python
+{
+    "status": "success",
+    "distribution": {"01000000": 512, "11000000": 512},
+    "distribution_kind": "counts",
+    "phase_bits": 8,
+    "explanation": "Measured the phase register; the browser verifies the order and factors."
+}
 ```
 
-Qollab supplies `backend`; use **Select QPU** to choose a simulator. Do not instantiate another provider, request API keys, or create a web server.
+This N=15, a=2 result illustrates exact ideal-simulator peaks. Live results must come from the selected simulator; they may be noisy or inconclusive.
 
-## Return value
+## Connect in Qollab
 
-Return a Python dictionary / `.toJs()`-convertible proxy with:
+Add the lines in [`connect.example.js.txt`](connect.example.js.txt) to the top of the root `main.js` inside the same JS / Qiskit project. The browser's illustrative mode remains separate from live execution. Verify an actual Qollab simulator run and inspect the returned `.toJs()` value before presenting a live run as successful.
 
-| Field | Meaning |
-| --- | --- |
-| `status` | `success`, `inconclusive`, or `error` |
-| `distribution` | Actual phase-register distribution, binary keys in **most-significant-bit-first** order, all the same width, between 2 and 12 bits |
-| `distribution_kind` | Exactly `counts` (nonnegative integer shots) or `probabilities` (nonnegative floats summing to approximately 1) |
-| `phase_bits` | Optional integer matching the key width |
-| `period` | Optional candidate period; it must pass verification |
-| `factors` | Optional list `[3, 5]` or `[5, 3]`; verified if provided |
-| `recovered_toy_secret` | Optional integer `d=3`; verified if provided |
-| `explanation` | Human-readable status, especially for errors |
-
-Return **only the measured phase register**, with any auxiliary-register bits removed. Preserve leading zeros and document bit ordering in the implementation. Do not send decimal outcome strings, mixed widths, quasiprobabilities with negative entries, or unexplained unlabeled values. For an error, `status='error'` and an explanation suffice. For an inconclusive measurement result, include the actual distribution.
-
-The frontend derives a candidate from continued-fraction convergents of `y/2^t`, checks that `2^r mod 15 = 1`, checks no smaller positive period works, requires an even useful period, and verifies both gcd factors. Zero/half-phase-only outcomes can be inconclusive; the frontend deliberately does not brute-force a missing period into success. A reported `period=4` without supporting phase data does not unlock the story.
-
-Map/dictionary conversion is recursive. Unknown status/kind, malformed distributions, invalid periods or contradictory factors become visible errors. The frontend never replaces live errors with samples. Retries submit a new call; restart only invalidates old frontend results and does not cancel remote work.
-
-The frontend's compact circuit is explicitly labeled an **order-finding schematic**. It abbreviates control wires and the work register and is not a rendering of your actual transpiled circuit. The deterministic four-bit demo distribution (`0000`, `0100`, `1000`, `1100`, 256 each) is marked as sample data; it is never claimed to have come from Python.
-
-## Connect it
-
-After the real function exists, add the lines from `connect.example.js.txt` to root `main.js` in the same Qollab JS / Qiskit project. A native browser cannot resolve Qollab's Python import; therefore that static import is intentionally absent from the standalone build until connection.
-
-Verify one real job inside Qollab, inspecting `raw.toJs()` to confirm the exact shape and phase register order before presenting the integration as live. The JS tests use mock proxies to validate conversions and UI lifecycle, **not** to certify a Qollab job.
-
-No ML-KEM implementation is required for the current complete story: the protected retry is explicitly illustrative. Replacing it with real cryptography is separate work requiring a verified implementation and authenticated key exchange, not a homemade cipher or a factoring-job timeout.
+The circuit teaches Shor's order-finding idea on tiny inputs. It does not demonstrate breaking modern RSA. The toy RSA stage remains deliberately insecure and is explained by the game's disclaimer.
