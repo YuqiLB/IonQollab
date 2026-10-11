@@ -8,9 +8,9 @@ import { runAttack, liveAvailable, lessonBase } from './js/quantum-adapter.js';
 import { moveWindows, resetMotion } from './js/desktop-motion.js';
 import { uiText } from './js/ui-text.js';
 import { pqVisual } from './js/visuals.js';
-import { revealWords, typingDelay, readingGap } from './js/story-pacing.js';
+import { revealWords, revealCaption, typingDelay, readingGap } from './js/story-pacing.js';
 import { mountStoryMotion, flyPacket } from './js/story-motion.js';
-let activeMotion = null, introReveal = null, dialogueReveal = null, sceneHandoff = null;
+let activeMotion = null, introReveal = null, dialogueReveal = null, captionReveal = null, sceneHandoff = null;
 let handoffTimers = [];
 
 const $ = id => document.getElementById(id);
@@ -282,7 +282,6 @@ function showStage(source = null) {
   $('message-context').hidden = false;
   uiText($('pending-message'), state.phase === 'RSA' ? state.invitation : source?.querySelector('.message-text')?.textContent || 'Let’s upgrade the protection.');
   $('message-context-label').textContent = state.phase === 'RSA' ? 'YOUR PENDING INVITATION' : 'A NEW ENVELOPE';
-  $('message-context-status').textContent = state.phase === 'RSA' ? 'Encrypting… Complete the steps below to send.' : 'Illustrative protection upgrade · then choose a new invitation.';
   setActions([]); updateComposer();
   renderStage(); $('stage-title').focus({ preventScroll: true });
   openFromMessage($('puzzle-window'), sourceRect, $('pending-message'), $('pending-message').textContent);
@@ -360,7 +359,11 @@ function visual(markup, compact = []) {
   compact.forEach(line => small.append(el('div','',line)));
   holder.append(small); $('stage-body').append(holder);
 }
-function caption(content, brief = content) { state.explanation = content; $('stage-caption').textContent = brief; }
+function caption(content, brief = content) {
+  state.explanation = content;
+  captionReveal?.cancel();
+  captionReveal = revealCaption($('stage-caption'), brief);
+}
 function renderStage() {
   if (state.renderedPhase !== state.phase) $('stage').scrollTop = 0;
   if (['INTERCEPT', 'RECOVER'].includes(state.phase)) $('zeno-title').textContent = state.phase === 'INTERCEPT' ? 'ZENO / PACKET INTERCEPTED' : 'ZENO / THE COPIED PACKET';
@@ -372,7 +375,10 @@ function renderStage() {
   state.renderedPhase = state.phase; state.stageDirty = false;
   syncTask(); queuePuzzleMessage();
 }
-function stopStoryMotion() { activeMotion?.destroy(); activeMotion = null; }
+function stopStoryMotion() {
+  activeMotion?.destroy(); activeMotion = null;
+  captionReveal?.cancel(); captionReveal = null;
+}
 function beginStoryMotion(kind, data, complete) {
   const epoch = generation;
   $('stage').classList.add('cinematic-stage');
@@ -382,6 +388,7 @@ function beginStoryMotion(kind, data, complete) {
     kind, data, getResult: () => ({result:state.result,text:state.recoveredText}),
     onCaption: text => caption(text),
     onProgress: (paused, done) => {
+      captionReveal?.suspend(paused);
       const label = paused ? 'Resume' : 'Pause';
       if ($('pause-animation').textContent !== label) $('pause-animation').textContent = label;
       $('pause-animation').disabled = done || ['error','inconclusive'].includes(state.job);
@@ -447,7 +454,6 @@ async function intercept() {
   state.intercepted = structuredClone(state.packet);
   transition('INTERCEPT');
   $('message-context-label').textContent = 'YOUR INVITATION';
-  $('message-context-status').textContent = 'Encryption complete · packet released.';
   $('packet-summary').textContent = state.packet.byteLength + ' UTF-8 bytes · ' + state.packet.ciphertext.length + ' encrypted blocks · public n = ' + state.packet.n;
   $('encryption-summary').hidden = false;
   $('zeno-popup').append($('stage'));
@@ -651,9 +657,9 @@ function renderPQDetails() {
     const form = el('form', 'mlkem-form');
     form.noValidate = true;
     const groups = [
-      { title: 'a(X) · public matrix sample', note: 'Coefficients: 0 to 3328', fields: MLKEM_FIELDS.slice(0, 2) },
-      { title: 's(X) · secret sample', note: 'Demo range: −2 to 2', fields: MLKEM_FIELDS.slice(2, 4) },
-      { title: 'e(X) · noise sample', note: 'Demo range: −2 to 2', fields: MLKEM_FIELDS.slice(4, 6) },
+      { title: 'a(X) · public', note: '0 to 3328', fields: MLKEM_FIELDS.slice(0, 2) },
+      { title: 's(X) · secret', note: '−2 to 2', fields: MLKEM_FIELDS.slice(2, 4) },
+      { title: 'e(X) · noise', note: '−2 to 2', fields: MLKEM_FIELDS.slice(4, 6) },
     ];
     const grid = el('div', 'mlkem-input-groups');
     let error;
@@ -807,7 +813,6 @@ export async function restart() {
   $('balcony-choices').replaceChildren();
   $('balcony-scene').setAttribute('aria-label', 'A walk break with Alice');
   $('scene-place').textContent = 'QUANTUM LABORATORY';
-  $('scene-time').textContent = 'Balcony · late shift';
   $('date-art').hidden = true;
   $('skip-balcony').hidden = false;
   $('end-screen').hidden = true;
@@ -946,7 +951,7 @@ function startMeeting() {
       transition('MEET'); state.dateStep=0;
       view='balcony'; $('game').dataset.view='balcony'; $('game').dataset.scene=location.id;
       $('date-art').src=location.background; $('date-art').hidden=false;
-      $('scene-place').textContent=location.name.toUpperCase(); $('scene-time').textContent=location.time+' · just us';
+      $('scene-place').textContent=location.name.toUpperCase();
       $('balcony-scene').setAttribute('aria-label','A date with Alice at the '+location.name.toLowerCase());
       $('balcony-line').textContent=''; $('balcony-choices').replaceChildren();
       $('balcony-scene').hidden=false; $('balcony-scene').inert=true; $('skip-balcony').hidden=true;

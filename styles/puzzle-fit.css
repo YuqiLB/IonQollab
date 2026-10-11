@@ -1,4 +1,19 @@
 /* One visual, one explanation, reachable actions. Optional reading lives in Details. */
+@media (max-width: 760px), (max-height: 650px) {
+  .puzzle-window:has(.stage[data-step='pq-2']) .message-context { display: none; }
+  .stage[data-step='pq-2'] .mlkem-input-equation,
+  .stage[data-step='pq-2'] .mlkem-copy,
+  .stage[data-step='pq-2'] .mlkem-input-help { display: none; }
+  .mlkem-form { padding: 8px; }
+  .mlkem-input-groups { grid-template-columns: 1fr; gap: 6px; }
+  .mlkem-input-group { display: grid; grid-template-columns: 70px minmax(0, 1fr); align-items: center; gap: 8px; padding: 4px 8px 6px; }
+  .mlkem-input-group legend { font-size: 11px; }
+  .mlkem-group-note { text-align: left; margin: 0; }
+  .mlkem-coefficients { min-width: 0; justify-content: flex-end; }
+  .mlkem-coefficient { min-width: 0; gap: 2px; }
+  .mlkem-coefficient input { width: 90px; padding: 5px 4px; }
+}
+
 .game .puzzle-window .stage, #zeno-popup .stage {
   padding: clamp(10px, 2vh, 24px) clamp(12px, 2vw, 28px);
   overflow: visible; min-height: 0; gap: 0;
@@ -21,7 +36,6 @@
 .message-context { padding: 10px 20px; }
 .message-context>span:first-child { display: none; }
 #pending-message { max-height: none; overflow: visible; font: 23px/1.15 var(--sans); margin: 0 0 4px; }
-#message-context-status { font-size: 16px; }
 .prime-form { padding: 12px; box-shadow: none; border-width: 1px; }
 .prime-inputs { margin: 0 0 8px; gap: 24px; }
 .prime-inputs input { width: 70px; padding: 5px; font-size: 32px; }
@@ -79,7 +93,6 @@
   .stage-caption { font-size: 18px; margin: 7px 0; }
   .message-context { padding: 7px 12px; }
   #pending-message { font-size: 21px; }
-  #message-context-status { font-size: 15px; }
   .motion-controls { gap: 12px; }
   .motion-controls .quiet { font-size: 17px; }
   .leak-quote { font-size: 23px; padding: 12px; }
@@ -99,7 +112,6 @@
   .game .puzzle-window .pixel-titlebar { min-height: 32px; padding: 4px 10px; }
   .message-context { padding: 5px 12px; }
   #pending-message { font-size: 18px; margin-bottom: 2px; }
-  #message-context-status { font-size: 14px; }
   .prime-form { padding: 7px 9px; }
   .prime-inputs { margin-bottom: 4px; gap: 18px; }
   .prime-inputs input { font-size: 27px; width: 54px; padding: 3px; }

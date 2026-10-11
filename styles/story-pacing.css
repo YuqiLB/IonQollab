@@ -15,6 +15,8 @@
 .start-screen:has(.start-hitarea:focus-visible) .start-prompt { text-decoration:underline; text-decoration-style:dotted; text-underline-offset:6px; }
 .reveal-word { display:inline-block; opacity:0; transform:translateY(3px); transition:opacity 210ms ease,transform 210ms ease; }
 .reveal-word.visible { opacity:1; transform:none; }
+.caption-reveal { display: block; width: 100%; }
+.caption-pending { visibility: hidden; }
 .game .message { animation:story-message-in 340ms ease-out both; }
 .game .typing.busy span::after { animation-duration:1.55s; }
 .game[data-scene='desk'] .conversation-panel { animation:desk-arrive 700ms ease-out both; }

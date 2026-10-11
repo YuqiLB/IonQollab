@@ -156,6 +156,20 @@ textarea::placeholder { color: #71657f; }
 .prime-inputs label { color: #2d6538; }
 .prime-inputs label:last-child { color: #654096; }
 .prime-inputs input { background: #f5f0ff; border: 2px solid var(--ink); color: var(--ink); box-shadow: inset 2px 2px 0 #c9c1da; }
+/* Toy coefficients use the light window palette, including their labels. */
+.mlkem-form { background: var(--paper); border: 2px solid var(--ink); color: var(--ink); }
+.mlkem-input-group { border-color: #9582ad; }
+.mlkem-input-group legend { color: #503565; font-size: 12px; }
+.mlkem-coefficient { color: var(--ink); }
+.mlkem-coefficient input {
+  width: 96px; background: #fff; color: #211b30; caret-color: #211b30;
+  border: 2px solid #66507f; font-size: 20px; font-variant-numeric: tabular-nums;
+}
+.mlkem-group-note, .mlkem-input-help { color: #51445e; font-size: 16px; }
+.mlkem-form .field-error { font: 18px/1.2 var(--sans); margin: 6px 0 0; }
+.mlkem-form .field-error:empty { display: none; }
+.stage .mlkem-coefficient input:focus, .stage .prime-inputs input:focus { outline: 3px solid #b63a87; outline-offset: 3px; }
+.stage input::selection { background: #5b287f; color: #fff; }
 .prime-help { color: #51465f; font-size: 17px; line-height: 1.5; }
 .math-svg text { fill: var(--ink); font-family: var(--pixel); }
 .math-svg { shape-rendering: crispEdges; }

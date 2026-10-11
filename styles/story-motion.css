@@ -36,7 +36,7 @@
 .cinematic-stage .stage-nav:empty { display: none; }
 .cinematic-stage .stage-nav button { min-height: 42px; }
 .game .puzzle-window:has(.cinematic-stage) .message-context { display: none; }
-#zeno-popup:has(.cinematic-stage) { background: #201e32; border-color: #72354d; box-shadow: 0 0 0 2px #bc6b8e, 9px 10px 0 #080b22a6; }
+#zeno-popup:has(.cinematic-stage) { background: #100e14; border-color: #72354d; box-shadow: 0 0 0 2px #bc6b8e, 9px 10px 0 #080b22a6; }
 #zeno-popup .cinematic-stage h2 { color: #ffe0ee; }
 #zeno-popup .cinematic-stage .stage-subtitle,#zeno-popup .cinematic-stage .stage-caption,#zeno-popup .cinematic-stage .mode-indicator { color: #ddd5e9; }
 #zeno-popup .cinematic-stage .motion-controls .quiet { color: #e6bad4; }
@@ -48,7 +48,7 @@
 .cinematic-stage .prime-inputs { margin-bottom: 18px; }
 .cinematic-stage .prime-inputs label { color: #85e2d0; }
 .cinematic-stage .prime-inputs label:last-child { color: #f6a2cb; }
-.cinematic-stage .prime-inputs input { width: 90px; background: #252b43; border: 1px solid #777c9d; box-shadow: none; color: #f8f1ff; border-radius: 8px; font: 42px system-ui,sans-serif; }
+.cinematic-stage .prime-inputs input { width: 90px; background: #fffef8; border: 2px solid #b5a1d1; box-shadow: none; color: #211b30; caret-color: #211b30; border-radius: 8px; font: 42px system-ui,sans-serif; }
 .cinematic-stage .prime-help { color: #c4bdd8; margin: 12px 0; }
 .cinematic-stage .prime-form .field-error { color: #ffb2c6; }
 .prime-invitation { padding: 16px 20px; margin: 0 0 20px; border-left: 2px solid #eea0c8; background: #29253f; font: 23px/1.35 var(--sans); color: #f7e0ef; }

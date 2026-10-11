@@ -22,7 +22,6 @@
 .message-context.receiving-message>* { opacity: 0; }
 .message-context>span:first-child { font: 10px/1.3 var(--pixel); letter-spacing: 1px; color: #705786; }
 #pending-message { margin: 7px 0; font: 25px/1.2 var(--sans); color: var(--ink); overflow-wrap: anywhere; max-height: 90px; overflow-y: auto; }
-#message-context-status { color: #665573; font: 17px/1.3 var(--sans); }
 .message-flight { position: fixed; z-index: 30; pointer-events: none; background: #f9d4ef; color: #262234; border: 3px solid #262234; box-shadow: 4px 4px 0 #262234; padding: 12px 15px; font: 20px/1.4 var(--pixel); overflow-wrap: anywhere; }
 .encryption-summary { min-height: 0; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px; overflow: auto; }
 .packet-seal { font: 72px/1 var(--pixel); color: #66548a; }
@@ -42,11 +41,11 @@
 
 /* Native modal: focus stays in Zeno's window and the live workspace stays behind glass. */
 #zeno-popup {
-  --ink: #35151d; --paper: #fff7ef; --lavender: #f8e2dd;
+  --ink: #f9eaf0; --paper: #1c171f; --lavender: #100e14;
   width: min(960px, calc(100% - 64px)); height: min(900px, calc(var(--scene-height, 100dvh) - 64px));
   max-width: none; max-height: none; margin: auto; padding: 0; overflow: hidden;
   border: 3px solid #51131f; box-shadow: 0 0 0 3px #e06368, 9px 10px 0 #230a13a6;
-  background: #f8e2dd; color: var(--ink);
+  background: #100e14; color: var(--ink); color-scheme: dark;
 }
 #zeno-popup[open] { display: flex; flex-direction: column; animation: zeno-window-in 280ms cubic-bezier(.2,.9,.2,1.12) both; }
 #zeno-popup::backdrop { background: #2d12264d; backdrop-filter: blur(9px) saturate(.65); -webkit-backdrop-filter: blur(9px) saturate(.65); transition: opacity 180ms; }
@@ -54,22 +53,25 @@
 #zeno-popup>.pixel-titlebar { background: #a62539; color: #fff8ed; border-bottom: 3px solid #51131f; padding: 7px 14px 7px 20px; min-height: 48px; }
 #zeno-popup .window-close { background: #ffd3c6; color: #51131f; border-color: #51131f; box-shadow: 2px 2px 0 #51131f; }
 #zeno-popup .window-close:hover { background: #fff7ef; }
-#zeno-popup .stage { padding: 24px 28px 20px; scrollbar-color: #a62539 #f8e2dd; }
-#zeno-popup .stage h2 { color: #781c2c; }
-#zeno-popup .stage-subtitle, #zeno-popup .stage-caption { color: #613841; }
+#zeno-popup .stage { padding: 24px 28px 20px; scrollbar-color: #a62539 #100e14; }
+#zeno-popup .stage h2 { color: #ffe0ee; }
+#zeno-popup .stage-subtitle, #zeno-popup .stage-caption { color: #e6d7df; }
 #zeno-popup .mode-control { border-color: #d6a29e; }
 #zeno-popup .mode-control label, #zeno-popup .mode-indicator, #zeno-popup .scope-note { color: #73404c; }
-#zeno-popup .quiet { color: #752638; }
-#zeno-popup .rival-interruption { background: #eeb6b2; border-color: #51131f; box-shadow: 4px 4px 0 #762e3a; }
-#zeno-popup .rival-speech { background: #fff7ef; border-color: #51131f; box-shadow: 4px 4px 0 #762e3a; }
-#zeno-popup .rival-speech .message-label { color: #a62539; }
+#zeno-popup .quiet { color: #f0b7d2; }
+#zeno-popup .quiet:hover:not(:disabled), #zeno-popup .quiet:focus-visible { background: #412333; color: #fff; }
+#zeno-popup :focus-visible { outline-color: #ffa6cf; }
+#zeno-popup .rival-interruption { background: #100e14; border-color: #63303f; box-shadow: 4px 4px 0 #351b25; }
+#zeno-popup .rival-speech { background: #251c25; color: #fff2f7; border-color: #b45b73; box-shadow: 4px 4px 0 #351b25; }
+#zeno-popup .rival-speech p { color: #fff2f7; }
+#zeno-popup .rival-speech .message-label { color: #ffa6bf; }
 #zeno-popup .rival-avatar p { color: #752638; }
 #zeno-popup .stage-nav button:last-child { background: #a62539; color: #fff8ed; border-color: #51131f; box-shadow: 3px 3px 0 #51131f; }
 #zeno-popup .stage-nav button:last-child:hover:not(:disabled) { background: #c43b4b; }
 #zeno-popup .result-label { color: #9d2538; }
 #zeno-popup .leak-quote { background: #fff7ef; border: 3px solid #b13c49; color: #641d2c; }
 #zeno-popup .job-status { border-color: #9d626b; }
-#zeno-popup .motion-controls>span:last-child { color: #73404c; }
+#zeno-popup .motion-controls>span:last-child { color: #d1b8c4; }
 
 @keyframes encrypt-wait { 50% { background: #805c9c; } }
 @keyframes zeno-window-in { from { opacity: 0; transform: translate(20px, -26px) scale(.9); } to { opacity: 1; transform: translate(0, 0) scale(1); } }
@@ -78,7 +80,6 @@
   .message-context { padding: 9px 12px; }
   .message-context>span:first-child { font-size: 8px; }
   #pending-message { font-size: 20px; margin: 5px 0; max-height: 64px; }
-  #message-context-status { font-size: 15px; }
   .message.pending .message-note { font-size: 17px; }
   .encryption-summary { padding: 16px; }
   .encryption-summary h2 { font-size: 24px; }
@@ -103,7 +104,6 @@
   #zeno-popup .stage { padding: 16px; }
   .message-context { padding-block: 8px; }
   #pending-message { font-size: 20px; margin-block: 4px; }
-  #message-context-status { font-size: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   #zeno-popup[open], .message.pending .message-note::before { animation: none; }
