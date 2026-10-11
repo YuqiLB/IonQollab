@@ -2,7 +2,7 @@ import { character, rivalSprites, storyExpressions } from './assets/manifest.js'
 import { balconyReplies, balconyBeat } from './js/opening.js';
 import { dateLocations, puzzleMessages } from './js/story-scenes.js';
 import { openFromMessage, closePopup, cancelWindowMotion } from './js/window-motion.js';
-import { makeKeys, encode, encrypt, decrypt, inverse } from './js/rsa.js';
+import { makeKeys, encode, encrypt, decrypt, inverse, modPow } from './js/rsa.js';
 import { runAttack, liveAvailable, lessonBase } from './js/quantum-adapter.js';
 
 import { moveWindows, resetMotion } from './js/desktop-motion.js';
