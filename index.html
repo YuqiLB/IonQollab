@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./styles/pixel-ui.css">
   <link rel="stylesheet" href="./styles/story-scenes.css">
   <link rel="stylesheet" href="./styles/puzzle-window.css">
+  <link rel="stylesheet" href="./styles/message-windows.css">
 </head>
 <body data-phase="MENU">
   <div class="app">
@@ -50,8 +51,8 @@
         </div>
       </section>
       <div id="scene-transition" class="scene-transition" role="status" hidden><span>A few steps down the hall.</span><strong>Back at your desk.</strong></div>
-      <section class="conversation-panel" aria-label="Conversation with Alice" inert>
-        <div class="pixel-titlebar" aria-hidden="true"><span>Qrush / private channel</span><span>♥</span></div>
+      <section id="conversation-window" class="conversation-panel" aria-label="Conversation with Alice" inert>
+        <div class="pixel-titlebar"><span>Qrush / private channel</span><button id="close-chat" class="window-close" type="button" aria-label="Close chat window" title="Close chat · progress is kept">×</button></div>
         <section id="chat-view" class="chat-view">
           <header class="chat-contact" aria-label="Texting Alice">
             <span class="contact-avatar"><img id="contact-avatar" src="./assets/characters/mira-idle-68x89.png" width="68" height="89" alt="Alice’s profile picture"></span>
@@ -72,7 +73,9 @@
         </section>
       </section>
       <section id="puzzle-window" class="puzzle-window" aria-label="Interactive puzzle" hidden>
-        <div class="pixel-titlebar"><span id="puzzle-window-title">Qrush / encryption</span><span aria-hidden="true">◇</span></div>
+        <div class="pixel-titlebar"><span id="puzzle-window-title">Qrush / encryption</span><button id="close-puzzle" class="window-close" type="button" aria-label="Close puzzle window" title="Close puzzle · progress is kept">×</button></div>
+        <div id="message-context" class="message-context" hidden><span id="message-context-label">YOUR PENDING INVITATION</span><p id="pending-message"></p><span id="message-context-status">Encrypting… Complete the steps below to send.</span></div>
+        <section id="encryption-summary" class="encryption-summary" hidden><span class="packet-seal" aria-hidden="true">↗</span><h2>Encrypted packet sent.</h2><p id="packet-summary"></p><p class="intercept-warning">Zeno copied the packet on its way out.</p><button id="inspect-interception" class="rose" type="button">Open Zeno’s interception ↗</button></section>
         <section id="stage" class="stage" aria-labelledby="stage-title" hidden>
           <h2 id="stage-title" tabindex="-1"></h2><p id="stage-subtitle" class="stage-subtitle"></p>
           <div class="mode-control" id="execution-controls" hidden><label for="execution-mode">EXECUTION</label><select id="execution-mode"><option value="demo">Illustrative demo</option><option value="live">Live Qollab</option></select><span class="mode-indicator" id="mode-label">Illustrative demo—no quantum job executed.</span><button id="about-button" class="quiet">What actually ran?</button></div>
@@ -82,6 +85,8 @@
           <div class="motion-controls"><button id="replay-animation" class="quiet">↺ Replay animation</button><button id="skip-animation" class="quiet">Skip animation</button><span id="step-count"></span></div>
         </section>
       </section>
+      <dialog id="zeno-popup" class="zeno-popup" aria-labelledby="zeno-title"><div class="pixel-titlebar"><span id="zeno-title">ZENO / PACKET INTERCEPTED</span><button id="close-zeno" class="window-close" type="button" aria-label="Close Zeno window" title="Close popup · progress is kept">×</button></div></dialog>
+      <nav id="window-dock" class="window-dock" aria-label="Reopen closed windows" hidden><button id="restore-chat" type="button" hidden>♥ Alice’s chat</button><button id="restore-puzzle" type="button" hidden>Resume encryption ↗</button><button id="restore-zeno" type="button" hidden>Zeno · resume interception ↗</button></nav>
       <section id="end-screen" class="end-screen" aria-labelledby="end-title" hidden>
         <div class="end-content">
           <p class="end-kicker">THE END</p>

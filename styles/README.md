@@ -2,6 +2,8 @@
 
 `pixel-ui.css` is the shared reference-inspired visual skin, loaded after the structural `main.css`. `story-scenes.css` follows it and owns the in-person scenes, centered desk and end screen. `puzzle-window.css` owns the independent 30/70 chat/puzzle composition and its stacked phone layout. None imports rejected concept code.
 
+`message-windows.css` is the final interaction layer: X buttons, the pending-message status, invitation context inside the puzzle, restore controls, and Zeno’s red modal with backdrop blur. `js/window-motion.js` handles short message/window motions and cancels them on reset. The animation does not decide cryptographic success or message delivery.
+
 Visual thesis: a lilac pixel desktop with cream speech balloons, stepped ink outlines, green primary keys and pink send/reply accents, matching the user's supplied pixel-window reference.
 
 Content plan: meet Alice in person on the balcony → return to Bob’s desk → give every text message a speech balloon → distinguish selected replies and the send button → carry the same window/balloon/control vocabulary through mathematics, interception, the protected retry, and dialogs.

@@ -191,7 +191,7 @@ let browser;
   assert.equal(await page.locator('.portrait-panel').evaluate(p => getComputedStyle(p).filter), 'none', 'pixel artwork stays crisp during mathematics');
   assert.match(await page.locator('#stage-subtitle').innerText(), /encrypt the invitation/);
   await page.screenshot({ animations: 'disabled', path: path.join(root, 'qa/desktop-primes.png') });
-  for (const [p, q, pattern] of [['', '', /whole prime/], ['4', '5', /must be prime/], ['3', '3', /distinct/], ['3', '7', /only 3 and 5/]]) {
+  for (const [p, q, pattern] of [['', '', /whole prime/], ['4', '5', /whole prime/], ['3', '3', /distinct/], ['3', '7', /fixes e = 3/]]) {
     await page.locator('#prime-p').fill(p); await page.locator('#prime-q').fill(q); await clickNext(page);
     assert.match(await page.locator('#prime-error').innerText(), pattern);
   }

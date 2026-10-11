@@ -1,6 +1,7 @@
 import { character, rivalSprites, storyExpressions } from './assets/manifest.js';
 import { balconyReplies, balconyBeat } from './js/opening.js';
 import { dateLocations, puzzleMessages } from './js/story-scenes.js';
+import { openFromMessage, closePopup, cancelWindowMotion } from './js/window-motion.js';
 import { makeKeys, encode, encrypt, decrypt, modPow, inverse } from './js/rsa.js';
 import { runAttack, liveAvailable, lessonBase } from './js/quantum-adapter.js';
 import { primesVisual, phiVisual, keyVisual, encodingVisual, ringVisual, sequenceVisual, circuitVisual, factorVisual, pqVisual } from './js/visuals.js';
@@ -161,22 +162,57 @@ function updateComposer() {
 function focusChoices() { $('suggestions').querySelector('button:not(:disabled)')?.focus({ preventScroll: true }); }
 function updateCount() { $('char-count').textContent = $('message').value.length + ' / 280'; $('compose-error').textContent = ''; }
 function setActions(actions) { $('story-actions').replaceChildren(...actions.map(a => button(a.label, a.run, a.cls || 'primary'))); }
+function updateWindowDock() {
+  const atDesk = ['chat', 'stage'].includes(view);
+  $('game').classList.toggle('chat-closed', state.chatClosed);
+  $('game').classList.toggle('puzzle-closed', state.puzzleClosed);
+  $('conversation-window').hidden = state.chatClosed;
+  $('puzzle-window').hidden = view !== 'stage' || state.puzzleClosed;
+  $('restore-chat').hidden = !atDesk || !state.chatClosed;
+  $('restore-puzzle').hidden = view !== 'stage' || !state.puzzleClosed;
+  $('restore-puzzle').textContent = state.phase === 'PQ' ? 'Resume protection upgrade ↗' : 'Resume encryption ↗';
+  $('restore-zeno').hidden = !atDesk || !state.zenoDismissed;
+  $('window-dock').hidden = [...$('window-dock').children].every(control => control.hidden);
+  $('game').classList.toggle('has-closed-windows', !$('window-dock').hidden);
+  const resume = $('messages').querySelector('.pending-resume');
+  if (resume) resume.hidden = !state.puzzleClosed;
+}
+function restoreChat() {
+  state.chatClosed = false; updateWindowDock();
+  $('messages').focus({ preventScroll: true });
+}
+function restorePuzzle() {
+  if (!['RSA', 'PQ', 'INTERCEPT', 'RECOVER'].includes(state.phase)) return;
+  state.puzzleClosed = false; updateWindowDock();
+  if (['RSA', 'PQ'].includes(state.phase)) { queuePuzzleMessage(); $('stage-title').focus({ preventScroll: true }); }
+  else $('inspect-interception').focus({ preventScroll: true });
+}
 function showChat() {
-  cancelPuzzleChatter();
+  cancelPuzzleChatter(); cancelWindowMotion();
   $('game').dataset.view = 'chat';
   view = 'chat'; $('puzzle-window').hidden = true; $('stage').hidden = true; $('chat-view').hidden = false;
+  $('puzzle-window').append($('stage')); $('encryption-summary').hidden = true;
+  state.chatClosed = false; state.puzzleClosed = false; state.zenoDismissed = false; updateWindowDock();
   if (followMessages) { $('messages').scrollTop = $('messages').scrollHeight; $('new-messages').hidden = true; }
   updateComposer();
 }
-function showStage() {
+function showStage(source = null) {
+  const sourceRect = source?.querySelector('.message-text')?.getBoundingClientRect();
   $('game').dataset.view = 'stage';
   view = 'stage'; $('chat-view').hidden = false; $('stage').hidden = false; $('puzzle-window').hidden = false;
+  $('puzzle-window').append($('stage')); $('encryption-summary').hidden = true;
+  state.puzzleClosed = false; updateWindowDock();
+  $('message-context').hidden = false;
+  $('pending-message').textContent = state.phase === 'RSA' ? state.invitation : source?.querySelector('.message-text')?.textContent || 'Let’s upgrade the protection.';
+  $('message-context-label').textContent = state.phase === 'RSA' ? 'YOUR PENDING INVITATION' : 'A NEW ENVELOPE';
+  $('message-context-status').textContent = state.phase === 'RSA' ? 'Encrypting… Complete the steps below to send.' : 'Illustrative protection upgrade · then choose a new invitation.';
   setActions([]); updateComposer();
   renderStage(); $('stage-title').focus({ preventScroll: true });
+  openFromMessage($('puzzle-window'), sourceRect, $('pending-message'), $('pending-message').textContent);
 }
 function markDraft(note) {
   const draft = $('messages').querySelector('[data-draft]');
-  if (draft) draft.querySelector('.message-note').textContent = note;
+  if (draft) { draft.querySelector('.message-note').textContent = note; draft.classList.remove('pending'); draft.dataset.delivery = 'sent'; }
 }
 async function sendMessage(event) {
   event.preventDefault();
@@ -192,10 +228,13 @@ async function sendMessage(event) {
     transition('INVITE'); updateComposer(); focusChoices();
   } else if (state.phase === 'INVITE') {
     state.invitation = raw;
-    const draft = appendMessage('user', raw, 'Draft · held before delivery'); draft.dataset.draft = 'true';
-    busy(true);
-    if (!(await speak(['Before we send your invitation, let’s encrypt it. RSA starts with two prime numbers that we use to build the encryption key.'], epoch))) return;
-    transition('RSA'); updateComposer(); showStage();
+    const draft = appendMessage('user', raw, 'Encrypting…'); draft.dataset.draft = 'true'; draft.dataset.delivery = 'pending'; draft.classList.add('pending');
+    const note = draft.querySelector('.message-note'); note.setAttribute('role', 'status');
+    const resume = button('Continue encryption ↗', restorePuzzle, 'pending-resume'); resume.hidden = true; note.append(resume);
+    transition('RSA'); updateComposer();
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) await sleep(200);
+    if (epoch !== generation || state.phase !== 'RSA') return;
+    showStage(draft);
   } else {
     state.retry = raw;
     state.dateLocation = dateLocations.find(location => location.invitation === raw).id;
@@ -234,7 +273,8 @@ function stageBase(title, subtitle, count) {
 function visual(markup) { const holder = el('div', 'visual'); holder.innerHTML = markup; $('stage-body').append(holder); }
 function caption(content) { $('stage-caption').textContent = content; }
 function renderStage() {
-  $('puzzle-window-title').textContent = 'Qrush / ' + ({ RSA: 'encrypt your invitation', INTERCEPT: 'interception', RECOVER: 'recover the message', PQ: 'new protection' }[state.phase] || 'puzzle');
+  if (['INTERCEPT', 'RECOVER'].includes(state.phase)) $('zeno-title').textContent = state.phase === 'INTERCEPT' ? 'ZENO / PACKET INTERCEPTED' : 'ZENO / THE COPIED PACKET';
+  else $('puzzle-window-title').textContent = 'Qrush / ' + (state.phase === 'RSA' ? 'encrypt your invitation' : 'new protection');
   if (state.phase === 'RSA') renderRSA();
   if (state.phase === 'INTERCEPT') renderIntercept();
   if (state.phase === 'RECOVER') renderRecovery();
@@ -294,24 +334,53 @@ function renderRSA() {
 }
 function intercept() {
   if (state.phase !== 'RSA' || !state.packet) return;
-  markDraft('Toy RSA packet sent · copied by an observer');
+  cancelWindowMotion();
+  markDraft('Encrypted packet sent · intercepted by Zeno');
   state.intercepted = structuredClone(state.packet);
   transition('INTERCEPT');
+  $('message-context-label').textContent = 'YOUR INVITATION';
+  $('message-context-status').textContent = 'Encryption complete · packet released.';
+  $('packet-summary').textContent = state.packet.byteLength + ' UTF-8 bytes · ' + state.packet.ciphertext.length + ' encrypted blocks · public n = ' + state.packet.n;
+  $('encryption-summary').hidden = false;
+  $('zeno-popup').append($('stage'));
   appendMessage('system', 'PACKET COPIED · n = ' + state.packet.n + ', e = ' + state.packet.e + ' and the ciphertext are visible on the channel.');
   appendMessage('rival', 'A private invitation? Cute. Let’s see how private.');
   renderStage();
   $('stage').scrollTop = 0;
+  openZeno();
+}
+function openZeno() {
+  if (!['INTERCEPT', 'RECOVER'].includes(state.phase) || state.zenoClosing) return;
+  state.zenoDismissed = false; updateWindowDock();
+  const popup = $('zeno-popup');
+  popup.classList.remove('closing');
+  if (!popup.open) popup.showModal();
+  $('stage-title').focus({ preventScroll: true });
+}
+async function dismissZeno() {
+  if (state.phase === 'RECOVER' && state.step === 4 && state.recoveredText != null) return consequence();
+  if (state.zenoClosing || !$('zeno-popup').open) return;
+  const epoch = generation;
+  state.zenoClosing = true; $('close-zeno').disabled = true; $('stage').inert = true; $('zeno-popup').classList.add('closing');
+  await closePopup($('zeno-popup'));
+  if (epoch !== generation) return;
+  $('zeno-popup').close(); $('zeno-popup').classList.remove('closing'); $('stage').inert = false;
+  state.zenoClosing = false; state.zenoDismissed = true; $('close-zeno').disabled = false;
+  updateWindowDock(); $('restore-zeno').focus({ preventScroll: true });
 }
 function renderIntercept() {
-  stageBase('An uninvited observer.', 'Cas copied the ciphertext. Copying it is easy. Reading it takes the next step.', '02 / THE RIVAL’S VIEW', 'INTERCEPTION');
-  const rival = el('div', 'rival-avatar'); rival.append(el('div', 'rival-face', '>_'), el('p', '', '“If I factor ' + state.intercepted.n + ', I can recover the toy key. And maybe get to your date first.”')); $('stage-body').append(rival);
+  stageBase(state.step === 0 ? 'Your invitation. My window.' : 'Run the quantum attack', 'Zeno copied the ciphertext. Copying it is easy. Reading it takes the next step.', '');
   if (state.step === 0 && state.job === 'idle') {
+    $('stage-body').append(rivalInterruption());
     const base = lessonBase(state.intercepted.n);
     visual(sequenceVisual(state.intercepted.n, base, orderOfBase(state.intercepted.n, base)));
     caption('The public modulus is N = ' + state.intercepted.n + '. For a = ' + base + ', modular powers repeat. Quantum order finding estimates that repetition; at this tiny size we can also see it directly.');
     stageNavigation('See the quantum circuit →', () => setStep(1));
     return;
   }
+  const rival = el('div', 'rival-avatar');
+  rival.append(rivalSprite('standing'), rivalSprite('machine'), el('p', '', '“If I factor ' + state.intercepted.n + ', I can recover the toy key. And maybe get to your date first.”'));
+  $('stage-body').append(rival);
   const base = lessonBase(state.intercepted.n);
   visual(circuitVisual(state.intercepted.n, base));
   const status = el('div', 'job-status ' + state.job);
@@ -387,8 +456,14 @@ function renderRecovery() {
   stageNavigation(state.step === 4 ? 'Return to the conversation →' : 'Next →', state.step === 4 ? consequence : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : null);
 }
 async function consequence() {
-  if (state.phase !== 'RECOVER' || state.recoveredText == null) return;
-  const epoch = generation; transition('CHOICE');
+  if (state.phase !== 'RECOVER' || state.recoveredText == null || state.zenoClosing) return;
+  const epoch = generation;
+  state.zenoClosing = true; $('close-zeno').disabled = true; $('stage').inert = true; $('zeno-popup').classList.add('closing');
+  await closePopup($('zeno-popup'));
+  if (epoch !== generation) return;
+  $('zeno-popup').close(); $('zeno-popup').classList.remove('closing'); $('stage').inert = false;
+  state.zenoClosing = false; $('close-zeno').disabled = false;
+  transition('CHOICE');
   setActions([]); showChat();
   const excerpt = [...state.recoveredText].slice(0, 110).join('') + ([...state.recoveredText].length > 110 ? '…' : '');
   appendMessage('rival', '“' + excerpt + '”\nOops. Did I just read your invitation out loud on the observatory intercom?');
@@ -406,7 +481,7 @@ function choiceActions() {
     if (await speak(['New words, same vulnerable key. Zeno could factor the same RSA modulus again. Let’s change how we establish the key.'], epoch)) choiceActions();
   } }, { label: 'Upgrade the protection →', run: () => {
     if (state.phase !== 'CHOICE' || state.busy) return;
-    appendMessage('user', 'Let’s upgrade the protection.'); transition('PQ'); showStage();
+    const request = appendMessage('user', 'Let’s upgrade the protection.'); transition('PQ'); showStage(request);
   } }]);
 }
 function renderPQ() {
@@ -447,8 +522,11 @@ function openAbout() {
 export async function restart() {
   const pending = state && ['waiting', 'submitting'].includes(state.job) && state.mode === 'live';
   generation++; submission++;
-  cancelPuzzleChatter();
-  state = { phase: 'MENU', step: 0, balconyStep: 0, balconyChoice: 0, dateStep: 0, dateLocation: null, chatterTyping: false, puzzleNotes: new Set(), busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
+  cancelPuzzleChatter(); cancelWindowMotion();
+  if ($('zeno-popup').open) $('zeno-popup').close();
+  $('zeno-popup').classList.remove('closing'); $('close-zeno').disabled = false; $('stage').inert = false;
+  $('puzzle-window').append($('stage')); $('encryption-summary').hidden = true;
+  state = { phase: 'MENU', step: 0, balconyStep: 0, balconyChoice: 0, dateStep: 0, dateLocation: null, chatClosed: false, puzzleClosed: false, zenoDismissed: false, zenoClosing: false, chatterTyping: false, puzzleNotes: new Set(), busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
   lastStageAction = 0; followMessages = true; userScrollUntil = 0;
   $('messages').replaceChildren();
   $('message').value = ''; updateCount(); $('new-messages').hidden = true;
@@ -468,6 +546,7 @@ export async function restart() {
   $('scene-transition').hidden = true;
   portrait('idle'); document.body.dataset.phase = 'MENU'; updateChapter(); setActions([]);
   view = 'menu'; $('game').dataset.view = 'menu';
+  updateWindowDock();
   $('stage').hidden = true; $('chat-view').hidden = false;
   document.querySelector('.conversation-panel').inert = true;
   $('start-screen').hidden = false;
@@ -579,6 +658,14 @@ $('dialogue-advance').addEventListener('click', advanceBalcony);
 $('skip-balcony').addEventListener('click', returnToDesk);
 $('end-replay').addEventListener('click', restart);
 $('end-about').addEventListener('click', openAbout);
+$('close-chat').addEventListener('click', () => { state.chatClosed = true; updateWindowDock(); $('restore-chat').focus({ preventScroll: true }); });
+$('restore-chat').addEventListener('click', restoreChat);
+$('close-puzzle').addEventListener('click', () => { cancelWindowMotion(); cancelPuzzleChatter(); state.puzzleClosed = true; updateWindowDock(); $('restore-puzzle').focus({ preventScroll: true }); });
+$('restore-puzzle').addEventListener('click', restorePuzzle);
+$('close-zeno').addEventListener('click', dismissZeno);
+$('zeno-popup').addEventListener('cancel', event => { event.preventDefault(); dismissZeno(); });
+$('restore-zeno').addEventListener('click', openZeno);
+$('inspect-interception').addEventListener('click', openZeno);
 $('composer').addEventListener('submit', sendMessage);
 for (const event of ['wheel', 'touchstart', 'touchmove', 'pointerdown', 'keydown']) {
   $('messages').addEventListener(event, () => { userScrollUntil = performance.now() + 1000; }, { passive: true });

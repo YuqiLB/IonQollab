@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "desktop: pending actual text, close/resume, modal blur, job completion while closed, exact decryption and popup exit",
+    "phone: pending actual text, close/resume, modal blur, job completion while closed, exact decryption and popup exit",
+    "compact: pending actual text, close/resume, modal blur, job completion while closed, exact decryption and popup exit",
+    "landscape: pending actual text, close/resume, modal blur, job completion while closed, exact decryption and popup exit",
+    "restart cancels pending open animation; no page errors"
+  ],
+  "errors": []
+}

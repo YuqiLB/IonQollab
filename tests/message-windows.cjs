@@ -1,0 +1,107 @@
+// Browser lifecycle checks for message-owned windows; no backend or fake success.
+const path = require('node:path');
+const { chromium } = require(path.join(process.argv[2], 'playwright'));
+const assert = require('node:assert/strict');
+const { spawn } = require('node:child_process');
+const { mkdir, writeFile } = require('node:fs/promises');
+const root = path.resolve(__dirname, '..'), out = path.join(root, 'qa/windows');
+const server = spawn(process.execPath, ['tools/serve.mjs'], { cwd: root, env: { ...process.env, PORT: '4177' }, windowsHide: true, stdio: 'pipe' });
+let browser;
+(async () => {
+  await new Promise((resolve, reject) => { server.stdout.once('data', resolve); server.once('error', reject); server.once('exit', n => reject(Error('Server exit ' + n))); setTimeout(() => reject(Error('Server timeout')), 10000).unref(); });
+  browser = await chromium.launch({ headless: true, executablePath: process.argv[3] || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+  await mkdir(out, { recursive: true });
+  const errors = [], checks = [];
+  const p = await browser.newPage(); p.on('pageerror', e => errors.push(e.message));
+  const ready = () => p.waitForFunction(() => !document.getElementById('message').disabled);
+  const next = async () => { await p.waitForTimeout(280); await p.locator('#stage-nav button').last().click(); };
+  const begin = async index => {
+    await p.goto('http://127.0.0.1:4177'); await p.locator('#start-game').click(); await p.locator('#skip-balcony').click(); await ready();
+    await p.locator('#suggestions button').first().click(); await p.locator('#send').click(); await ready();
+    await p.locator('#suggestions button').nth(index).click();
+    const invitation = await p.locator('#message').inputValue(); await p.locator('#send').click(); return invitation;
+  };
+  const fit = async () => assert.deepEqual(await p.evaluate(() => {
+    const issues = [];
+    const popup = document.getElementById('zeno-popup');
+    for (const selector of popup.open ? ['#zeno-popup', '#close-zeno'] : ['#conversation-window', '#puzzle-window', '#window-dock', '#close-chat', '#close-puzzle']) {
+      const e = document.querySelector(selector);
+      if (!e.getClientRects().length) continue;
+      const b = e.getBoundingClientRect();
+      if (b.left < 0 || b.top < 0 || b.right > innerWidth + 1 || b.bottom > innerHeight + 1) issues.push(selector + ' outside viewport');
+    }
+    if (document.documentElement.scrollWidth > innerWidth) issues.push('outer overflow');
+    const dock = document.getElementById('window-dock');
+    if (!dock.hidden && dock.scrollWidth > dock.clientWidth + 1) issues.push('restore controls overflow');
+    return issues;
+  }), [], JSON.stringify(p.viewportSize()));
+  const sizes = [{ name: 'desktop', width: 1440, height: 900 }, { name: 'phone', width: 390, height: 844 }, { name: 'compact', width: 320, height: 480 }, { name: 'landscape', width: 844, height: 390 }];
+  for (const [index, size] of sizes.entries()) {
+    await p.setViewportSize({ width: size.width, height: size.height });
+    await p.emulateMedia({ reducedMotion: index ? 'reduce' : 'no-preference' });
+    const invitation = await begin(index % 2);
+    assert.equal(await p.locator('[data-draft]').getAttribute('data-delivery'), 'pending');
+    assert.match(await p.locator('[data-draft] .message-note').innerText(), /Encrypting/);
+    if (!index) {
+      await p.waitForSelector('.message-flight');
+      assert.equal(await p.locator('.message-flight').textContent(), invitation);
+      await p.evaluate(() => { for (const a of document.getAnimations()) if (a.effect.getTiming().duration === 460 || a.effect.getTiming().duration === 480) { a.pause(); a.currentTime = 180; } });
+      await p.screenshot({ path: path.join(out, 'message-opens-window.png'), animations: 'allow' });
+      await p.evaluate(() => document.getAnimations().forEach(a => { if (a.playState === 'paused') a.play(); }));
+    } else assert.equal(await p.locator('.message-flight').count(), 0, 'reduced motion skips the text flight');
+    await p.locator('#prime-p').waitFor(); await p.waitForTimeout(520); await fit();
+    assert.equal(await p.locator('#pending-message').textContent(), invitation);
+    await p.locator('#prime-p').fill('3'); await p.locator('#prime-q').fill(index === 1 ? '11' : '5');
+    await p.locator('#close-puzzle').click();
+    assert(await p.locator('#puzzle-window').isHidden());
+    assert.equal(await p.locator('body').getAttribute('data-phase'), 'RSA');
+    assert(await p.locator('#send').isDisabled());
+    await fit();
+    await p.locator('.pending-resume').click();
+    assert.equal(await p.locator('#prime-q').inputValue(), index === 1 ? '11' : '5');
+    await p.locator('#close-chat').click(); await fit();
+    assert(await p.locator('#conversation-window').isHidden());
+    await p.locator('#restore-chat').click();
+    await p.screenshot({ path: path.join(out, size.name + '-encrypting.png'), animations: 'disabled' });
+    for (let i = 0; i < 7; i++) await next();
+    await p.waitForTimeout(300); await fit();
+    assert(await p.locator('#zeno-popup').evaluate(e => e.matches(':modal')));
+    assert.match(await p.locator('#zeno-popup').evaluate(e => getComputedStyle(e, '::backdrop').backdropFilter), /blur/);
+    assert.equal(await p.locator('[data-draft]').getAttribute('data-delivery'), 'sent');
+    assert(!await p.locator('[data-draft]').evaluate(e => e.classList.contains('pending')));
+    await p.screenshot({ path: path.join(out, size.name + '-zeno-popup.png'), animations: 'disabled' });
+    await p.locator('#close-zeno').click(); await p.waitForFunction(() => !document.getElementById('zeno-popup').open);
+    assert.equal(await p.locator('body').getAttribute('data-phase'), 'INTERCEPT');
+    await p.locator('#close-chat').click(); await p.locator('#close-puzzle').click();
+    assert(await p.locator('#restore-chat').isVisible()); assert(await p.locator('#restore-puzzle').isVisible()); await fit();
+    await p.locator('#restore-chat').click(); await p.locator('#restore-puzzle').click();
+    await p.locator('#restore-zeno').click();
+    await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('zeno-popup').open);
+    await p.locator('#inspect-interception').click();
+    await next(); await p.getByRole('button', { name: 'Run quantum attack →', exact: true }).click();
+    await p.locator('#close-zeno').click(); await p.waitForFunction(() => !document.getElementById('zeno-popup').open);
+    await p.waitForFunction(() => document.getElementById('job-status')?.classList.contains('success'));
+    await p.locator('#restore-zeno').click();
+    assert(await p.locator('.job-status.success').isVisible(), 'a job result survives closing the popup');
+    await next(); for (let i = 0; i < 4; i++) await next();
+    assert.equal(await p.locator('.leak-quote').textContent(), invitation);
+    await p.locator('#close-zeno').click();
+    await p.getByRole('button', { name: 'Upgrade the protection →', exact: true }).waitFor();
+    assert.equal(await p.locator('body').getAttribute('data-phase'), 'CHOICE');
+    assert(await p.locator('#zeno-popup').isHidden());
+    assert(await p.locator('#conversation-window').isVisible());
+    checks.push(size.name + ': pending actual text, close/resume, modal blur, job completion while closed, exact decryption and popup exit');
+  }
+  await p.emulateMedia({ reducedMotion: 'no-preference' });
+  await begin(1);
+  await p.evaluate(async () => (await import('./main.js')).restart());
+  await p.waitForTimeout(700);
+  assert.equal(await p.locator('body').getAttribute('data-phase'), 'MENU');
+  assert.equal(await p.locator('.message-flight').count(), 0);
+  assert(await p.locator('#puzzle-window').isHidden());
+  assert(await p.locator('#window-dock').isHidden());
+  assert.deepEqual(errors, []);
+  checks.push('restart cancels pending open animation; no page errors');
+  await writeFile(path.join(out, 'results.json'), JSON.stringify({ checks, errors }, null, 2));
+  console.log(checks.map(c => 'PASS: ' + c).join('\n'));
+})().then(async () => { if (browser) await browser.close(); server.kill(); }).catch(async e => { console.error(e); if (browser) await browser.close(); server.kill(); process.exitCode = 1; });

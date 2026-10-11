@@ -1,5 +1,14 @@
 # Qrush verification
 
+## Pending invitation and Zeno popup — 2026-10-11
+
+- Both invitation choices open their encryption window from the actual message. The bubble remains “Encrypting…” until the RSA lesson releases its computed packet. The invitation remains visible above the steps. Reduced motion skips the flight and window movement.
+- X buttons close chat, puzzle and Zeno views while preserving progress. The restore bar reopens them. Zeno uses a native modal with a red frame, frosted backdrop (`backdrop-filter: blur(9px)`), keyboard focus containment, Escape dismissal and an exit animation. Completing recovery closes the popup and resumes the story.
+- The complete desktop/mobile browser suite passes, including both date endings, disconnected live failure, explicit demo selection, duplicate live submission and stale-result rejection. Its obsolete prime-error expectations were updated to the current bounded-prime validation wording.
+- `tests/message-windows.cjs` exercises 1440×900, 390×844, 320×480 and 844×390: exact text in the flight, pending/sent status, form values surviving close, all three restore controls, early dismissal without advancing the story, completed jobs surviving a closed popup, and actual decryption. N=33 (3×11) is exercised alongside N=15. Captures/results live in [windows/](windows/README.md).
+- **Pre-existing math-test failure:** before UI edits, `node --test tests/math.test.mjs` passed 10/11. The malformed/contradictory-result test at `tests/math.test.mjs:50` reports “Missing expected exception”; its extra `recovered_toy_secret` field is accepted by the current adapter. This turn does not change `js/rsa.js`, `js/quantum-adapter.js`, or the math tests. Do not interpret the historical all-pass notes below as the current baseline.
+- Native character PNGs, original fonts, current bounded RSA lesson, Python contracts and post-quantum caveats are preserved. No real quantum job was run. QA uses headless Chrome; physical devices, other engines and screen-reader announcements remain unverified.
+
 ## Click-through dialogue, puzzle windows and dates — 2026-10-11
 
 - The full in-person dialogue box is a native keyboard-accessible button surface. Namebar/body clicks, Enter and Space advance; double-clicks advance one line; a required reply choice cannot be bypassed. The opening suite passes at 1440×900, 390×844, 320×480 and 844×390.

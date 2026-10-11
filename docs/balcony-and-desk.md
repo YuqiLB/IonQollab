@@ -17,3 +17,11 @@ Visual thesis: keep Alice present while the player works, then return to an inti
 Content plan: click anywhere on spoken dialogue to continue → retain real reply choices → keep chat readable during puzzles, with responses locked → follow the final invitation to its actual setting (quiet garden or east dome) → conclude the in-person meeting → show an end screen with replay.
 
 Interaction thesis: the puzzle window enters when needed; a few phase-specific Alice messages arrive without taking focus; the final meeting reuses the player-paced dialogue surface. All motion respects reduced motion. Timers are canceled on phase change/reset and returning to old puzzle steps does not duplicate messages. Final location follows the replacement invitation because the original plan was leaked.
+
+## An invitation opens its own encryption window
+
+Visual thesis: the pending message is the source of the encryption workspace; Zeno interrupts that same workspace with a forceful red modal window over a frosted background.
+
+Content plan: send an invitation → show “Encrypting…” on the actual unsent message → open its encryption window from that bubble → complete the RSA lesson and release the real packet → Zeno’s popup copies and recovers it → close the popup and return to Alice. The actual invitation remains visible above the puzzle steps.
+
+Interaction thesis: short anticipation on Send, a window growing from the message with its text traveling into the window, then a red popup entrance and closing motion. Reduced motion replaces these with immediate state changes. Loading is an indeterminate teaching-workflow status, not a fake cryptographic progress percentage. X closes a view while preserving progress; restore controls reopen it. Closing Zeno early does not complete the attack or cancel a submitted remote job.
