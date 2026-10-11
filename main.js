@@ -556,25 +556,175 @@ function choiceActions() {
   });
   syncTask();
 }
-function renderPQ() {
-  const titles = ['Alice shares a public key', 'Make a shared secret', 'Alice recovers the secret', 'Protect the message'];
-  const captions = [
-    'Alice provides an ML-KEM public key, authenticated as hers. Her decapsulation key stays private. This scheme uses different mathematics from RSA factoring.',
-    'You encapsulate: the public key produces a shared secret S and encapsulation data Cₖₑₘ. Only Cₖₑₘ crosses the channel. The shared secret is not sent.',
-    'Alice decapsulates Cₖₑₘ with her private key to recover the same S. Matching tokens illustrate that agreement; they are not computed cryptographic secrets.',
-    'Both sides derive a symmetric key K from S. Authenticated encryption then protects the text and detects tampering. ML-KEM establishes a secret; it does not encrypt chat text directly.',
+const MLKEM_Q = 3329;
+const MLKEM_FIELDS = [
+  { key: 'a0', label: 'a₀', purpose: 'public matrix', min: 0, max: MLKEM_Q - 1 },
+  { key: 'a1', label: 'a₁', purpose: 'public matrix', min: 0, max: MLKEM_Q - 1 },
+  { key: 's0', label: 's₀', purpose: 'secret sample', min: -2, max: 2 },
+  { key: 's1', label: 's₁', purpose: 'secret sample', min: -2, max: 2 },
+  { key: 'e0', label: 'e₀', purpose: 'noise sample', min: -2, max: 2 },
+  { key: 'e1', label: 'e₁', purpose: 'noise sample', min: -2, max: 2 },
+];
+function readMlkemInputs() {
+  const values = {};
+  for (const field of MLKEM_FIELDS) {
+    const input = $('mlkem-' + field.key);
+    const value = Number(input.value);
+    if (!input.value.trim() || !Number.isInteger(value) || value < field.min || value > field.max) {
+      throw new Error(field.label + ' must be a whole number from ' + field.min + ' to ' + field.max + '.');
+    }
+    values[field.key] = value;
+  }
+  state.mlkemDraft = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, String(value)]));
+  return values;
+}
+function calculateMlkemToy(values) {
+  const raw = [
+    values.a0 * values.s0 + values.e0,
+    values.a0 * values.s1 + values.a1 * values.s0 + values.e1,
+    values.a1 * values.s1,
   ];
-  const compact = [['ALICE → YOU', 'ML-KEM public key'], ['YOU: secret S', 'Send Cₖₑₘ → ALICE'], ['Decaps(sk, Cₖₑₘ)', 'ALICE: same secret S'], ['KDF(S) → key K', 'Text + auth tag']];
-  const briefs = ['Her authenticated public key travels. Her private key stays.', 'Keep S. Send only the encapsulation data Cₖₑₘ.', 'Her private key recovers S. Matching tokens are illustrative.', 'A derived symmetric key protects the text and its integrity.'];
-  stageBase(titles[state.step], 'Illustration only · no post-quantum computation', (state.step + 1) + ' / 4');
-  visual(pqVisual(state.step), compact[state.step]); caption(captions[state.step], briefs[state.step]);
-  stageNavigation(state.step === 3 ? 'Choose a new invitation ♥' : 'Next →', state.step === 3 ? retryConversation : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : null);
+  return { raw, reduced: raw.map(value => ((value % MLKEM_Q) + MLKEM_Q) % MLKEM_Q) };
+}
+function polynomialText(coefficients) {
+  const terms = [];
+  coefficients.forEach((coefficient, power) => {
+    if (!coefficient) return;
+    const magnitude = Math.abs(coefficient);
+    const body = power === 0 ? String(magnitude) : (magnitude === 1 ? '' : magnitude) + 'X' + (power > 1 ? '^' + power : '');
+    if (!terms.length) terms.push((coefficient < 0 ? '−' : '') + body);
+    else terms.push((coefficient < 0 ? ' − ' : ' + ') + body);
+  });
+  return terms.join('') || '0';
+}
+function renderPQ() {
+  const titles = [
+    'ML-KEM, in context',
+    'Alice sends her public key',
+    'Choose the toy numbers',
+    'Follow one polynomial product',
+    'What Zeno can intercept',
+    'Why Zeno cannot feasibly decrypt it',
+  ];
+  const subtitles = [
+    'A post-quantum way to agree on a shared secret.',
+    'Public information can travel through the channel.',
+    'Pick six coefficients for one small teaching example.',
+    'See what the chosen coefficients do.',
+    'An intercepted packet is still encrypted.',
+    'The secret depends on two different protections.',
+  ];
+  stageBase(titles[state.step], subtitles[state.step], (state.step + 1) + ' / 6');
+  if (state.step === 0) {
+    $('stage-body').append(el('div', 'math-equation', 'ML-KEM → shared secret → AES-256-GCM'));
+    $('stage-body').append(el('p', 'math-small mlkem-copy', 'ML-KEM helps you and Alice establish the same secret. AES-GCM uses a key derived from it to encrypt the actual text and detect tampering.'));
+    const details = el('details', 'mlkem-details');
+    details.append(el('summary', '', 'How this demo differs from real ML-KEM'));
+    details.append(el('p', '', 'Real ML-KEM-768 works with a 3 × 3 matrix of degree-255 polynomials modulo X^256 + 1 and q = 3329, with standardized sampling, transforms, encoding, and compression. This lesson lets you choose six toy coefficients and calculates one short polynomial product within a simplified equation. It does not generate an ML-KEM key, capsule, or encrypted message; real secret and noise values are sampled by the algorithm.'));
+    $('stage-body').append(details);
+    caption('ML-KEM establishes a secret; AES-GCM encrypts the text. This is a teaching model, not a working cipher.', 'ML-KEM agrees a secret; AES-GCM protects the text.');
+  }
+  if (state.step === 1) {
+    visual(pqVisual(0), ['ALICE → YOU', 'ML-KEM public key']);
+    $('stage-body').append(el('p', 'math-small mlkem-copy', 'Alice’s ML-KEM-768 public key is 1,184 bytes in the real standard. The coefficients on the next screen are teaching inputs, not those key bytes.'));
+    caption('Alice’s public key may be shared. Her private decapsulation key stays on her device. In this story, you already verified Alice’s identity at work.', 'Alice sends pk; her private decapsulation key stays with her.');
+  }
+  if (state.step === 2) {
+    $('stage-body').append(el('div', 'math-equation mlkem-input-equation', 't(X) = a(X)s(X) + e(X)  (mod 3329)'));
+    const form = el('form', 'mlkem-form');
+    form.noValidate = true;
+    const groups = [
+      { title: 'a(X) · public matrix sample', note: 'Coefficients: 0 to 3328', fields: MLKEM_FIELDS.slice(0, 2) },
+      { title: 's(X) · secret sample', note: 'Demo range: −2 to 2', fields: MLKEM_FIELDS.slice(2, 4) },
+      { title: 'e(X) · noise sample', note: 'Demo range: −2 to 2', fields: MLKEM_FIELDS.slice(4, 6) },
+    ];
+    const grid = el('div', 'mlkem-input-groups');
+    let error;
+    for (const groupInfo of groups) {
+      const group = el('fieldset', 'mlkem-input-group');
+      group.append(el('legend', '', groupInfo.title), el('p', 'mlkem-group-note', groupInfo.note));
+      const row = el('div', 'mlkem-coefficients');
+      for (const field of groupInfo.fields) {
+        const label = el('label', 'mlkem-coefficient');
+        label.append(el('span', '', field.label));
+        const input = el('input');
+        input.type = 'number'; input.step = '1'; input.min = String(field.min); input.max = String(field.max);
+        input.id = 'mlkem-' + field.key; input.name = field.key; input.inputMode = 'numeric'; input.required = true;
+        input.value = state.mlkemDraft[field.key];
+        input.setAttribute('aria-label', field.label + ', ' + field.purpose + ' coefficient');
+        input.addEventListener('input', () => { state.mlkemDraft[field.key] = input.value; if (error) error.textContent = ''; });
+        label.append(input); row.append(label);
+      }
+      group.append(row); grid.append(group);
+    }
+    const help = el('p', 'mlkem-input-help', 'Toy values only: real ML-KEM samples its secret and noise internally. Here you choose them to follow the equation.');
+    help.id = 'mlkem-input-help';
+    error = el('p', 'field-error'); error.id = 'mlkem-input-error'; error.setAttribute('role', 'alert');
+    form.append(grid, help, error);
+    const calculate = event => {
+      if (event) event.preventDefault();
+      try {
+        readMlkemInputs();
+        setStep(3);
+      } catch (problem) { error.textContent = problem.message; }
+    };
+    form.addEventListener('submit', calculate);
+    $('stage-body').append(form);
+    caption('q stays fixed at 3329. Choose each coefficient within its displayed range.', 'Choose six values, then calculate.');
+    stageNavigation('Calculate →', calculate, () => setStep(1));
+    return;
+  }
+  if (state.step === 3) {
+    const values = Object.fromEntries(MLKEM_FIELDS.map(field => [field.key, Number(state.mlkemDraft[field.key])]));
+    const result = calculateMlkemToy(values);
+    const a = [values.a0, values.a1], s = [values.s0, values.s1], e = [values.e0, values.e1];
+    $('stage-body').append(el('p', 'math-small mlkem-copy', 'a(X) = ' + polynomialText(a) + '     s(X) = ' + polynomialText(s) + '     e(X) = ' + polynomialText(e)));
+    $('stage-body').append(el('p', 'math-small mlkem-copy', 'a(X)s(X) + e(X) = ' + polynomialText(result.raw)));
+    $('stage-body').append(el('div', 'math-equation mlkem-result', '[' + result.reduced.join(', ') + '] mod 3329'));
+    const wrapped = result.raw.filter(value => value < 0).map(value => value + ' ≡ ' + (((value % MLKEM_Q) + MLKEM_Q) % MLKEM_Q) + ' (mod 3329)').join('; ');
+    $('stage-body').append(el('p', 'math-small mlkem-copy', wrapped ? 'Negative coefficients wrap into 0–3328: ' + wrapped + '.' : 'Each coefficient is reduced modulo q into the range 0–3328.'));
+    caption('This is a toy single-polynomial analogue of one product term in t = A·s + e. Real ML-KEM sums three polynomial products per component and also reduces modulo X^256 + 1.', 'Your values are multiplied, noise is added, and coefficients are reduced mod q.');
+  }
+  if (state.step === 4) {
+    visual(pqVisual(1), ['YOU: keep S', 'Send Cₖₑₘ → ALICE']);
+    const grid = el('div', 'mlkem-observer-grid');
+    const visible = el('section', 'mlkem-observer-card');
+    visible.append(el('h3', '', 'Visible to Zeno'));
+    const publicList = el('ul', '');
+    ['Alice’s public key', 'ML-KEM capsule Cₖₑₘ', 'AES-GCM nonce, ciphertext, and authentication tag'].forEach(item => publicList.append(el('li', '', item)));
+    visible.append(publicList);
+    const secret = el('section', 'mlkem-observer-card private');
+    secret.append(el('h3', '', 'Not sent in the packet'));
+    const privateList = el('ul', '');
+    ['Alice’s private decapsulation key', 'The shared secret S', 'The derived AES key K'].forEach(item => privateList.append(el('li', '', item)));
+    secret.append(privateList);
+    grid.append(visible, secret);
+    $('stage-body').append(grid);
+    caption('These are the fields a real hybrid packet would expose. This demo generates none of them; Zeno could copy them, but copying ciphertext is not decrypting it.', 'Zeno can copy the packet fields. They do not contain the secret.');
+  }
+  if (state.step === 5) {
+    const points = el('ol', 'mlkem-security-points');
+    const keySetup = el('li', '');
+    keySetup.append(el('strong', '', 'ML-KEM: '), el('span', '', 'Recovering S from Alice’s public key and Cₖₑₘ would require Alice’s private key or solving the Module-LWE lattice problem. No practical quantum attack on standardized ML-KEM-768 is known; Shor’s factoring algorithm does not solve this problem.'));
+    const message = el('li', '');
+    message.append(el('strong', '', 'AES-256-GCM: '), el('span', '', 'Without S and the derived key K, the ciphertext cannot feasibly be decrypted or authenticated. Generic quantum search gives a quadratic speedup, not a Shor-style break; AES-256 is designed to retain a strong security margin.'));
+    const identity = el('li', '');
+    identity.append(el('strong', '', 'Alice’s identity: '), el('span', '', 'This story assumes her public key was authenticated when you verified each other at work. Without key authentication, Zeno could try to substitute his own public key.'));
+    points.append(keySetup, message, identity);
+    $('stage-body').append(points);
+    const caveat = el('details', 'mlkem-details');
+    caveat.append(el('summary', '', 'What “cannot” means here'));
+    caveat.append(el('p', '', 'Zeno can intercept the packet, but current cryptanalysis gives him no known feasible way to decrypt it when the standardized algorithms are implemented correctly and the key is authentic. This is not a mathematical proof that no future attack can ever exist. This game only illustrates the process; it does not run ML-KEM or AES-GCM.'));
+    $('stage-body').append(caveat);
+    caption('Interception is possible. Feasible decryption is what these algorithms are designed to prevent.', 'Zeno can copy it; no known practical quantum attack decrypts it.');
+  }
+  stageNavigation(state.step === 5 ? 'Choose a new invitation ♥' : 'Next →', state.step === 5 ? retryConversation : () => setStep(state.step + 1), state.step ? () => setStep(state.step - 1) : null);
 }
 async function retryConversation() {
   if (state.phase !== 'PQ') return;
-  finishTask('pq', 'Exchange illustrated · ready for a new invitation');
+  finishTask('pq', 'Step-by-step exchange illustrated · ready for a new invitation');
   const epoch = generation; transition('RETRY'); setActions([]); showChat();
-  appendMessage('system', 'ILLUSTRATIVE POST-QUANTUM EXCHANGE COMPLETE\nThe RSA factoring attack no longer applies to this key-establishment scheme. This is not a proof that every attack is impossible.');
+  appendMessage('system', 'ILLUSTRATIVE POST-QUANTUM EXCHANGE COMPLETE\nNo ML-KEM or AES-GCM code ran, and no real message was protected. Zeno’s RSA factoring trick does not apply to this key-establishment scheme.');
   rivalDefeat();
   if (!(await speak(['Better mathematics. Same butterflies.', 'The first invitation is still out there. Let’s make a new plan—somewhere the intercom can’t follow us.'], epoch))) return;
   updateComposer(); focusChoices();
@@ -607,7 +757,7 @@ export async function restart() {
   if ($('zeno-popup').open) $('zeno-popup').close();
   $('zeno-popup').classList.remove('closing'); $('stage').inert = false;
   $('puzzle-window').append($('stage')); $('encryption-summary').hidden = true;
-  state = { phase: 'MENU', step: 0, balconyStep: 0, balconyChoice: 0, dateStep: 0, dateLocation: null, chatClosed: false, puzzleClosed: false, zenoDismissed: false, zenoClosing: false, chatterTyping: false, puzzleNotes: new Set(), busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
+  state = { phase: 'MENU', step: 0, balconyStep: 0, balconyChoice: 0, dateStep: 0, dateLocation: null, chatClosed: false, puzzleClosed: false, zenoDismissed: false, zenoClosing: false, chatterTyping: false, puzzleNotes: new Set(), busy: false, selectedReply: '', mode: 'demo', job: 'idle', history: [], primeDraft: { p: '', q: '' }, mlkemDraft: { a0: '6', a1: '1', s0: '1', s1: '-1', e0: '0', e1: '1' }, invitation: '', retry: '', result: null, packet: null, error: '', recoveredText: null };
   lastStageAction = 0; followMessages = true; userScrollUntil = 0;
   $('messages').replaceChildren();
   $('message').value = ''; updateCount(); $('new-messages').hidden = true;
