@@ -17,10 +17,13 @@ export function inverse(e, phi) {
   throw new Error('The exponent has no inverse.');
 }
 export function makeKeys(p, q) {
-  if (!isPrime(p) || !isPrime(q)) throw new Error('Both values must be prime numbers. Try 3 and 5.');
-  if (p === q) throw new Error('Choose two distinct primes: 3 and 5.');
-  if (p * q !== 15) throw new Error('This demonstration supports only 3 and 5, in either order.');
-  const n = p * q, phi = (p - 1) * (q - 1), e = 3;
+  if (!Number.isSafeInteger(p) || !Number.isSafeInteger(q) || !isPrime(p) || !isPrime(q)) throw new Error('Enter two whole prime numbers.');
+  if (p === q) throw new Error('Choose two distinct primes.');
+  if (p === 2 || q === 2) throw new Error('Choose odd primes; the factor 2 would make this Shor lesson trivial.');
+  const n = p * q;
+  if (n > 63) throw new Error('For this simulator lesson, keep p × q at 63 or below (at most 18 qubits).');
+  const phi = (p - 1) * (q - 1), e = 3;
+  if (gcd(e, phi) !== 1) throw new Error('This lesson fixes e = 3. Choose a pair with gcd(3, φ(n)) = 1; try 3 and 5, 3 and 11, 3 and 17, or 5 and 11.');
   return { p, q, n, phi, e, d: inverse(e, phi) };
 }
 export function encode(text, n) {
@@ -41,7 +44,8 @@ export function encrypt(text, keys) {
     encoding: encoded.encoding, ciphertext: encoded.digits.map(m => modPow(m, keys.e, keys.n)) };
 }
 export function decrypt(packet, d) {
-  if (packet.n !== 15 || packet.width !== 3 || packet.encoding !== 'utf-8/base-n-fixed-width' ||
+  const expectedWidth = Math.ceil(Math.log(256) / Math.log(packet.n));
+  if (!Number.isSafeInteger(packet.n) || packet.n < 3 || packet.n > 63 || packet.width !== expectedWidth || packet.encoding !== 'utf-8/base-n-fixed-width' ||
       !Number.isInteger(packet.byteLength) || packet.byteLength < 0 ||
       packet.ciphertext.length !== packet.byteLength * packet.width) throw new Error('Invalid toy packet metadata.');
   const blocks = packet.ciphertext.map(c => {

@@ -36,24 +36,28 @@ For Qollab, use **one JS / Qiskit project**. Copy the root `index.html`, `main.j
 | Part | Execution |
 | --- | --- |
 | Conversation | Local scripted state machine; no LLM or network service |
+| Typed text | Safely rendered with `textContent`; 280 UTF-16 code units; Enter sends, Shift+Enter adds a newline |
+| Toy RSA | Real local UTF-8/base-N encoding, modular exponentiation, ciphertext packet, and decryption |
 | Reply choices | Suggestion chips preview a scripted reply in a read-only text box; the send arrow submits the selected choice |
 | Toy RSA | Real local UTF-8/base-15 encoding, modular exponentiation, ciphertext packet, and decryption |
 | Illustrative quantum mode | Explicitly labeled deterministic sample measurements; **no quantum job** |
-| Live Qollab mode | Calls a configured Python proxy with Qollab's supplied backend; disconnected until teammates connect it |
+| Live Qollab mode | Runs the bounded Qiskit order-finding circuit on the simulator selected in Qollab |
 | Period/factor recovery | Continued fractions from measurement phases, minimal-period verification, gcd calculations, inverse, actual packet decryption |
 | Post-quantum retry | **Illustrative post-quantum exchange**; ML-KEM, KDF and authenticated encryption are diagrams, not cryptographic implementations |
 
 Everything stays in memory. There is no persistence, account, database or real encrypted chat service. The story's machine is fictional and sufficiently powerful; today's tiny simulator demo is not a real-world RSA attack. It does not demonstrate breaking AES, a production messaging service, or every end-to-end encryption scheme.
 
-Toy parameters are restricted to `p=3, q=5` or the reverse, `n=15`, `φ(n)=8`, `e=3`, `d=3`. This tiny, unpadded textbook example is trivial to attack classically. In particular, **e=d** means its public exponent also decrypts; we use factoring to teach the recovery chain, not because quantum computation is needed for 15.
+The player can enter distinct odd prime pairs `(3, 5)`, `(3, 11)`, `(3, 17)`, or `(5, 11)`. These keep `e=3` valid and cap `N=pq` at 55. The Shor circuit has a hard ceiling of `N≤63`, 12 measured phase bits, and 18 total qubits. The frontend sends only public `N` and the selected base to Python, never the player's `p` or `q`.
 
-Every UTF-8 byte uses exactly **three** base-15 digits, including leading zeroes: `byte = a×225 + b×15 + c`. Ciphertext includes modulus, public exponent, encoding, digit width and byte count. Decryption uses only the copied packet and a private exponent derived from verified factors. No animation timer unlocks the leaked message.
+This tiny, unpadded textbook example is deliberately insecure and is trivial to attack classically. For `(3, 5)`, `φ(n)=8` and `d=e=3`, so even the public exponent decrypts. The in-game disclaimer explains that factoring is used to teach the recovery chain, not because quantum computation is needed for the toy case.
+
+Each UTF-8 byte uses a fixed-width base-`N` encoding, including leading zeroes; the width is computed from the selected modulus. Ciphertext includes modulus, public exponent, encoding, digit width and byte count. Decryption uses only the copied packet and a private exponent derived from verified factors. No animation timer unlocks the leaked message.
 
 ## Python handoff
 
-The inspected `backend/main.py` and `backend/requirements.txt` were empty and remain unchanged. No pre-existing quantum function or verified ML-KEM implementation was available. This delivery does not claim to include either.
+`backend/main.py` remains empty because Qollab injects the selected Qiskit backend directly; the game does not need a separate web server. No verified ML-KEM implementation is included.
 
-The team should implement **`quantum/attack.py` → `run_attack(backend, shots)`**, or adapt its own existing function to the interface described in [quantum/README.md](quantum/README.md). Add the three Qollab-only connection lines in [quantum/connect.example.js.txt](quantum/connect.example.js.txt) to `main.js` once the real function exists. The user selects a simulator through Qollab's **Select QPU** dialog. Keep that backend; do not add credentials or a provider connection.
+**`quantum/attack.py` → `run_attack(backend, shots=1024, modulus=15, base=2)`** builds an order-finding circuit, submits it to the Qollab-selected simulator, and returns only measured phase-register counts. The defaults preserve the original two-argument call. The browser validates the measurements and computes the period and factors. Read [quantum/README.md](quantum/README.md) for the resource limits and integration steps.
 
 The adapter in `js/quantum-adapter.js` converts `.toJs()` proxies and nested Maps, validates the declared counts/probabilities, and verifies the recovered period. Live failure or inconclusive measurements never silently become illustrative success. The player may explicitly switch modes after failure. Tests use synthetic bridge objects only to test the contract; they are not evidence of Qollab execution.
 
