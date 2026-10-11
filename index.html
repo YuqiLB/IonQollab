@@ -19,20 +19,19 @@
 <body data-phase="MENU">
   <div class="app">
     <main class="game" id="game" data-view="menu" data-scene="balcony">
-      <h1 class="sr-only">Qrush — a quantum love story</h1>
+      <h1 class="sr-only">Qrush</h1>
       <img class="scene-art balcony-art" src="./assets/scenes/balcony.svg" alt="" aria-hidden="true">
       <img class="scene-art desk-art" src="./assets/scenes/desk.svg" alt="" aria-hidden="true">
       <img id="date-art" class="scene-art" alt="" aria-hidden="true" hidden>
 
       <section id="start-screen" class="start-screen" aria-labelledby="intro-title">
         <div class="intro-content">
-          <p class="intro-kicker">2042 · QUANTUM LABORATORY</p>
           <div class="intro-logo" aria-hidden="true">Qrush<span><img class="game-heart" src="./assets/heart.svg" alt=""></span></div>
-          <h2 id="intro-title">The lab can wait.</h2>
+          <h2 id="intro-title">Year 2042 - QUANTUM LABORATORY</h2>
           <div id="intro-story" class="intro-story">
-            <p>Alice is on the balcony. Your coworker. Your crush.</p>
-            <p>You’ve found a reason to stay a little longer.</p>
-            <p>And Zeno? He has a quantum computer—and terrible timing.</p>
+            <p>As you go for a walk, you see that Alice is on the balcony, your coworker and crush.</p>
+            <p>You build up the courage to approach her...</p>
+            <p>But you have a strange feeling that Zeno won't let this happen so easily.</p>
           </div>
           <p class="start-prompt" aria-hidden="true"><span id="start-prompt-copy">Click anywhere to start</span> <span>↗</span></p>
         </div>
@@ -86,8 +85,7 @@
         <div id="message-context" class="message-context" hidden><span id="message-context-label">YOUR PENDING INVITATION</span><p id="pending-message"></p><span id="message-context-status">Encrypting… Complete the steps below to send.</span></div>
         <section id="encryption-summary" class="encryption-summary" hidden><span class="packet-seal" aria-hidden="true">↗</span><h2>Encrypted packet sent.</h2><p id="packet-summary"></p><p class="intercept-warning">Zeno copied the packet on its way out.</p><button id="inspect-interception" class="rose" type="button">Open Zeno’s interception ↗</button></section>
         <section id="stage" class="stage" aria-labelledby="stage-title" hidden>
-          <h2 id="stage-title" tabindex="-1"></h2><p id="stage-subtitle" class="stage-subtitle"></p>
-          <div class="mode-control" id="execution-controls" hidden><label for="execution-mode">EXECUTION</label><select id="execution-mode"><option value="demo">Illustrative demo</option><option value="live">Live Qollab</option></select><span class="mode-indicator" id="mode-label">No quantum job.</span></div>
+          <h2 id="stage-title" tabindex="-1"></h2><p id="stage-subtitle" class="stage-subtitle" hidden></p>
           <div id="stage-body" class="stage-body"></div>
           <p id="stage-caption" class="stage-caption" aria-live="polite"></p>
           <div id="stage-nav" class="stage-nav"></div>
@@ -107,7 +105,7 @@
       </section>
     </main>
   </div>
-  <dialog id="about-dialog"><div class="dialog-head"><span class="eyebrow">BEHIND THE SCENE</span><button id="close-about" class="icon-button" aria-label="Close explanation">×</button></div><h2>What actually ran?</h2><div id="run-report"></div><hr><p><strong>Real classical mathematics.</strong> Your text becomes UTF-8 bytes, each stored as fixed-width base-N digits. Each digit is encrypted with tiny, unpadded textbook RSA. After a verified period yields factors, the recovered exponent decrypts the actual packet.</p><p><strong>Quantum execution.</strong> Illustrative mode uses labeled deterministic sample measurements. Live mode runs the bounded Shor order-finding circuit on your Qollab-selected simulator. Only public N and the order-finding base are sent; the chosen primes stay in the game. A failed live job never becomes sample success. The wave animation illustrates interference; it is not a backend circuit trace.</p><p><strong>Post-quantum exchange.</strong> The ML-KEM, key derivation, and authenticated-encryption sequence is an illustration. No actual ML-KEM or authenticated encryption runs here. Both messages stay in this browser’s memory; there is no secure chat service.</p><p>This is a deliberately insecure RSA teaching example: the public modulus is capped at N ≤ 63, there is no production padding, and classical factoring is trivial at this size. For p = 3, q = 5, e = d = 3, so even the public exponent decrypts. Shor's order-finding lesson illustrates the recovery chain; it does not demonstrate breaking modern RSA. ML-KEM is designed to resist known quantum attacks; it is not a claim of invulnerability. Public keys must also be authenticated in a real protocol.</p><p>Homomorphic encryption means computation on encrypted data; it is a different concept from post-quantum cryptography.</p><p class="source-links">Read the science: <a href="https://quantum.cloud.ibm.com/docs/en/tutorials/shors-algorithm" target="_blank" rel="noreferrer">IBM: Shor’s algorithm ↗</a> · <a href="https://csrc.nist.gov/pubs/fips/203/final" target="_blank" rel="noreferrer">NIST: ML-KEM ↗</a></p></dialog>
+  <dialog id="about-dialog"><div class="dialog-head"><span class="eyebrow">BEHIND THE SCENE</span><button id="close-about" class="icon-button" aria-label="Close explanation">×</button></div><h2>What actually ran?</h2><div class="mode-control" id="execution-controls" hidden><label for="execution-mode">EXECUTION</label><select id="execution-mode"><option value="demo">Illustrative demo</option><option value="live">Live Qollab</option></select><span class="mode-indicator" id="mode-label">No quantum job.</span></div><div id="run-report"></div><hr><p><strong>Classical mathematics.</strong> Your text becomes UTF-8 bytes, each stored as fixed-width base-N digits. Each digit is encrypted with tiny, unpadded textbook RSA. After a verified period yields factors, the recovered exponent decrypts the actual packet.</p><p><strong>Quantum execution.</strong> Illustrative mode uses labeled deterministic sample measurements. Live mode runs the bounded Shor order-finding circuit on your Qollab-selected simulator. Only public N and the order-finding base are sent; the chosen primes stay in the game. A failed live job never becomes sample success. The wave animation illustrates interference; it is not a backend circuit trace.</p><p><strong>Post-quantum exchange.</strong> The ML-KEM, key derivation, and authenticated-encryption sequence is an illustration. No actual ML-KEM or authenticated encryption runs here. Both messages stay in this browser’s memory; there is no secure chat service.</p><p>This is a deliberately insecure RSA teaching example: the public modulus is capped at N ≤ 63, there is no production padding, and classical factoring is trivial at this size. For p = 3, q = 5, e = d = 3, so even the public exponent decrypts. Shor's order-finding lesson illustrates the recovery chain; it does not demonstrate breaking modern RSA. ML-KEM is designed to resist known quantum attacks; it is not a claim of invulnerability. Public keys must also be authenticated in a real protocol.</p><p>Homomorphic encryption means computation on encrypted data; it is a different concept from post-quantum cryptography.</p><p class="source-links">Read the science: <a href="https://quantum.cloud.ibm.com/docs/en/tutorials/shors-algorithm" target="_blank" rel="noreferrer">IBM: Shor’s algorithm ↗</a> · <a href="https://csrc.nist.gov/pubs/fips/203/final" target="_blank" rel="noreferrer">NIST: ML-KEM ↗</a></p></dialog>
   <noscript>This game needs JavaScript. Enable it and reopen the page.</noscript>
   <script type="module" src="./main.js"></script>
 </body>

@@ -174,7 +174,11 @@ function updateComposer() {
 }
 function focusChoices() { $('suggestions').querySelector('button:not(:disabled)')?.focus({ preventScroll: true }); }
 function updateCount() { $('char-count').textContent = $('message').value.length + ' / 280'; $('compose-error').textContent = ''; }
-function setActions(actions) { $('story-actions').replaceChildren(...actions.map(a => button(a.label, a.run, a.cls || 'primary'))); }
+function setActions(actions, { replaceComposer = false } = {}) {
+  $('story-actions').replaceChildren(...actions.map(a => button(a.label, a.run, a.cls || 'primary')));
+  $('story-actions').classList.toggle('replaces-composer', replaceComposer);
+  $('composer').hidden = replaceComposer;
+}
 function currentTask() {
   return { RSA: 'rsa', INTERCEPT: 'attack', RECOVER: 'attack', CHOICE: 'pq', PQ: 'pq' }[state.phase];
 }
@@ -322,7 +326,7 @@ async function sendMessage(event) {
     portrait('happy');
     appendMessage('system', 'The first invitation is still leaked. But the next chapter belongs to the two of you.');
     if (followMessages) $('messages').scrollTop = $('messages').scrollHeight;
-    setActions([{ label: 'Meet Alice ↗', run: startMeeting, cls: 'rose' }]);
+    setActions([{ label: 'Meet Alice ↗', run: startMeeting, cls: 'rose' }], { replaceComposer: true });
   }
 }
 
@@ -344,7 +348,6 @@ function stageBase(title, subtitle, count) {
   $('replay-animation').disabled = false; $('skip-animation').disabled = false;
   $('stage-title').textContent = title; $('stage-subtitle').textContent = subtitle;
   $('step-count').textContent = count;
-  $('execution-controls').hidden = state.phase !== 'INTERCEPT' || state.step === 0;
   $('stage').dataset.step = state.phase.toLowerCase() + '-' + state.step;
   $('stage-caption').textContent = ''; $('stage-nav').replaceChildren(); $('stage-body').replaceChildren();
   $('stage-body').className = 'stage-body animate';
@@ -469,7 +472,6 @@ function openZeno() {
 function renderIntercept() {
   stageBase('Your invitation. My window.', 'Fictional future machine · toy RSA demonstration', '');
   if (state.step === 0) {
-    $('execution-controls').hidden = false;
     $('pause-animation').hidden = true; $('replay-animation').hidden = true; $('skip-animation').hidden = true;
     $('stage-body').append(rivalInterruption());
     caption('A sufficiently powerful quantum computer could break RSA. This tiny example demonstrates how.');
@@ -477,7 +479,6 @@ function renderIntercept() {
     return;
   }
   $('stage-title').textContent = 'Inside Zeno’s machine.';
-  $('execution-controls').hidden = true;
   beginStoryMotion('attack', {packet:state.intercepted,base:lessonBase(state.intercepted.n)}, attackRevealed);
   updateAttackStatus();
 }
@@ -759,10 +760,14 @@ function updateModeLabel() {
 }
 function openAbout() {
   activeMotion?.suspend('details',true);
+  $('execution-controls').hidden = !['INTERCEPT', 'RECOVER'].includes(state.phase);
   const report = el('div', 'run-report');
   const description = state.result ? 'This playthrough: ' + (state.result.source === 'sample' ? 'sample measurements (no quantum job)' : 'live Qollab measurements') + '; job status: ' + state.job + '.' : 'This playthrough: ' + (state.job === 'error' ? 'the attack failed. No successful quantum result.' : ['waiting', 'submitting'].includes(state.job) ? 'the attack is still pending.' : 'no attack completed yet.');
   report.append(el('p', '', description), el('p', '', 'Dialogue uses scripted reply choices. No messages are sent to a server or stored persistently.'));
-  if (view === 'stage' && state.explanation) report.append(el('p', '', state.explanation));
+  if (view === 'stage') {
+    report.append(el('p', '', $('stage-subtitle').textContent));
+    if (state.explanation) report.append(el('p', '', state.explanation));
+  }
   if (state.error) report.append(el('p', '', state.error));
   if (state.keys) {
     const k=state.keys;

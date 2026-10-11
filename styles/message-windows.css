@@ -8,6 +8,12 @@
   box-shadow: 2px 2px 0 var(--ink);
 }
 .game .window-close:hover:not(:disabled) { background: #f9d4ef; }
+#close-chat { background: #a62539; color: #fff8ed; border-color: #51131f; }
+#close-chat:hover:not(:disabled) { background: #c43b4b; }
+.game .story-actions.replaces-composer { padding: 8px 4px 4px 0; }
+.game .story-actions.replaces-composer button { width: 100%; min-height: 88px; font-size: 26px; }
+#about-dialog .mode-control { flex-wrap: wrap; gap: 8px; }
+#about-dialog .mode-control label { display: block; }
 .puzzle-window { animation: none; }
 .message.pending .message-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; font: 20px/1.2 var(--sans); color: #6a476d; }
 .message.pending .message-note::before { content: ''; width: 10px; height: 10px; border: 2px solid #805c9c; background: #c6b6f6; animation: encrypt-wait 1.1s steps(2, end) infinite; }
