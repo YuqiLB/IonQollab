@@ -21,8 +21,8 @@ const allowed = {
   DELIVERED: ['MEET'], MEET: ['END'], END: [],
 };
 const replyChoices = {
-  INTRO: ['That was my favourite part of the shift.', 'So… do you always flirt in qubits?'],
-  INVITE: ['Meet me on the observatory rooftop at midnight? ♥', 'Coffee at the Moon Café? Just us.'],
+  INTRO: ['That walk was my favourite part of the shift.', 'So… do you always flirt in qubits?'],
+  INVITE: ['Meet me on the observatory rooftop at midnight? <3', 'How about coffee at the Moon Café? Just us.'],
   RETRY: dateLocations.map(location => location.invitation),
 };
 let generation = 0, submission = 0, state, view = 'chat';
@@ -81,7 +81,7 @@ function rivalInterruption() {
   const scene = el('aside', 'rival-interruption');
   scene.setAttribute('aria-label', 'Zeno interrupts with his quantum computer');
   const speech = el('div', 'rival-speech');
-  speech.append(el('div', 'message-label', 'ZENO · UNINVITED'), el('p', '', 'A private invitation? Cute.'));
+  speech.append(el('div', 'message-label', 'ZENO · UNINVITED'), el('p', '', 'How cute, a private invitation!'));
   const art = el('div', 'rival-art');
   art.append(rivalSprite('standing'), rivalSprite('machine'));
   const banner = el('div', 'rival-banner'); banner.append(el('h3', '', 'ZENO INTERCEPTS!'));
@@ -159,7 +159,7 @@ function updateComposer() {
   $('puzzle-chat-lock').hidden = view !== 'stage';
   $('composer-label').textContent = state.phase === 'INVITE' ? 'MAKE IT PERSONAL · CHOOSE YOUR INVITATION' : state.phase === 'RETRY' ? 'A FRESH INVITATION · ILLUSTRATIVE PROTECTED CHANNEL' : state.phase === 'DELIVERED' ? 'IT’S A DATE' : 'CHOOSE YOUR REPLY';
   $('message').placeholder = active ? 'Choose a reply above…' : state.busy ? 'Alice is typing…' : 'Continue the story using the button above.';
-  $('composer-hint').textContent = active ? 'Choose a reply above, then send ↗' : state.busy ? 'A moment. She’s still here.' : 'Your conversation stays here.';
+  $('composer-hint').textContent = active ? 'Choose a reply above, then send ↗' : state.busy ? 'Just a moment,she\'s still here.' : 'Your conversation stays here.';
   const suggestions = replyChoices[state.phase] || [];
   $('suggestions').replaceChildren(...suggestions.map(value => {
     const b = button(value, () => {
@@ -300,7 +300,7 @@ async function sendMessage(event) {
   const epoch = generation;
   if (state.phase === 'INTRO') {
     appendMessage('user', raw); busy(true);
-    if (!(await speak(['Message received. For the record, I’m enjoying this.', 'Let’s make a plan. Where should we meet?'], epoch))) return;
+    if (!(await speak(['hehehe. For the record, I’m enjoying this.', 'Let’s make a plan. Where should we meet?'], epoch))) return;
     transition('INVITE'); updateComposer(); focusChoices();
   } else if (state.phase === 'INVITE') {
     state.invitation = raw;
@@ -934,7 +934,7 @@ function returnToDesk() {
     after:async () => {
       document.querySelector('.conversation-panel').inert=false;
       $('messages').focus({preventScroll:true});
-      if (await speak(['Back at your desk? I’m glad we took that walk.', 'The trapped ions can wait. I’d rather get to know you.', 'Want to continue this somewhere a little more private?'],epoch)) focusChoices();
+      if (await speak(['Back at your desk yet?', 'I’m glad we took that walk.', 'The trapped ions can wait. I’d rather get to know you better.'],epoch)) focusChoices();
     },
   });
 }
