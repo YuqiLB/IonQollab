@@ -1,0 +1,27 @@
+Independent sprite editability verification
+Aseprite 1.3.18.6
+
+PASS redcoat-standing: saved 68 x 89 RGB, one frame, one normal unlocked visible editable pixel layer; no group/reference/background/tilemap, empty selection, sole character layer active on reopen.
+PASS redcoat-standing: native equals reopened rendering; 1876 opaque pixels, 4176 transparent pixels, 1121 actual opaque colors; binary alpha and exact 544 x 712 nearest-neighbour preview.
+PASS redcoat-standing: real pencil changed opaque hair (33,9) to visible magenta and real eraser removed opaque (34,9); app.useTool had no layer argument.
+PASS redcoat-standing: real pencil changed opaque face (34,17) to visible magenta and real eraser removed opaque (35,17); app.useTool had no layer argument.
+PASS redcoat-standing: real pencil changed opaque coat (25,31) to visible magenta and real eraser removed opaque (26,31); app.useTool had no layer argument.
+PASS redcoat-standing: exactly six interior edits persisted pixel-for-pixel after saving/reopening the separate QA probe; delivered source bytes unchanged.
+
+PASS redcoat-fallen: saved 68 x 89 RGB, one frame, one normal unlocked visible editable pixel layer; no group/reference/background/tilemap, empty selection, sole character layer active on reopen.
+PASS redcoat-fallen: native equals reopened rendering; 911 opaque pixels, 5141 transparent pixels, 456 actual opaque colors; binary alpha and exact 544 x 712 nearest-neighbour preview.
+PASS redcoat-fallen: real pencil changed opaque hair (61,75) to visible magenta and real eraser removed opaque (62,75); app.useTool had no layer argument.
+PASS redcoat-fallen: real pencil changed opaque hand (48,86) to visible magenta and real eraser removed opaque (49,86); app.useTool had no layer argument.
+PASS redcoat-fallen: real pencil changed opaque coat (45,74) to visible magenta and real eraser removed opaque (46,74); app.useTool had no layer argument.
+PASS redcoat-fallen: exactly six interior edits persisted pixel-for-pixel after saving/reopening the separate QA probe; delivered source bytes unchanged.
+
+PASS machine: saved 68 x 89 RGB, one frame, one normal unlocked visible editable pixel layer; no group/reference/background/tilemap, empty selection, sole character layer active on reopen.
+PASS machine: native equals reopened rendering; 4304 opaque pixels, 1748 transparent pixels, 1588 actual opaque colors; binary alpha and exact 544 x 712 nearest-neighbour preview.
+PASS machine: real pencil changed opaque gray frame (15,25) to visible magenta and real eraser removed opaque (16,25); app.useTool had no layer argument.
+PASS machine: real pencil changed opaque gold rotor (34,30) to visible magenta and real eraser removed opaque (35,30); app.useTool had no layer argument.
+PASS machine: real pencil changed opaque console (54,66) to visible magenta and real eraser removed opaque (55,66); app.useTool had no layer argument.
+PASS machine: exactly six interior edits persisted pixel-for-pixel after saving/reopening the separate QA probe; delivered source bytes unchanged.
+
+PASS: all three delivered .aseprite files remain byte-identical to their starting state; only QA probes contain test marks.
+Manual visual review: all three native PNGs and final light/dark 4x contact sheets were actually opened. Poses, silhouette, machine rotor and console remain readable; no blocking matte holes or edge fringe observed. Fine details are reduced at 68 x 89, especially in the horizontal fallen pose.
+Editability evidence uses actual Aseprite pencil/eraser tool APIs and save/reopen tests. No GUI click test is claimed.

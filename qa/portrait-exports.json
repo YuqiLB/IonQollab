@@ -1,0 +1,52 @@
+[
+  {
+    "expression": "idle",
+    "canvas": [
+      68,
+      89
+    ],
+    "sourceSHA256": "92beb20e32cfdb7dc5666fc6f1330555133b93a4a6e7466934a846c8a3cf4c65",
+    "pngSHA256": "8adf3a3f6c0b481fa41dea52f0532b03fdd152620361400fa3820beedd240415",
+    "differsFromAdjacentPreview": true
+  },
+  {
+    "expression": "blushing",
+    "canvas": [
+      68,
+      89
+    ],
+    "sourceSHA256": "4e8b17dd2b31c82789d3959d2f2c69f6e2c94cea3f6c3a612f183954f8475d21",
+    "pngSHA256": "32f837c9c0533be9ac3f222056322269bc2cc835abb91777b0d9445d8b5c3e70",
+    "differsFromAdjacentPreview": true
+  },
+  {
+    "expression": "happy",
+    "canvas": [
+      68,
+      89
+    ],
+    "sourceSHA256": "343f0045961ea3e14001e9f4d44b30251b44031dfb2cd71d6be4257765f68703",
+    "pngSHA256": "f4090e97a9c119691d8c3a3a9aa1a1af522341b10c27b005f35c04e10a78ae21",
+    "differsFromAdjacentPreview": true
+  },
+  {
+    "expression": "serious",
+    "canvas": [
+      68,
+      89
+    ],
+    "sourceSHA256": "f32d4e053b22b5fca737452cfb8d7f67bf25736d9f4835db511f38bbe45a268f",
+    "pngSHA256": "7aa43ce9ce13ac3256894a20a5758ed93619d1a1cb2d3be290b489ef7d02209d",
+    "differsFromAdjacentPreview": true
+  },
+  {
+    "expression": "surprised",
+    "canvas": [
+      68,
+      89
+    ],
+    "sourceSHA256": "52fb1814163ef6d05952e92252bfefd6ac544144455527aa97bfb82f590693f3",
+    "pngSHA256": "c46232e81fe14b70f0db4e3224773c4ca85f0963b6f933dbd2428f5d55148795",
+    "differsFromAdjacentPreview": true
+  }
+]

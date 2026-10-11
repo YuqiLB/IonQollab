@@ -77,7 +77,7 @@ export function factorVisual(r, factors, n = 15, a = 2) {
     '<g class="prime-right">' + rect(249, 88, 215, 82) + text(357, 118, 'gcd(' + a + '^' + r / 2 + ' + 1, ' + n + ')') + text(357, 154, '= ' + factors[1], 'big blue') + '</g>' + text(240, 207, factors[0] + ' × ' + factors[1] + ' = ' + n + '  (a^(r/2) mod N = ' + half + ')', 'muted'), 'Period ' + r + ' recovers factors ' + factors[0] + ' and ' + factors[1] + ' with gcd calculations', 226);
 }
 export function pqVisual(step) {
-  let body = text(75, 25, 'YOU', 'muted') + text(405, 25, 'MIRA', 'muted');
+  let body = text(75, 25, 'YOU', 'muted') + text(405, 25, 'ALICE', 'muted');
   body += rect(25, 46, 100, 120) + rect(355, 46, 100, 120) + text(75, 73, 'sender', 'small muted') + text(405, 73, 'recipient', 'small muted');
   if (step === 0) {
     body += text(405, 111, 'pk', 'big cyan') + text(405, 143, 'sk stays here', 'small rose') + arrow(342, 105, 140) + '<g class="prime-right">' + rect(203, 82, 74, 44, 'accent-tile') + text(240, 110, 'pk', 'cyan') + '</g>' + text(240, 196, 'An authenticated ML-KEM public key crosses the channel.', 'small muted');
@@ -94,5 +94,5 @@ export function pqVisual(step) {
       body += text(75, 186, 'KDF(S) → K', 'small cyan') + text(405, 186, 'KDF(S) → K', 'small cyan') + text(240, 221, 'A derived symmetric key locks the message separately.', 'small muted');
     }
   }
-  return svg(body, ['Mira provides her authenticated ML-KEM public key. Her secret key remains private.', 'The sender encapsulates secret S and sends encapsulation data C kem.', 'Mira decapsulates the same secret S using her private key.', 'Both sides derive a symmetric key from S; authenticated encryption protects the message and its integrity.'][step], 243);
+  return svg(body, ['Alice provides her authenticated ML-KEM public key. Her secret key remains private.', 'The sender encapsulates secret S and sends encapsulation data C kem.', 'Alice decapsulates the same secret S using her private key.', 'Both sides derive a symmetric key from S; authenticated encryption protects the message and its integrity.'][step], 243);
 }

@@ -1,0 +1,9 @@
+PASS: saved 68 x 89 RGB sprite, one frame, one visible editable normal pixel layer named Character - EDIT HERE; layer flags exactly Visible+Editable, no movement/reference/background lock.
+PASS: selection is empty and the sole character layer is active immediately after reopening.
+PASS: native PNG equals saved rendering; 3912 opaque pixels, 2140 transparent pixels, 1585 actual opaque colors, binary alpha; 544 x 712 preview is exact 8x nearest-neighbour.
+PASS: actual pencil repainted opaque hair pixel (30,18) magenta, and actual eraser removed adjacent opaque pixel (31,18), using active-layer routing.
+PASS: actual pencil repainted opaque face pixel (38,40) magenta, and actual eraser removed adjacent opaque pixel (39,40), using active-layer routing.
+PASS: actual pencil repainted opaque clothing pixel (36,65) magenta, and actual eraser removed adjacent opaque pixel (37,65), using active-layer routing.
+PASS: exactly six interior edits (three paints and three erasures) persisted pixel-for-pixel after saving and reopening qa_edit_probe.aseprite.
+PASS: delivered .aseprite bytes remain unchanged. Only the separate QA probe contains test marks.
+Manual review: final native and 8x images were actually opened and inspected. Character remains readable at 68 x 89. Editability was tested with real Aseprite tool APIs; no GUI click test is claimed.

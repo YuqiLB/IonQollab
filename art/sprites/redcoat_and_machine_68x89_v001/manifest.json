@@ -1,0 +1,96 @@
+{
+  "canvas": [
+    68,
+    89
+  ],
+  "color_mode": "RGB",
+  "layer": "Sprite - EDIT HERE",
+  "alpha_cutoff": 128,
+  "source": "Exact original PNG attachments from the user",
+  "sprites": [
+    {
+      "name": "redcoat-standing",
+      "source": "sources/redcoat-standing.png",
+      "source_size": [
+        1097,
+        1434
+      ],
+      "source_sha256": "33815ba00472536da2a39a60374944d59f0c514e9bf304510dec4c97d75360c3",
+      "crop": [
+        257,
+        12,
+        610,
+        1419
+      ],
+      "fit": [
+        38,
+        89
+      ],
+      "offset": [
+        15,
+        0
+      ],
+      "sampling_phase": 0.75,
+      "aseprite": "redcoat-standing_68x89.aseprite",
+      "aseprite_sha256": "b278935a5b28c31f09153499e06deb3b000c7e1d41c4bde541384373012e09d1",
+      "png": "redcoat-standing_68x89.png",
+      "png_sha256": "520b008fd3860055f4caf83eae470d18312f19ecb050d4f5d6dc8cfa93f9b4bc"
+    },
+    {
+      "name": "redcoat-fallen",
+      "source": "sources/redcoat-fallen.png",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_sha256": "a9ed3fd17a64473d28c05b312836b7bfef25cb491dec90995a14140b34069bda",
+      "crop": [
+        33,
+        220,
+        1484,
+        661
+      ],
+      "fit": [
+        68,
+        30
+      ],
+      "offset": [
+        0,
+        59
+      ],
+      "sampling_phase": 0.5,
+      "aseprite": "redcoat-fallen_68x89.aseprite",
+      "aseprite_sha256": "3695ac65ae10feb58098e394b17e9f7c7fc02084ee53204db4dc553bf7d8a8bf",
+      "png": "redcoat-fallen_68x89.png",
+      "png_sha256": "21bdbd317eebfed8dad31de24ca257bb61961e2ca2ed6e131767bf56a6b32eb2"
+    },
+    {
+      "name": "machine",
+      "source": "sources/machine.png",
+      "source_size": [
+        1097,
+        1434
+      ],
+      "source_sha256": "bf3b04ae6a58541f123695fa51325aa5db7dbd031e2d917239964d540c8833da",
+      "crop": [
+        109,
+        70,
+        962,
+        1319
+      ],
+      "fit": [
+        65,
+        89
+      ],
+      "offset": [
+        1,
+        0
+      ],
+      "sampling_phase": 0.5,
+      "aseprite": "machine_68x89.aseprite",
+      "aseprite_sha256": "56c0055f56e8c8e113af19e2728abbcc36ca02dca9ab75e4f976b2595ce49915",
+      "png": "machine_68x89.png",
+      "png_sha256": "78d38dcc004fbf6ecb5bb69efa3cf41b5ae9d30d9bfce5d69e6fd8e09757694e"
+    }
+  ]
+}

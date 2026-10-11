@@ -1,0 +1,4 @@
+serious: source 302x441, crop-left=2, fit=61x89 at (3,0), phase=0.75
+surprised: source 305x450, crop-left=0, fit=60x89 at (4,0), phase=0.25
+blushing: source 297x456, crop-left=0, fit=58x89 at (5,0), phase=0
+happy: source 302x447, crop-left=0, fit=60x89 at (4,0), phase=0.25

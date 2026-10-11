@@ -1,0 +1,13 @@
+Independent standing sprite 136x178 editability verification
+Aseprite 1.3.18.6
+
+PASS redcoat-standing: saved 136 x 178 RGB, one frame, one normal unlocked visible editable pixel layer; no group/reference/background/tilemap, empty selection, sole character layer active on reopen.
+PASS redcoat-standing: native equals reopened rendering; 7587 opaque pixels, 16621 transparent pixels, 3163 actual opaque colors; binary alpha and exact 544 x 712 4x nearest-neighbour preview.
+PASS redcoat-standing: real pencil changed opaque hair (66,18) to visible magenta and real eraser removed opaque (67,18); app.useTool had no layer argument.
+PASS redcoat-standing: real pencil changed opaque face (68,34) to visible magenta and real eraser removed opaque (69,34); app.useTool had no layer argument.
+PASS redcoat-standing: real pencil changed opaque coat (50,62) to visible magenta and real eraser removed opaque (51,62); app.useTool had no layer argument.
+PASS redcoat-standing: exactly six interior edits persisted pixel-for-pixel after saving/reopening the separate QA probe; delivered source bytes unchanged.
+
+PASS: the delivered .aseprite remains byte-identical to its starting state; only QA probes contain test marks.
+Manual visual review: final native and 4x PNGs were actually opened and inspected after phase 0.25 was selected. Golden eyes, smile, coat folds and boots remain readable; no blocking silhouette or matte defect observed.
+Editability evidence uses actual Aseprite pencil/eraser tool APIs and save/reopen tests. No GUI click test is claimed.

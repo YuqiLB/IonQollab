@@ -2,7 +2,8 @@
 
 - 11 Node mathematical/adapter tests passed.
 - Automated desktop and 390px mobile full playthroughs passed in Chrome.
-- Unicode invitations (including 140 emoji), leading zeroes, safe HTML-like text, invalid and reversed primes verified.
+- Earlier typed-input verification covered Unicode invitations (including 140 emoji), leading zeroes, and safe HTML-like text. The current game uses scripted reply choices; the reversible encoding is unchanged.
+- Current browser checks cover read-only preview behavior, keyboard selection, duplicate-send prevention, both invitation choices, and invalid/reversed primes.
 - Skip/Replay animation, Back, returning to conversation, reduced motion, and restart verified.
 - Deliberate reading position preserved. Automatic following survives composer resizing.
 - Disconnected live mode remains an error; explicitly switching to samples is required.
@@ -11,8 +12,16 @@
 - Full-screen revision: complete desktop (1440×1000) and mobile (390×844) playthroughs passed.
 - Mobile assertions verify no outer horizontal or vertical overflow and a composer contained within the viewport.
 - Desktop and mobile screenshots visually confirm the shared observatory, transparent dialogue, and removal of the website header, footer and reset button.
-- Supplied idle PNG is SHA-256 identical to the original; expression RGB values match their source crops exactly.
+- Portrait update: all five runtime PNGs are fresh 68 × 89 renders of the current editable Aseprite files. The adjacent historical PNGs are older artwork.
+- Source/export SHA-256 values are recorded in portrait-exports.json; the current set is shown in current-portraits.png.
+- Superseded runtime portraits and screenshot crops were removed; the editable art archive is retained.
+- Opening revision: desktop click-anywhere and mobile keyboard start, duplicate-start guard, replay back to the menu, and delayed live-job isolation all pass.
+- The intro shows only blurred scenery. Alice’s supplied portrait enters with a bounce, appears in the contact header, and recedes with blur during mathematics. Reduced motion disables entrance/idle animation.
+- Intro screenshots include desktop, 390px mobile, and 320×480 compact layouts; all remain within the viewport.
+- Story and diagram labels consistently use Bob, Alice, and Zeno. Original artwork filenames remain unchanged for provenance.
 - Existing Python files remain empty and unchanged.
+- Zeno intrusion update: all 11 mathematical/adapter tests and the full desktop/mobile browser suite pass. Layout checks cover 1440×1000, 1366×768, 390×844, 320×480, and 844×390 across the entrance, circuit, error/success states, measurements (including expanded details), and every recovery step. Stage sections and body blocks do not overlap or overflow horizontally; the tilted speech remains inside the panel and clear of the sprites.
+- The supplied standing (136×178), quantum computer (68×89), and fallen (68×89) PNGs load successfully. The native export helper verifies unchanged editable sources. The fallen pose appears after the protection upgrade and clears on replay. Desktop entrance, measurements, and desktop/mobile defeat screenshots were visually inspected.
 
 Screenshots in this directory document the tested scene, RSA stages, measurements, post-quantum exchange, and endings. Finite animations were completed for screenshots.
 

@@ -1,0 +1,37 @@
+{
+  "canvas": [
+    136,
+    178
+  ],
+  "previous_canvas": [
+    68,
+    89
+  ],
+  "source_size": [
+    1097,
+    1434
+  ],
+  "source": "sources/redcoat-standing.png",
+  "source_sha256": "33815ba00472536da2a39a60374944d59f0c514e9bf304510dec4c97d75360c3",
+  "crop": [
+    257,
+    12,
+    610,
+    1419
+  ],
+  "fit": [
+    77,
+    178
+  ],
+  "offset": [
+    29,
+    0
+  ],
+  "sampling_phase": 0.25,
+  "alpha_cutoff": 128,
+  "layer": "Sprite - EDIT HERE",
+  "aseprite": "redcoat-standing_136x178.aseprite",
+  "aseprite_sha256": "15b16266b05988e3a656f3c279d2d833f61c820be17f793389c1f7e1ed60b7c3",
+  "png": "redcoat-standing_136x178.png",
+  "png_sha256": "3dd661a29102edb59b82be45f2a751948327a3ac66315b9e9a76b2f4705dbae1"
+}

@@ -1,0 +1,2 @@
+redcoat-standing source: 1097x1434; alpha zero=1068879 partial=501472 opaque=2747; threshold=128; content crop=(257,12,610,1419)
+redcoat-standing output: canvas=136x178; fitted=77x178; offset=(29,0); sampling phase=0.25
