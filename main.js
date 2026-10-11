@@ -370,7 +370,7 @@ function renderRSA() {
       input.value = state.primeDraft[name]; input.addEventListener('input', () => { state.primeDraft[name] = input.value; $('prime-error').textContent = ''; });
       label.append(input); fields.append(label);
     });
-    const help = el('p', 'prime-help', 'Distinct odd primes · p × q ≤ 63 · e = 3'); help.id = 'prime-help';
+    const help = el('p', 'prime-help', 'Distinct odd primes · p × q ≤ 63 · e is selected to fit your primes'); help.id = 'prime-help';
     const error = el('p', 'field-error'); error.id = 'prime-error'; error.setAttribute('role', 'alert');
     form.append(fields, help, button('Use demo values', () => { $('prime-p').value = '3'; $('prime-q').value = '5'; state.primeDraft = { p: '3', q: '5' }; error.textContent = ''; }), error);
     const validate = () => {
@@ -384,17 +384,17 @@ function renderRSA() {
         next();
       } catch (e) {
         state.explanation = e.message;
-        error.textContent = e.message.includes('fixes e = 3') ? 'This lesson fixes e = 3. Try 3 and 5.' : e.message.includes('odd primes') ? 'Choose odd primes. Try 3 and 5.' : e.message.includes('63 or below') ? 'Keep p × q ≤ 63. Try 3 and 5.' : e.message;
+        error.textContent = e.message.includes('odd primes') ? 'Choose odd primes. Try 3 and 5.' : e.message.includes('63 or below') ? 'Keep p × q ≤ 63. Try 3 and 5.' : e.message;
       }
     };
     form.addEventListener('submit', e => { e.preventDefault(); validate(); }); $('stage-body').append(form);
-    caption('Choose distinct odd primes with p × q ≤ 63 and e = 3. Try (3, 5), (3, 11), (3, 17), or (5, 11). This is deliberately insecure textbook RSA with no padding. Only the public product N goes to the attack.', 'Your primes stay private; their product becomes public.');
+    caption('Choose distinct odd primes with p × q ≤ 63. The lesson will choose the smallest odd e that is coprime to φ(n), so every permitted prime pair gets a usable exponent. This is deliberately insecure textbook RSA with no padding. Only the public product N goes to the attack.', 'Your primes stay private; the lesson chooses a compatible e.');
     stageNavigation('Calculate n →', validate); return;
   }
   const keys = state.keys;
   if (state.step === 1) { visual(primesVisual(keys.p, keys.q, true), [keys.p + ' × ' + keys.q, 'n = ' + keys.n]); caption('Multiply the two primes. The product n = ' + keys.n + ' becomes public; the two factors are meant to stay private.', 'Multiply your primes to get the public modulus.'); }
   if (state.step === 2) { visual(phiVisual(keys), ['(' + keys.p + ' − 1) × (' + keys.q + ' − 1)', 'φ(n) = ' + keys.phi]); caption('φ(n) counts numbers below n that share no factor with it. For two distinct primes, φ(n) = (p − 1)(q − 1) = ' + keys.phi + '.', 'Count the residues that share no factor with n.'); }
-  if (state.step === 3) { visual(keyVisual(keys), ['PUBLIC: n = ' + keys.n + ' · e = ' + keys.e, 'PRIVATE: d = ' + keys.d]); caption('This lesson fixes e = 3. The private exponent d solves e × d ≡ 1 (mod φ(n)). These tiny textbook values are deliberately insecure; the disclaimer explains the limits.', keys.e + ' × ' + keys.d + ' ≡ 1 (mod ' + keys.phi + '). Keep d private.'); }
+  if (state.step === 3) { visual(keyVisual(keys), ['PUBLIC: n = ' + keys.n + ' · e = ' + keys.e, 'PRIVATE: d = ' + keys.d]); caption('The lesson selected the smallest odd e greater than 1 that is coprime to φ(n) = ' + keys.phi + '. The private exponent d is its modular inverse: e × d ≡ 1 (mod φ(n)). These tiny textbook values are deliberately insecure; the disclaimer explains the limits.', keys.e + ' × ' + keys.d + ' ≡ 1 (mod ' + keys.phi + '). Keep d private.'); }
   if (state.step === 4) {
     const byte = new TextEncoder().encode(state.invitation)[0], digits = state.encoded.digits.slice(0, state.encoded.width);
     visual(encodingVisual(byte, digits, keys.n), ['UTF-8 byte: ' + byte, 'Base ' + keys.n + ': ' + digits.join(' · ')]);
@@ -409,7 +409,7 @@ function renderRSA() {
     const packet = el('div', 'packet-preview', state.packet.ciphertext.slice(0, 8).join(' · ') + ' …'); $('stage-body').append(packet);
     caption('The full packet contains every encrypted block and its decoding metadata. Someone on the channel can copy the envelope without knowing what it says.', 'First 8 encrypted blocks. The full packet is ready.');
   }
-  stageNavigation(state.step === 6 ? 'Send encrypted packet ↗' : ['','','Calculate φ(n) →','Choose the exponent →','Encode my message →','Encrypt a block →','Prepare the packet →'][state.step + 1] || 'Next →', state.step === 6 ? intercept : next, back);
+  stageNavigation(state.step === 6 ? 'Send encrypted packet ↗' : ['','','Calculate φ(n) →','Build the key pair →','Encode my message →','Encrypt a block →','Prepare the packet →'][state.step + 1] || 'Next →', state.step === 6 ? intercept : next, back);
 }
 function intercept() {
   if (state.phase !== 'RSA' || !state.packet) return;
